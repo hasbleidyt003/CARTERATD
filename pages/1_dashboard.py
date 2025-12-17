@@ -1,7 +1,7 @@
+# pages/1_dashboard.py - VERSIÓN SIN PLOTLY
 import streamlit as st
 import pandas as pd
 from modules.database import get_clientes, get_ocs_pendientes
-import plotly.express as px
 
 def show():
     st.header("📊 Dashboard de Control - Cupos Medicamentos")
@@ -10,7 +10,7 @@ def show():
     clientes = get_clientes()
     ocs_pendientes = get_ocs_pendientes()
     
-    # Métricas principales (actualizadas)
+    # Métricas principales
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
@@ -24,116 +24,99 @@ def show():
     with col3:
         clientes_alerta = len(clientes[clientes['estado'] == 'ALERTA'])
         clientes_sobrepasado = len(clientes[clientes['estado'] == 'SOBREPASADO'])
-        st.metric("Clientes en Alerta/Crítico", f"{clientes_alerta}/{clientes_sobrepasado}")
+        st.metric("Clientes Críticos", f"{clientes_alerta}/{clientes_sobrepasado}")
     
     with col4:
-        total_pendientes = ocs_pendientes['valor_pendiente'].sum()
-        st.metric("OCs Pendientes Total", f"${total_pendientes:,.0f}")
+        total_pendientes = ocs_pendientes['valor_pendiente'].sum() if not ocs_pendientes.empty else 0
+        st.metric("OCs Pendientes", f"${total_pendientes:,.0f}")
     
     st.divider()
     
-    # Tabla de clientes con colores por estado
-    st.subheader("🏥 Estado Actual de Clientes")
+    # Tabla principal de clientes
+    st.subheader("🏥 Estado de Clientes")
     
-    # Formatear DataFrame para mostrar
-    display_df = clientes.copy()
+    if not clientes.empty:
+        # Preparar datos para mostrar
+        display_df = clientes.copy()
+        
+        # Formatear columnas monetarias
+        for col in ['cupo_sugerido', 'saldo_actual', 'cartera_vencida']:
+            display_df[f'{col}_fmt'] = display_df[col].apply(lambda x: f"${x:,.0f}")
+        
+        # Calcular disponible
+        display_df['disponible_real'] = display_df['cupo_sugerido'] - display_df['saldo_actual'] - display_df['cartera_vencida']
+        display_df['disponible_fmt'] = display_df['disponible_real'].apply(
+            lambda x: f"${x:,.0f}" if x >= 0 else f"(${-x:,.0f})"
+        )
+        
+        # Crear tabla con colores
+        st.dataframe(
+            display_df[[
+                'nit', 'nombre', 'cupo_sugerido_fmt', 'saldo_actual_fmt',
+                'cartera_vencida_fmt', 'disponible_fmt', 'porcentaje_uso', 'estado'
+            ]],
+            column_config={
+                "nit": "NIT",
+                "nombre": "Cliente",
+                "cupo_sugerido_fmt": "Cupo Sugerido",
+                "saldo_actual_fmt": "Saldo Actual",
+                "cartera_vencida_fmt": "Cartera Vencida",
+                "disponible_fmt": "Disponible Real",
+                "porcentaje_uso": "% Uso",
+                "estado": "Estado"
+            },
+            hide_index=True,
+            use_container_width=True
+        )
+    else:
+        st.warning("No hay clientes registrados en la base de datos")
     
-    # Calcular disponibilidad real
-    display_df['disponibilidad_real'] = display_df['cupo_sugerido'] - display_df['saldo_actual'] - display_df['cartera_vencida']
-    
-    # Función para aplicar colores según estado
-    def color_row(row):
-        if row['estado'] == 'SOBREPASADO':
-            return ['background-color: #ff6b6b; color: white'] * len(row)
-        elif row['estado'] == 'ALERTA':
-            return ['background-color: #ffeaa7'] * len(row)
-        else:
-            return ['background-color: #d1f7c4'] * len(row)
-    
-    # Columnas a mostrar
-    columns_to_show = ['nit', 'nombre', 'cupo_sugerido', 'saldo_actual', 
-                      'cartera_vencida', 'disponibilidad_real', 'porcentaje_uso', 'estado']
-    
-    # Crear DataFrame estilizado
-    styled_df = display_df[columns_to_show].copy()
-    
-    # Formatear valores monetarios
-    for col in ['cupo_sugerido', 'saldo_actual', 'cartera_vencida', 'disponibilidad_real']:
-        styled_df[col] = styled_df[col].apply(lambda x: f"${x:,.0f}")
-    
-    styled_df['porcentaje_uso'] = styled_df['porcentaje_uso'].apply(lambda x: f"{x}%")
-    
-    # Aplicar estilos
-    styled_df = styled_df.style.apply(color_row, axis=1)
-    
-    st.dataframe(
-        styled_df,
-        column_config={
-            "nit": "NIT",
-            "nombre": "Cliente",
-            "cupo_sugerido": "Cupo Sugerido",
-            "saldo_actual": "Saldo Actual",
-            "cartera_vencida": "Cartera Vencida",
-            "disponibilidad_real": "Disponible Real",
-            "porcentaje_uso": "% Uso",
-            "estado": "Estado"
-        },
-        hide_index=True,
-        use_container_width=True
-    )
-    
-    # Gráfico de barras - Cupo vs Saldo
     st.divider()
-    st.subheader("📈 Comparativa Cupo vs Saldo")
+    
+    # Gráficos simples con Streamlit nativo (sin Plotly)
+    st.subheader("📊 Resumen Visual")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        fig1 = px.bar(
-            display_df.nlargest(10, 'saldo_actual'),
-            x='nombre',
-            y=['cupo_sugerido', 'saldo_actual'],
-            title='Top 10 - Cupo vs Saldo',
-            labels={'value': 'Valor ($)', 'variable': 'Tipo'},
-            barmode='group'
-        )
-        fig1.update_layout(height=400)
-        st.plotly_chart(fig1, use_container_width=True)
+        st.write("**Distribución por Estado**")
+        if not clientes.empty:
+            estado_counts = clientes['estado'].value_counts()
+            
+            # Mostrar como métricas
+            for estado, count in estado_counts.items():
+                color = {
+                    'NORMAL': '🟢',
+                    'ALERTA': '🟡',
+                    'SOBREPASADO': '🔴'
+                }.get(estado, '⚫')
+                
+                st.metric(f"{color} {estado}", count)
     
     with col2:
-        # Gráfico de pastel - Estados
-        estado_counts = display_df['estado'].value_counts().reset_index()
-        estado_counts.columns = ['estado', 'cantidad']
-        
-        fig2 = px.pie(
-            estado_counts,
-            values='cantidad',
-            names='estado',
-            title='Distribución por Estado',
-            color='estado',
-            color_discrete_map={
-                'NORMAL': '#2ecc71',
-                'ALERTA': '#f39c12', 
-                'SOBREPASADO': '#e74c3c'
-            }
-        )
-        fig2.update_layout(height=400)
-        st.plotly_chart(fig2, use_container_width=True)
+        st.write("**Top 5 - Mayor Saldo**")
+        if not clientes.empty:
+            top_clientes = clientes.nlargest(5, 'saldo_actual')
+            for _, cliente in top_clientes.iterrows():
+                st.progress(
+                    min(cliente['saldo_actual'] / cliente['cupo_sugerido'], 1),
+                    text=f"{cliente['nombre'][:20]}...: ${cliente['saldo_actual']:,.0f}"
+                )
     
-    # Sección de resumen rápido
+    # Alertas críticas
     st.divider()
-    st.subheader("🔔 Alertas y Acciones Prioritarias")
+    st.subheader("🚨 Alertas Prioritarias")
     
     # Clientes sobrepasados
-    sobrepasados = display_df[display_df['estado'] == 'SOBREPASADO']
+    sobrepasados = clientes[clientes['estado'] == 'SOBREPASADO']
     if not sobrepasados.empty:
-        st.warning("🚨 **Clientes con Cupo Sobrepasado:**")
+        st.error("**Clientes con Cupo Sobrepasado:**")
         for _, cliente in sobrepasados.iterrows():
-            st.error(f"**{cliente['nombre']}** - Sobrepasa en: ${cliente['disponibilidad_real']*-1:,.0f}")
+            st.write(f"• **{cliente['nombre']}** - Sobrepasa: ${(cliente['cupo_sugerido'] - cliente['saldo_actual'] - cliente['cartera_vencida'])*-1:,.0f}")
     
     # Clientes en alerta
-    alertas = display_df[display_df['estado'] == 'ALERTA']
+    alertas = clientes[clientes['estado'] == 'ALERTA']
     if not alertas.empty:
-        st.warning("⚠️ **Clientes en Estado de Alerta (80%+ uso):**")
+        st.warning("**Clientes en Alerta (>80% uso):**")
         for _, cliente in alertas.iterrows():
-            st.warning(f"**{cliente['nombre']}** - Uso: {cliente['porcentaje_uso']}")
+            st.write(f"• **{cliente['nombre']}** - Uso: {cliente['porcentaje_uso']}%")
