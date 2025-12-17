@@ -1,6 +1,7 @@
 import streamlit as st
 from modules.auth import authenticate
 from modules.database import init_db
+import importlib
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -29,8 +30,11 @@ def main():
 
 def show_main_app():
     # CSS personalizado
-    with open('assets/styles.css', 'r') as f:
-        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+    try:
+        with open('assets/styles.css', 'r') as f:
+            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+    except:
+        pass  # Si no existe el CSS, continuar sin problemas
     
     # Barra superior
     col1, col2, col3 = st.columns([3, 2, 1])
@@ -51,21 +55,38 @@ def show_main_app():
         "🧹 Mantenimiento"
     ])
     
+    # ✅ IMPORTAR CORRECTAMENTE los módulos con números
     with tab1:
-        import pages.Dashboard as dashboard
-        dashboard.show()
+        try:
+            dashboard = importlib.import_module("pages.1_dashboard")
+            dashboard.show()
+        except Exception as e:
+            st.error(f"Error cargando Dashboard: {str(e)}")
+            st.info("Asegúrate que existe: pages/1_dashboard.py")
     
     with tab2:
-        import pages.Clientes as clientes
-        clientes.show()
+        try:
+            clientes = importlib.import_module("pages.2_clientes")
+            clientes.show()
+        except Exception as e:
+            st.error(f"Error cargando Clientes: {str(e)}")
+            st.info("Asegúrate que existe: pages/2_clientes.py")
     
     with tab3:
-        import pages.OCs as ocs
-        ocs.show()
+        try:
+            ocs = importlib.import_module("pages.3_ocs")
+            ocs.show()
+        except Exception as e:
+            st.error(f"Error cargando OCs: {str(e)}")
+            st.info("Asegúrate que existe: pages/3_ocs.py")
     
     with tab4:
-        import pages.Mantenimiento as mantenimiento
-        mantenimiento.show()
+        try:
+            mantenimiento = importlib.import_module("pages.4_mantenimiento")
+            mantenimiento.show()
+        except Exception as e:
+            st.error(f"Error cargando Mantenimiento: {str(e)}")
+            st.info("Asegúrate que existe: pages/4_mantenimiento.py")
 
 if __name__ == "__main__":
     main()
