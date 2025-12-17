@@ -62,7 +62,7 @@ def main():
     # Solo mostrar header común
     col1, col2, col3 = st.columns([3, 2, 1])
     with col1:
-        st.title("💊 Control de Cupos - Medicamentos")
+        st.title("💊 Control de Cupos")
     with col2:
         st.info(f"👤 Usuario: {st.session_state.username}")
     with col3:
