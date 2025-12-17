@@ -1,4 +1,3 @@
-python
 """
 Módulos del Sistema de Cartera TD
 Contiene:
