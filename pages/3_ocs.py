@@ -1,152 +1,92 @@
+"""
+Página de gestión de Órdenes de Compra (OCs) para Streamlit
+Versión completa con todas las funciones CORREGIDA
+"""
+
 import streamlit as st
 import pandas as pd
+import sqlite3
+from datetime import datetime
 from modules.database import (
     get_clientes, 
     get_ocs_pendientes, 
     get_todas_ocs,
     crear_oc,
-    editar_oc,
-    eliminar_oc,
     autorizar_oc,
     get_estadisticas_generales,
-    get_autorizaciones_oc,
-    get_oc_por_id
+    get_autorizaciones_oc
 )
 
 # ==================== FUNCIONES AUXILIARES ====================
 
 def mostrar_modal_agregar_oc():
-    """Modal para agregar nueva OC con opción de autorizar inmediatamente"""
+    """Modal para agregar nueva OC - CORREGIDO"""
     with st.form("form_nueva_oc"):
         st.subheader("➕ Agregar Nueva Orden de Compra")
         
-        # Obtener clientes desde la base de datos
-        clientes_df = get_clientes()
-        
-        if clientes_df.empty:
-            st.warning("No hay clientes disponibles")
-            return False
+        # Obtener clientes para dropdown
+        clientes = get_clientes()
         
         col1, col2 = st.columns(2)
         
         with col1:
-            # Crear lista de clientes con información de cupo disponible
-            opciones_clientes = []
-            for _, cliente in clientes_df.iterrows():
-                nombre = cliente['nombre']
-                cupo_sugerido = cliente['cupo_sugerido']
-                saldo_actual = cliente['saldo_actual']
-                disponible = cliente['disponible']
+            # Seleccionar cliente
+            if not clientes.empty:
+                cliente_nombre = st.selectbox(
+                    "Cliente *",
+                    clientes['nombre'].tolist(),
+                    help="Seleccione el cliente"
+                )
                 
-                # Mostrar cupo disponible (negativo significa excedido)
-                if disponible < 0:
-                    estado_cupo = f"❌ Excedido: ${abs(disponible):,.0f}"
-                else:
-                    estado_cupo = f"✅ Disponible: ${disponible:,.0f}"
-                
-                texto_cliente = f"{nombre} (NIT: {cliente['nit']}) - {estado_cupo}"
-                opciones_clientes.append((texto_cliente, cliente['nit'], nombre, disponible))
+                # Obtener NIT del cliente seleccionado
+                cliente_nit = clientes[clientes['nombre'] == cliente_nombre]['nit'].iloc[0]
+            else:
+                st.warning("No hay clientes disponibles")
+                cliente_nit = None
             
-            # Selectbox para clientes
-            cliente_opcion = st.selectbox(
-                "Cliente *",
-                options=[op[0] for op in opciones_clientes]
-            )
-            
-            # Obtener datos del cliente seleccionado
-            cliente_info = None
-            for op in opciones_clientes:
-                if op[0] == cliente_opcion:
-                    cliente_info = op
-                    break
-            
-            # Número de OC
+            # Número de OC - CORREGIDO: sin max_length
             numero_oc = st.text_input(
                 "Número de OC *",
-                placeholder="Ej: OC-2024-001, FACT-12345"
+                help="Ej: OC-2024-001, FACT-12345",
+                placeholder="OC-2024-001"
             )
         
         with col2:
-            if cliente_info:
-                nit_cliente, nombre_cliente, disponible_cliente = cliente_info[1], cliente_info[2], cliente_info[3]
-                
-                # Mostrar información del cupo
-                if disponible_cliente < 0:
-                    st.error(f"**Cupo excedido por:** ${abs(disponible_cliente):,.0f}")
-                else:
-                    st.success(f"**Cupo disponible:** ${disponible_cliente:,.0f}")
-                
-                # Valor total de la OC
-                valor_total = st.number_input(
-                    "Valor Total de la OC *",
-                    min_value=0.0,
-                    value=0.0,
-                    step=100000.0,
-                    format="%.0f"
-                )
-                
-                # Validar si el valor excede el cupo disponible
-                if valor_total > 0 and disponible_cliente < 0:
-                    st.warning(f"⚠️ El cliente tiene excedido de cupo por ${abs(disponible_cliente):,.0f}")
-                
-                if valor_total > 0 and disponible_cliente >= 0 and valor_total > disponible_cliente:
-                    st.error(f"❌ El valor excede el cupo disponible por ${valor_total - disponible_cliente:,.0f}")
-                
-                # Tipo de OC
-                tipo_oc = st.selectbox(
-                    "Tipo de OC",
-                    ["SUELTA", "CUPO_NUEVO"]
-                )
-                
-                # Cupo de referencia (solo para tipo CUPO_NUEVO)
-                cupo_referencia = ""
-                if tipo_oc == "CUPO_NUEVO":
-                    cupo_referencia = st.text_input(
-                        "Cupo de Referencia",
-                        placeholder="CUPO-001"
-                    )
-                
-                # Opción: ¿Autorizar inmediatamente o dejar pendiente?
-                tipo_autorizacion = st.radio(
-                    "Estado de la OC:",
-                    ["📝 Dejar como PENDIENTE", "✅ Autorizar INMEDIATAMENTE"]
-                )
-                
-                autorizar_inmediato = tipo_autorizacion == "✅ Autorizar INMEDIATAMENTE"
-                
-                if autorizar_inmediato:
-                    # Si autoriza inmediatamente, preguntar cuánto autorizar
-                    if disponible_cliente >= 0:
-                        max_valor = min(valor_total, disponible_cliente)
-                        valor_autorizar = st.number_input(
-                            "Valor a autorizar ahora *",
-                            min_value=0.0,
-                            max_value=float(max_valor),
-                            value=float(valor_total) if valor_total <= disponible_cliente else float(disponible_cliente),
-                            step=100000.0,
-                            format="%.0f",
-                            help=f"Máximo autorizable: ${max_valor:,.0f}"
-                        )
-                        
-                        if valor_autorizar < valor_total:
-                            st.warning(f"📝 Quedarán pendientes: ${valor_total - valor_autorizar:,.0f}")
-                    else:
-                        st.error("❌ No se puede autorizar: Cupo excedido")
-                        valor_autorizar = 0
-            else:
-                valor_total = 0
-                tipo_oc = "SUELTA"
-                autorizar_inmediato = False
-                valor_autorizar = 0
+            # Valor total
+            valor_total = st.number_input(
+                "Valor Total *",
+                min_value=0.0,
+                value=0.0,
+                step=100000.0,
+                format="%.0f",
+                help="Valor total de la orden"
+            )
+            
+            # Tipo de OC
+            tipo_oc = st.selectbox(
+                "Tipo de OC",
+                ["SUELTA", "CUPO_NUEVO"],
+                help="SUELTA: OC individual, CUPO_NUEVO: para cupo nuevo"
+            )
+        
+        # Cupo de referencia (solo para tipo CUPO_NUEVO)
+        cupo_referencia = ""
+        if tipo_oc == "CUPO_NUEVO":
+            cupo_referencia = st.text_input(
+                "Cupo de Referencia",
+                help="Número de cupo al que está asociada esta OC",
+                placeholder="CUPO-001"
+            )
         
         # Comentarios
         comentarios = st.text_area(
             "Comentarios (opcional)",
             height=100,
+            help="Información adicional sobre esta OC",
             placeholder="Descripción o notas adicionales..."
         )
         
-        # Botón de envío
+        # Botón de envío - CORREGIDO: usando st.form_submit_button
         col_submit, col_cancel = st.columns(2)
         
         submitted = False
@@ -163,7 +103,7 @@ def mostrar_modal_agregar_oc():
                 use_container_width=True
             )
         
-        if submitted and cliente_info:
+        if submitted:
             # Validaciones
             if not numero_oc.strip():
                 st.error("❌ El número de OC es obligatorio")
@@ -173,12 +113,14 @@ def mostrar_modal_agregar_oc():
                 st.error("❌ El valor total debe ser mayor a 0")
                 return False
             
-            nit_cliente, nombre_cliente, disponible_cliente = cliente_info[1], cliente_info[2], cliente_info[3]
+            if not cliente_nit:
+                st.error("❌ Debe seleccionar un cliente")
+                return False
             
             try:
                 # Crear la OC
                 crear_oc(
-                    cliente_nit=nit_cliente,
+                    cliente_nit=cliente_nit,
                     numero_oc=numero_oc.strip(),
                     valor_total=valor_total,
                     tipo=tipo_oc,
@@ -186,19 +128,7 @@ def mostrar_modal_agregar_oc():
                     comentarios=comentarios.strip()
                 )
                 
-                # Si se debe autorizar inmediatamente
-                if autorizar_inmediato and valor_autorizar > 0:
-                    if valor_autorizar <= disponible_cliente or disponible_cliente < 0:
-                        # Necesitamos obtener el ID de la OC recién creada
-                        # Por simplicidad, vamos a autorizar manualmente
-                        # En una implementación real, deberíamos obtener el ID
-                        st.success(f"✅ OC '{numero_oc}' creada")
-                        st.warning("⚠️ Funcionalidad de autorización automática en desarrollo")
-                    else:
-                        st.warning(f"⚠️ OC creada como PENDIENTE. No se pudo autorizar por exceso de cupo")
-                else:
-                    st.success(f"✅ OC '{numero_oc}' creada como PENDIENTE")
-                
+                st.success(f"✅ OC '{numero_oc}' creada exitosamente")
                 st.rerun()
                 return True
                 
@@ -212,43 +142,21 @@ def mostrar_modal_agregar_oc():
     return False
 
 def mostrar_modal_autorizar(oc):
-    """Modal para autorizar una OC pendiente"""
+    """Modal para autorización de OC - CORREGIDO"""
     with st.form(f"auth_form_{oc['id']}"):
         st.subheader(f"✅ Autorizar OC: {oc['numero_oc']}")
         
-        # Obtener datos actuales del cliente
-        clientes_df = get_clientes()
-        cliente_info = clientes_df[clientes_df['nit'] == oc['cliente_nit']]
-        
+        # Información de la OC
         col_info1, col_info2 = st.columns(2)
         with col_info1:
-            st.metric("Valor Total OC", f"${oc['valor_total']:,.0f}")
-            st.metric("Ya Autorizado", f"${oc['valor_autorizado']:,.0f}")
-        
+            st.metric("Valor Total", f"${oc['valor_total']:,.0f}")
         with col_info2:
-            if not cliente_info.empty:
-                cliente = cliente_info.iloc[0]
-                st.metric("Cliente", cliente['nombre'])
-                disponible_cliente = cliente['disponible']
-                st.metric("Cupo Disponible", f"${disponible_cliente:,.0f}")
-            else:
-                st.metric("Cliente", "No encontrado")
-                disponible_cliente = 0
-                st.metric("Cupo Disponible", "$0")
+            if oc['estado'] == 'PARCIAL':
+                st.metric("Ya Autorizado", f"${oc['valor_autorizado']:,.0f}")
         
-        # Calcular valor restante de la OC
-        valor_restante_oc = oc['valor_total'] - oc['valor_autorizado']
-        
-        # El máximo que se puede autorizar es el mínimo entre lo que falta de la OC y el cupo disponible
-        max_autorizable = min(valor_restante_oc, disponible_cliente) if disponible_cliente >= 0 else 0
-        
-        st.info(f"**Por autorizar de esta OC:** ${valor_restante_oc:,.0f}")
-        
-        if disponible_cliente < 0:
-            st.error(f"❌ Cliente con cupo excedido por ${abs(disponible_cliente):,.0f}")
-            max_autorizable = 0
-        elif max_autorizable < valor_restante_oc:
-            st.warning(f"⚠️ Solo se puede autorizar ${max_autorizable:,.0f} (cupo insuficiente)")
+        # Calcular valor restante
+        valor_restante = oc['valor_total'] - oc['valor_autorizado']
+        st.info(f"**Valor disponible para autorizar:** ${valor_restante:,.0f}")
         
         # Botones de porcentaje rápido
         st.write("**Autorización rápida (%):**")
@@ -274,40 +182,28 @@ def mostrar_modal_autorizar(oc):
                 st.rerun()
         
         # Calcular valor sugerido
-        valor_sugerido = max_autorizable
-        if porcentaje_key in st.session_state and max_autorizable > 0:
-            porcentaje = st.session_state[porcentaje_key]
-            valor_sugerido = min(valor_restante_oc * (porcentaje / 100), max_autorizable)
+        valor_sugerido = valor_restante
+        if porcentaje_key in st.session_state:
+            valor_sugerido = valor_restante * (st.session_state[porcentaje_key] / 100)
         
         # Campo para valor de autorización
         valor_autorizar = st.number_input(
             "Valor a autorizar *",
             min_value=0.0,
-            max_value=float(max_autorizable),
+            max_value=float(valor_restante),
             value=float(valor_sugerido),
             step=100000.0,
             format="%.0f"
         )
         
-        # Mostrar lo que quedará pendiente
-        if valor_autorizar > 0:
-            nuevo_pendiente = valor_restante_oc - valor_autorizar
-            nuevo_disponible = disponible_cliente - valor_autorizar
-            
-            col_res1, col_res2 = st.columns(2)
-            with col_res1:
-                st.metric("Quedará pendiente OC", f"${nuevo_pendiente:,.0f}")
-            with col_res2:
-                st.metric("Nuevo cupo disponible", f"${nuevo_disponible:,.0f}")
-        
-        # Comentario
+        # Comentario - CORREGIDO: sin max_length
         comentario = st.text_area(
             "Comentario (opcional)",
-            placeholder="Motivo de la autorización...",
+            placeholder="Ej: Autorización parcial por aprobación de gerencia",
             height=100
         )
         
-        # Botones de acción
+        # Botones de acción - CORREGIDO: usando st.form_submit_button
         col_a, col_b = st.columns(2)
         
         confirmado = False
@@ -315,8 +211,7 @@ def mostrar_modal_autorizar(oc):
             confirmado = st.form_submit_button(
                 "✅ Confirmar Autorización",
                 type="primary",
-                use_container_width=True,
-                disabled=(max_autorizable <= 0)
+                use_container_width=True
             )
         
         with col_b:
@@ -331,17 +226,15 @@ def mostrar_modal_autorizar(oc):
                 return False
             
             try:
-                # Autorizar la OC
+                # Llamar a la función de autorización
                 autorizar_oc(
                     oc_id=oc['id'],
                     valor_autorizado=valor_autorizar,
                     comentario=comentario.strip(),
-                    usuario=st.session_state.get('username', 'Sistema')
+                    usuario="Sistema"
                 )
                 
                 st.success(f"✅ Autorizado ${valor_autorizar:,.0f} de la OC {oc['numero_oc']}")
-                st.info(f"📊 Cupo del cliente reducido en ${valor_autorizar:,.0f}")
-                
                 st.rerun()
                 return True
                 
@@ -354,9 +247,77 @@ def mostrar_modal_autorizar(oc):
     
     return False
 
+def mostrar_detalle_oc(oc):
+    """Muestra el detalle completo de una OC"""
+    with st.expander(f"📋 Detalle completo - {oc['numero_oc']}", expanded=True):
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.write("**Información General:**")
+            st.write(f"**Número OC:** {oc['numero_oc']}")
+            st.write(f"**Cliente:** {oc['cliente_nombre']}")
+            st.write(f"**Tipo:** {oc['tipo']}")
+            
+            if oc['cupo_referencia']:
+                st.write(f"**Cupo Referencia:** {oc['cupo_referencia']}")
+            
+            st.write(f"**Fecha Registro:** {oc['fecha_registro']}")
+            
+            if oc['fecha_ultima_autorizacion']:
+                st.write(f"**Última Autorización:** {oc['fecha_ultima_autorizacion']}")
+        
+        with col2:
+            st.write("**Valores:**")
+            st.write(f"**Valor Total:** ${oc['valor_total']:,.0f}")
+            st.write(f"**Valor Autorizado:** ${oc['valor_autorizado']:,.0f}")
+            st.write(f"**Valor Pendiente:** ${oc['valor_pendiente']:,.0f}")
+            
+            # Barra de progreso
+            if oc['valor_total'] > 0:
+                progreso = (oc['valor_autorizado'] / oc['valor_total']) * 100
+                st.progress(progreso / 100)
+                st.write(f"**Progreso:** {progreso:.1f}%")
+        
+        # Comentarios
+        if oc['comentarios']:
+            st.write("**Comentarios:**")
+            st.info(oc['comentarios'])
+        
+        st.divider()
+        
+        # Historial de autorizaciones (si existe)
+        try:
+            autorizaciones = get_autorizaciones_oc(oc['id'])
+            
+            if not autorizaciones.empty:
+                st.write("**Historial de Autorizaciones:**")
+                
+                for _, auth in autorizaciones.iterrows():
+                    col_a1, col_a2, col_a3 = st.columns([2, 2, 1])
+                    with col_a1:
+                        st.write(f"**Valor:** ${auth['valor_autorizado']:,.0f}")
+                    with col_a2:
+                        # Formatear fecha
+                        try:
+                            fecha = pd.to_datetime(auth['fecha_autorizacion']).strftime('%d/%m/%Y %H:%M')
+                            st.write(f"**Fecha:** {fecha}")
+                        except:
+                            st.write(f"**Fecha:** {auth['fecha_autorizacion']}")
+                    with col_a3:
+                        if auth['comentario']:
+                            with st.expander("📝 Comentario"):
+                                st.write(auth['comentario'])
+                st.divider()
+            else:
+                st.write("No hay historial de autorizaciones.")
+                
+        except Exception as e:
+            st.write(f"No se pudo cargar el historial: {e}")
+
 def mostrar_oc_tarjeta(oc):
     """Muestra una OC como tarjeta interactiva"""
     with st.container():
+        # Determinar color según estado
         estado_colores = {
             'PENDIENTE': '🟡',
             'PARCIAL': '🟠', 
@@ -367,9 +328,11 @@ def mostrar_oc_tarjeta(oc):
         col1, col2, col3 = st.columns([3, 2, 1])
         
         with col1:
+            # Número de OC y cliente
             st.subheader(f"📄 {oc['numero_oc']}")
             st.caption(f"**Cliente:** {oc['cliente_nombre']}")
             
+            # Mostrar progreso si está parcial
             if oc['estado'] == 'PARCIAL':
                 if oc['valor_total'] > 0:
                     progreso = (oc['valor_autorizado'] / oc['valor_total']) * 100
@@ -378,13 +341,16 @@ def mostrar_oc_tarjeta(oc):
             else:
                 st.write(f"**Valor:** ${oc['valor_total']:,.0f}")
             
+            # Tipo y referencia
             st.caption(f"**Tipo:** {oc['tipo']}")
             if oc['cupo_referencia']:
                 st.caption(f"**Ref:** {oc['cupo_referencia']}")
         
         with col2:
+            # Estado
             st.metric("Estado", f"{color_icono} {oc['estado']}")
             
+            # Fecha
             if 'fecha_registro' in oc:
                 try:
                     fecha = pd.to_datetime(oc['fecha_registro']).strftime('%d/%m/%Y')
@@ -392,13 +358,13 @@ def mostrar_oc_tarjeta(oc):
                 except:
                     st.caption(f"Registro: {oc['fecha_registro']}")
             
+            # Valor pendiente
             if 'valor_pendiente' in oc and oc['estado'] != 'AUTORIZADA':
-                st.caption(f"**Pendiente:** ${oc['valor_pendiente']:,.0f}")
+                st.caption(f"Pendiente: ${oc['valor_pendiente']:,.0f}")
         
         with col3:
             # Botones de acción según estado
             if oc['estado'] in ['PENDIENTE', 'PARCIAL']:
-                # Botón autorizar
                 if st.button("✅ Autorizar", 
                            key=f"auth_btn_{oc['id']}", 
                            use_container_width=True,
@@ -406,7 +372,6 @@ def mostrar_oc_tarjeta(oc):
                     st.session_state[f'autorizar_oc_{oc["id"]}'] = True
                     st.rerun()
             else:
-                # Para OCs autorizadas, solo mostrar detalle
                 if st.button("📋 Detalle", 
                            key=f"det_btn_{oc['id']}", 
                            use_container_width=True,
@@ -421,38 +386,33 @@ def mostrar_oc_tarjeta(oc):
             if f'autorizar_oc_{oc["id"]}' in st.session_state:
                 del st.session_state[f'autorizar_oc_{oc["id"]}']
         
+        # Mostrar detalle si está activo
+        if f'detalle_oc_{oc["id"]}' in st.session_state:
+            mostrar_detalle_oc(oc)
+            # Limpiar estado después de mostrar
+            if f'detalle_oc_{oc["id"]}' in st.session_state:
+                del st.session_state[f'detalle_oc_{oc["id"]}']
+        
         st.divider()
 
 # ==================== FUNCIÓN PRINCIPAL ====================
 
 def show():
     """Función principal de la página de OCs"""
-    st.title("📋 Gestión de Órdenes de Compra")
+    st.header("📋 Gestión de Órdenes de Compra (OCs)")
     
     # Estadísticas rápidas
     try:
         stats = get_estadisticas_generales()
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            if 'total_ocs_pendientes' in stats:
-                st.metric("Total OCs Pendientes", f"${stats['total_ocs_pendientes']:,.0f}")
-            else:
-                st.metric("OCs Pendientes", "$0")
+            st.metric("Total OCs Pendientes", f"${stats['total_ocs_pendientes']:,.0f}")
         with col2:
-            if 'total_clientes' in stats:
-                st.metric("Clientes Activos", stats['total_clientes'])
-            else:
-                st.metric("Clientes", "0")
+            st.metric("Clientes Activos", stats['total_clientes'])
         with col3:
-            if 'total_cupo_sugerido' in stats:
-                st.metric("Cupo Total", f"${stats['total_cupo_sugerido']:,.0f}")
-            else:
-                st.metric("Cupo Total", "$0")
+            st.metric("Cupo Total", f"${stats['total_cupo_sugerido']:,.0f}")
         with col4:
-            if 'total_saldo_actual' in stats:
-                st.metric("Saldo Total", f"${stats['total_saldo_actual']:,.0f}")
-            else:
-                st.metric("Saldo Total", "$0")
+            st.metric("Saldo Total", f"${stats['total_saldo_actual']:,.0f}")
     except Exception as e:
         st.warning(f"No se pudieron cargar todas las estadísticas: {e}")
     
@@ -480,7 +440,7 @@ def show():
             cliente_lista = ["Todos"] + clientes['nombre'].tolist()
         else:
             cliente_lista = ["Todos"]
-            st.warning("No hay clientes registrados.")
+            st.warning("No hay clientes registrados. Agrega clientes primero.")
         
         # Filtros
         st.subheader("🔍 Filtros de Búsqueda")
@@ -525,11 +485,59 @@ def show():
         st.subheader(f"📊 Resultados: {len(ocs)} OCs encontradas")
         
         if not ocs.empty:
-            # Mostrar como tarjetas
-            for _, oc in ocs.iterrows():
-                mostrar_oc_tarjeta(oc)
+            # Opción de vista: tarjetas o tabla
+            vista = st.radio(
+                "Tipo de vista:",
+                ["Tarjetas", "Tabla"],
+                horizontal=True,
+                key="vista_ocs"
+            )
+            
+            if vista == "Tarjetas":
+                # Mostrar como tarjetas
+                for _, oc in ocs.iterrows():
+                    mostrar_oc_tarjeta(oc)
+            else:
+                # Mostrar como tabla
+                columnas_mostrar = [
+                    'numero_oc', 'cliente_nombre', 'valor_total', 
+                    'valor_autorizado', 'valor_pendiente', 'estado', 'tipo'
+                ]
+                
+                # Filtrar columnas que existen
+                columnas_existentes = [col for col in columnas_mostrar if col in ocs.columns]
+                
+                df_tabla = ocs[columnas_existentes].copy()
+                df_tabla = df_tabla.rename(columns={
+                    'numero_oc': 'Número OC',
+                    'cliente_nombre': 'Cliente',
+                    'valor_total': 'Valor Total',
+                    'valor_autorizado': 'Autorizado',
+                    'valor_pendiente': 'Pendiente',
+                    'estado': 'Estado',
+                    'tipo': 'Tipo'
+                })
+                
+                # Formatear valores monetarios
+                for col in ['Valor Total', 'Autorizado', 'Pendiente']:
+                    if col in df_tabla.columns:
+                        df_tabla[col] = df_tabla[col].apply(lambda x: f"${x:,.0f}" if pd.notnull(x) else "")
+                
+                st.dataframe(
+                    df_tabla,
+                    use_container_width=True,
+                    hide_index=True
+                )
         else:
             st.info("📭 No hay OCs que coincidan con los filtros seleccionados")
             
     except Exception as e:
         st.error(f"❌ Error al cargar OCs: {str(e)}")
+        st.code(f"Detalle: {e}")
+
+# ==================== EJECUCIÓN PARA PRUEBAS ====================
+
+if __name__ == "__main__":
+    # Para pruebas directas
+    st.set_page_config(page_title="Gestión de OCs", layout="wide")
+    show()
