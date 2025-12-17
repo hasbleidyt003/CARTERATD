@@ -2,7 +2,7 @@ import streamlit as st
 
 # Configuración de página
 st.set_page_config(
-    page_title="Control de Cupos - Medicamentos",
+    page_title="Control de Cupos",
     page_icon="💊",
     layout="wide"
 )
