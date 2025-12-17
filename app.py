@@ -2,9 +2,10 @@ import streamlit as st
 
 # Configuración de página
 st.set_page_config(
-    page_title="Control de Cupos",
+    page_title="Control de Cupos - Medicamentos",
     page_icon="💊",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"  # IMPORTANTE: sidebar expandido
 )
 
 # ==================== AUTENTICACIÓN ====================
@@ -13,21 +14,19 @@ USUARIOS = {
     "viewer": "view123"
 }
 
-def check_auth():
-    """Verifica si el usuario está autenticado"""
-    if 'authenticated' not in st.session_state:
-        st.session_state.authenticated = False
-    if 'username' not in st.session_state:
-        st.session_state.username = ""
-    
-    return st.session_state.authenticated
+# Inicializar estado de sesión
+if 'authenticated' not in st.session_state:
+    st.session_state.authenticated = False
+if 'username' not in st.session_state:
+    st.session_state.username = ""
 
+# ==================== PÁGINA DE LOGIN ====================
 def show_login():
     """Muestra la página de login"""
     st.markdown("""
     <div style='text-align: center; padding: 50px;'>
         <h1>💊 Control de Cupos</h1>
-        <h3>Sistema de Seguimiento</h3>
+        <h3>Sistema de Seguimiento - Medicamentos</h3>
     </div>
     """, unsafe_allow_html=True)
     
@@ -51,25 +50,26 @@ def show_login():
 
 # ==================== APLICACIÓN PRINCIPAL ====================
 def main():
-    # Verificar autenticación
-    if not check_auth():
+    # Si no está autenticado, mostrar login
+    if not st.session_state.authenticated:
         show_login()
         return
     
-    # Si está autenticado, Streamlit mostrará automáticamente las páginas
-    # No necesitamos hacer nada más aquí
+    # Si está autenticado, Streamlit mostrará automáticamente:
+    # 1. Sidebar con navegación a las páginas
+    # 2. Contenido de la página seleccionada
     
     # Solo mostrar header común
-    col1, col2, col3 = st.columns([3, 2, 1])
-    with col1:
-        st.title("💊 Control de Cupos")
-    with col2:
-        st.info(f"👤 Usuario: {st.session_state.username}")
-    with col3:
-        if st.button("🚪 Cerrar Sesión", use_container_width=True):
-            st.session_state.authenticated = False
-            st.session_state.username = ""
-            st.rerun()
+    st.sidebar.markdown(f"**👤 Usuario:** {st.session_state.username}")
+    
+    if st.sidebar.button("🚪 Cerrar Sesión", use_container_width=True):
+        st.session_state.authenticated = False
+        st.session_state.username = ""
+        st.rerun()
+    
+    # Mostrar título en página principal
+    st.title("💊 Control de Cupos - Medicamentos")
+    st.info("Seleccione una página en el menú lateral ⬅️")
 
 if __name__ == "__main__":
     main()
