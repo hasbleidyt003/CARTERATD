@@ -1,122 +1,92 @@
-# pages/1_dashboard.py - VERSIÓN SIN PLOTLY
 import streamlit as st
-import pandas as pd
-from modules.database import get_clientes, get_ocs_pendientes
+from modules.auth import authenticate
+from modules.database import init_db
+import importlib
+import warnings
+warnings.filterwarnings('ignore')
 
-def show():
-    st.header("📊 Dashboard de Control - Cupos Medicamentos")
+# Configuración de página
+st.set_page_config(
+    page_title="Control de Cupos - Medicamentos",
+    page_icon="💊",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# Inicializar base de datos
+init_db()
+
+# Sistema de autenticación
+def main():
+    # Mostrar login si no está autenticado
+    if 'authenticated' not in st.session_state:
+        st.session_state.authenticated = False
     
-    # Obtener datos
-    clientes = get_clientes()
-    ocs_pendientes = get_ocs_pendientes()
-    
-    # Métricas principales
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        total_cupo_sugerido = clientes['cupo_sugerido'].sum()
-        st.metric("Cupo Sugerido Total", f"${total_cupo_sugerido:,.0f}")
-    
-    with col2:
-        total_saldo = clientes['saldo_actual'].sum()
-        st.metric("Saldo Total Clientes", f"${total_saldo:,.0f}")
-    
-    with col3:
-        clientes_alerta = len(clientes[clientes['estado'] == 'ALERTA'])
-        clientes_sobrepasado = len(clientes[clientes['estado'] == 'SOBREPASADO'])
-        st.metric("Clientes Críticos", f"{clientes_alerta}/{clientes_sobrepasado}")
-    
-    with col4:
-        total_pendientes = ocs_pendientes['valor_pendiente'].sum() if not ocs_pendientes.empty else 0
-        st.metric("OCs Pendientes", f"${total_pendientes:,.0f}")
-    
-    st.divider()
-    
-    # Tabla principal de clientes
-    st.subheader("🏥 Estado de Clientes")
-    
-    if not clientes.empty:
-        # Preparar datos para mostrar
-        display_df = clientes.copy()
-        
-        # Formatear columnas monetarias
-        for col in ['cupo_sugerido', 'saldo_actual', 'cartera_vencida']:
-            display_df[f'{col}_fmt'] = display_df[col].apply(lambda x: f"${x:,.0f}")
-        
-        # Calcular disponible
-        display_df['disponible_real'] = display_df['cupo_sugerido'] - display_df['saldo_actual'] - display_df['cartera_vencida']
-        display_df['disponible_fmt'] = display_df['disponible_real'].apply(
-            lambda x: f"${x:,.0f}" if x >= 0 else f"(${-x:,.0f})"
-        )
-        
-        # Crear tabla con colores
-        st.dataframe(
-            display_df[[
-                'nit', 'nombre', 'cupo_sugerido_fmt', 'saldo_actual_fmt',
-                'cartera_vencida_fmt', 'disponible_fmt', 'porcentaje_uso', 'estado'
-            ]],
-            column_config={
-                "nit": "NIT",
-                "nombre": "Cliente",
-                "cupo_sugerido_fmt": "Cupo Sugerido",
-                "saldo_actual_fmt": "Saldo Actual",
-                "cartera_vencida_fmt": "Cartera Vencida",
-                "disponible_fmt": "Disponible Real",
-                "porcentaje_uso": "% Uso",
-                "estado": "Estado"
-            },
-            hide_index=True,
-            use_container_width=True
-        )
+    if not st.session_state.authenticated:
+        authenticate()
     else:
-        st.warning("No hay clientes registrados en la base de datos")
+        # Mostrar aplicación principal
+        show_main_app()
+
+def show_main_app():
+    # CSS personalizado
+    try:
+        with open('assets/styles.css', 'r') as f:
+            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+    except:
+        pass  # Si no existe el CSS, continuar sin problemas
     
-    st.divider()
-    
-    # Gráficos simples con Streamlit nativo (sin Plotly)
-    st.subheader("📊 Resumen Visual")
-    
-    col1, col2 = st.columns(2)
-    
+    # Barra superior
+    col1, col2, col3 = st.columns([3, 2, 1])
     with col1:
-        st.write("**Distribución por Estado**")
-        if not clientes.empty:
-            estado_counts = clientes['estado'].value_counts()
-            
-            # Mostrar como métricas
-            for estado, count in estado_counts.items():
-                color = {
-                    'NORMAL': '🟢',
-                    'ALERTA': '🟡',
-                    'SOBREPASADO': '🔴'
-                }.get(estado, '⚫')
-                
-                st.metric(f"{color} {estado}", count)
-    
+        st.title("💊 Control de Cupos - Medicamentos")
     with col2:
-        st.write("**Top 5 - Mayor Saldo**")
-        if not clientes.empty:
-            top_clientes = clientes.nlargest(5, 'saldo_actual')
-            for _, cliente in top_clientes.iterrows():
-                st.progress(
-                    min(cliente['saldo_actual'] / cliente['cupo_sugerido'], 1),
-                    text=f"{cliente['nombre'][:20]}...: ${cliente['saldo_actual']:,.0f}"
-                )
+        st.info(f"Usuario: {st.session_state.username}")
+    with col3:
+        if st.button("🚪 Cerrar Sesión"):
+            st.session_state.authenticated = False
+            st.rerun()
     
-    # Alertas críticas
-    st.divider()
-    st.subheader("🚨 Alertas Prioritarias")
+    # Navegación por pestañas
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "🏠 Dashboard", 
+        "👥 Clientes", 
+        "📋 OCs Pendientes", 
+        "🧹 Mantenimiento"
+    ])
     
-    # Clientes sobrepasados
-    sobrepasados = clientes[clientes['estado'] == 'SOBREPASADO']
-    if not sobrepasados.empty:
-        st.error("**Clientes con Cupo Sobrepasado:**")
-        for _, cliente in sobrepasados.iterrows():
-            st.write(f"• **{cliente['nombre']}** - Sobrepasa: ${(cliente['cupo_sugerido'] - cliente['saldo_actual'] - cliente['cartera_vencida'])*-1:,.0f}")
+    # ✅ IMPORTAR CORRECTAMENTE los módulos con números
+    with tab1:
+        try:
+            dashboard = importlib.import_module("pages.1_dashboard")
+            dashboard.show()
+        except Exception as e:
+            st.error(f"Error cargando Dashboard: {str(e)}")
+            st.info("Asegúrate que existe: pages/1_dashboard.py")
     
-    # Clientes en alerta
-    alertas = clientes[clientes['estado'] == 'ALERTA']
-    if not alertas.empty:
-        st.warning("**Clientes en Alerta (>80% uso):**")
-        for _, cliente in alertas.iterrows():
-            st.write(f"• **{cliente['nombre']}** - Uso: {cliente['porcentaje_uso']}%")
+    with tab2:
+        try:
+            clientes = importlib.import_module("pages.2_clientes")
+            clientes.show()
+        except Exception as e:
+            st.error(f"Error cargando Clientes: {str(e)}")
+            st.info("Asegúrate que existe: pages/2_clientes.py")
+    
+    with tab3:
+        try:
+            ocs = importlib.import_module("pages.3_ocs")
+            ocs.show()
+        except Exception as e:
+            st.error(f"Error cargando OCs: {str(e)}")
+            st.info("Asegúrate que existe: pages/3_ocs.py")
+    
+    with tab4:
+        try:
+            mantenimiento = importlib.import_module("pages.4_mantenimiento")
+            mantenimiento.show()
+        except Exception as e:
+            st.error(f"Error cargando Mantenimiento: {str(e)}")
+            st.info("Asegúrate que existe: pages/4_mantenimiento.py")
+
+if __name__ == "__main__":
+    main()
