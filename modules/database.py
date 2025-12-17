@@ -4,18 +4,18 @@ from datetime import datetime, timedelta
 import os
 
 # ============================================================================
-# INICIALIZACIÓN DE BASE DE DATOS
+# INICIALIZACIÓN DE BASE DE DATOS CON LOS 7 CLIENTES REALES
 # ============================================================================
 
 def init_db():
-    """Inicializa la base de datos si no existe"""
+    """Inicializa la base de datos con los 7 clientes reales"""
     # Crear carpeta data si no existe
     os.makedirs('data', exist_ok=True)
     
     conn = sqlite3.connect('data/database.db')
     cursor = conn.cursor()
     
-    # Tabla de clientes (SIN cartera_vencida)
+    # Tabla de clientes
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS clientes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,37 +82,25 @@ def init_db():
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_oc_estado ON ocs(estado)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_mov_cliente ON movimientos(cliente_nit)')
     
-    # Insertar TUS CLIENTES REALES (SIN cartera_vencida)
+    # Insertar LOS 7 CLIENTES REALES
     cursor.execute("SELECT COUNT(*) FROM clientes")
     if cursor.fetchone()[0] == 0:
         clientes_reales = [
-            # NIT, Nombre, Cupo Sugerido, Saldo Actual
-            ('890905166', 'EMPRESA SOCIAL DEL ESTADO HOSPITAL MENTAL', 7500000000, 7397192942),
+            # NIT, Nombre, Cupo Sugerido, Saldo Actual (Total Cartera)
+            ('901212102', 'AUNA COLOMBIA S.A.S.', 21693849830, 19493849830),
+            ('890905166', 'EMPRESA SOCIAL DEL ESTADO HOSPITAL MENTAL DE ANTIOQ', 7500000000, 7397192942),
+            ('900249425', 'PHARMASAN S.A.S', 5910785209, 5710785209),
             ('900746052', 'NEURUM SAS', 5500000000, 5184247632),
-            ('800241602', 'FUNDACION COLOMBIANA DE CANCEROLOGIA', 3500000000, 3031469552),
+            ('800241602', 'FUNDACION COLOMBIANA DE CANCEROLOGIA CLINICA VIDA', 3500000000, 3031469552),
             ('890985122', 'COOPERATIVA DE HOSPITALES DE ANTIOQUIA', 1500000000, 1291931405),
-            ('900099945', 'GLOBAL SERVICE PHARMACEUTICAL S.A.S.', 1200000000, 1009298565),
             ('811038014', 'GRUPO ONCOLOGICO INTERNACIONAL S.A.', 900000000, 806853666),
         ]
         
         for nit, nombre, cupo, saldo in clientes_reales:
             cursor.execute('''
-            INSERT INTO clientes (nit, nombre, cupo_sugerido, saldo_actual)
-            VALUES (?, ?, ?, ?)
+            INSERT OR REPLACE INTO clientes (nit, nombre, cupo_sugerido, saldo_actual, activo)
+            VALUES (?, ?, ?, ?, 1)
             ''', (nit, nombre, cupo, saldo))
-        
-        # Insertar pagos registrados
-        pagos = [
-            ('800241602', 'PAGO', 490000000, 'Pago reportado', 'PAGO-001'),
-            ('900099945', 'PAGO', 68802510, 'Pago parcial', 'PAGO-002'),
-            ('811038014', 'PAGO', 583783, 'Pago mínimo', 'PAGO-003'),
-        ]
-        
-        for nit, tipo, valor, desc, ref in pagos:
-            cursor.execute('''
-            INSERT INTO movimientos (cliente_nit, tipo, valor, descripcion, referencia)
-            VALUES (?, ?, ?, ?, ?)
-            ''', (nit, tipo, valor, desc, ref))
         
         print(f"✅ Insertados {len(clientes_reales)} clientes reales")
     
@@ -121,71 +109,68 @@ def init_db():
     return True
 
 # ============================================================================
-# FUNCIONES PARA CLIENTES (SIN cartera_vencida)
+# FUNCIONES PARA CLIENTES
 # ============================================================================
 
 def get_clientes():
-    """Obtiene todos los clientes activos - SIN cartera_vencida"""
+    """Obtiene todos los clientes activos"""
     conn = sqlite3.connect('data/database.db')
     query = '''
     SELECT 
-        c.*,
-        COALESCE(SUM(o.valor_pendiente), 0) as pendientes_total,
+        nit,
+        nombre,
+        cupo_sugerido,
+        saldo_actual,
+        disponible,
         -- Calcular porcentaje de uso
         CASE 
-            WHEN c.cupo_sugerido > 0 
-            THEN ROUND((c.saldo_actual * 100.0 / c.cupo_sugerido), 2)
+            WHEN cupo_sugerido > 0 
+            THEN ROUND((saldo_actual * 100.0 / cupo_sugerido), 1)
             ELSE 0 
         END as porcentaje_uso,
         -- Calcular estado
         CASE 
-            WHEN c.saldo_actual > c.cupo_sugerido THEN 'SOBREPASADO'
-            WHEN c.saldo_actual > (c.cupo_sugerido * 0.8) THEN 'ALERTA'
+            WHEN saldo_actual > cupo_sugerido THEN 'SOBREPASADO'
+            WHEN (saldo_actual * 100.0 / cupo_sugerido) > 80 THEN 'ALERTA'
             ELSE 'NORMAL'
         END as estado
-    FROM clientes c
-    LEFT JOIN ocs o ON c.nit = o.cliente_nit AND o.estado IN ('PENDIENTE', 'PARCIAL')
-    WHERE c.activo = 1
-    GROUP BY c.nit
-    ORDER BY 
-        CASE 
-            WHEN c.saldo_actual > c.cupo_sugerido THEN 1
-            WHEN c.saldo_actual > (c.cupo_sugerido * 0.8) THEN 2
-            ELSE 3
-        END,
-        c.saldo_actual DESC
+    FROM clientes 
+    WHERE activo = 1
+    ORDER BY nombre
     '''
     df = pd.read_sql_query(query, conn)
     conn.close()
     return df
 
 def get_cliente_por_nit(nit):
-    """Obtiene un cliente específico por NIT - SIN cartera_vencida"""
+    """Obtiene un cliente específico por NIT"""
     conn = sqlite3.connect('data/database.db')
     query = '''
-    SELECT c.*,
-           COALESCE(SUM(o.valor_pendiente), 0) as pendientes_total,
-           CASE 
-                WHEN c.cupo_sugerido > 0 
-                THEN ROUND((c.saldo_actual * 100.0 / c.cupo_sugerido), 2)
-                ELSE 0 
-           END as porcentaje_uso,
-           CASE 
-                WHEN c.saldo_actual > c.cupo_sugerido THEN 'SOBREPASADO'
-                WHEN c.saldo_actual > (c.cupo_sugerido * 0.8) THEN 'ALERTA'
-                ELSE 'NORMAL'
-           END as estado
-    FROM clientes c
-    LEFT JOIN ocs o ON c.nit = o.cliente_nit AND o.estado IN ('PENDIENTE', 'PARCIAL')
-    WHERE c.nit = ? AND c.activo = 1
-    GROUP BY c.nit
+    SELECT 
+        nit,
+        nombre,
+        cupo_sugerido,
+        saldo_actual,
+        disponible,
+        CASE 
+            WHEN cupo_sugerido > 0 
+            THEN ROUND((saldo_actual * 100.0 / cupo_sugerido), 1)
+            ELSE 0 
+        END as porcentaje_uso,
+        CASE 
+            WHEN saldo_actual > cupo_sugerido THEN 'SOBREPASADO'
+            WHEN (saldo_actual * 100.0 / cupo_sugerido) > 80 THEN 'ALERTA'
+            ELSE 'NORMAL'
+        END as estado
+    FROM clientes 
+    WHERE nit = ? AND activo = 1
     '''
     df = pd.read_sql_query(query, conn, params=(nit,))
     conn.close()
     return df.iloc[0] if not df.empty else None
 
 def actualizar_cliente(nit, cupo_sugerido=None, saldo_actual=None, nombre=None):
-    """Actualiza los datos de un cliente - SIN cartera_vencida"""
+    """Actualiza los datos de un cliente"""
     conn = sqlite3.connect('data/database.db')
     cursor = conn.cursor()
     
@@ -216,7 +201,7 @@ def actualizar_cliente(nit, cupo_sugerido=None, saldo_actual=None, nombre=None):
     return True
 
 def crear_cliente(nit, nombre, cupo_sugerido, saldo_actual=0):
-    """Crea un nuevo cliente - SIN cartera_vencida"""
+    """Crea un nuevo cliente"""
     conn = sqlite3.connect('data/database.db')
     cursor = conn.cursor()
     
@@ -235,16 +220,17 @@ def crear_cliente(nit, nombre, cupo_sugerido, saldo_actual=0):
     finally:
         conn.close()
 
-def eliminar_cliente_logico(nit):
-    """Elimina un cliente lógicamente"""
+def actualizar_saldo_cliente(nit, valor):
+    """Actualiza el saldo de un cliente (para autorizaciones de OCs)"""
     conn = sqlite3.connect('data/database.db')
     cursor = conn.cursor()
     
     cursor.execute('''
     UPDATE clientes 
-    SET activo = 0, fecha_actualizacion = CURRENT_TIMESTAMP
+    SET saldo_actual = saldo_actual + ?, 
+        fecha_actualizacion = CURRENT_TIMESTAMP
     WHERE nit = ?
-    ''', (nit,))
+    ''', (valor, nit))
     
     conn.commit()
     conn.close()
@@ -283,21 +269,8 @@ def agregar_movimiento(cliente_nit, tipo, valor, descripcion="", referencia="", 
     finally:
         conn.close()
 
-def get_movimientos_cliente(cliente_nit, limit=50):
-    """Obtiene los movimientos de un cliente"""
-    conn = sqlite3.connect('data/database.db')
-    query = '''
-    SELECT * FROM movimientos 
-    WHERE cliente_nit = ? 
-    ORDER BY fecha_movimiento DESC
-    LIMIT ?
-    '''
-    df = pd.read_sql_query(query, conn, params=(cliente_nit, limit))
-    conn.close()
-    return df
-
 # ============================================================================
-# FUNCIONES PARA OCs (COMPLETAS)
+# FUNCIONES PARA OCs
 # ============================================================================
 
 def get_ocs_pendientes(cliente_nit=None):
@@ -394,7 +367,7 @@ def editar_oc(oc_id, numero_oc=None, valor_total=None, tipo=None, cupo_referenci
     
     if cupo_referencia is not None:
         updates.append("cupo_referencia = ?")
-        params.append(cupo_referencia)
+        params.append(cupo_reference)
     
     if comentarios is not None:
         updates.append("comentarios = ?")
@@ -437,13 +410,13 @@ def autorizar_oc(oc_id, valor_autorizado, comentario="", usuario="Sistema"):
     
     try:
         # Obtener datos actuales de la OC
-        cursor.execute('SELECT valor_autorizado, valor_total FROM ocs WHERE id = ?', (oc_id,))
+        cursor.execute('SELECT valor_autorizado, valor_total, cliente_nit FROM ocs WHERE id = ?', (oc_id,))
         oc = cursor.fetchone()
         
         if not oc:
             raise Exception("OC no encontrada")
         
-        valor_actual, valor_total = oc
+        valor_actual, valor_total, cliente_nit = oc
         
         # Calcular nuevo valor autorizado
         nuevo_valor = valor_actual + valor_autorizado
@@ -471,6 +444,14 @@ def autorizar_oc(oc_id, valor_autorizado, comentario="", usuario="Sistema"):
         VALUES (?, ?, ?, ?)
         ''', (oc_id, valor_autorizado, comentario, usuario))
         
+        # Actualizar saldo del cliente (aumenta porque es deuda)
+        cursor.execute('''
+        UPDATE clientes 
+        SET saldo_actual = saldo_actual + ?, 
+            fecha_actualizacion = CURRENT_TIMESTAMP
+        WHERE nit = ?
+        ''', (valor_autorizado, cliente_nit))
+        
         conn.commit()
         return True
     except Exception as e:
@@ -492,19 +473,6 @@ def get_oc_por_id(oc_id):
     conn.close()
     return df.iloc[0] if not df.empty else None
 
-def get_oc_por_numero(numero_oc):
-    """Obtiene una OC por su número"""
-    conn = sqlite3.connect('data/database.db')
-    query = '''
-    SELECT o.*, c.nombre as cliente_nombre 
-    FROM ocs o
-    JOIN clientes c ON o.cliente_nit = c.nit
-    WHERE o.numero_oc = ?
-    '''
-    df = pd.read_sql_query(query, conn, params=(numero_oc,))
-    conn.close()
-    return df.iloc[0] if not df.empty else None
-
 def get_autorizaciones_oc(oc_id):
     """Obtiene el historial de autorizaciones de una OC"""
     conn = sqlite3.connect('data/database.db')
@@ -518,11 +486,11 @@ def get_autorizaciones_oc(oc_id):
     return df
 
 # ============================================================================
-# FUNCIONES DE REPORTES Y ESTADÍSTICAS (SIN cartera_vencida)
+# FUNCIONES DE ESTADÍSTICAS
 # ============================================================================
 
 def get_estadisticas_generales():
-    """Obtiene estadísticas generales del sistema - SIN cartera_vencida"""
+    """Obtiene estadísticas generales del sistema"""
     conn = sqlite3.connect('data/database.db')
     
     query = '''
@@ -530,116 +498,25 @@ def get_estadisticas_generales():
         COUNT(*) as total_clientes,
         SUM(cupo_sugerido) as total_cupo_sugerido,
         SUM(saldo_actual) as total_saldo_actual,
-        SUM(disponible) as total_disponible,
-        SUM(
-            CASE 
-                WHEN o.estado IN ('PENDIENTE', 'PARCIAL') 
-                THEN o.valor_pendiente 
-                ELSE 0 
-            END
-        ) as total_ocs_pendientes,
-        -- Contar clientes en diferentes estados
-        SUM(CASE WHEN saldo_actual > cupo_sugerido THEN 1 ELSE 0 END) as clientes_sobrepasados,
-        SUM(CASE WHEN saldo_actual > (cupo_sugerido * 0.8) AND saldo_actual <= cupo_sugerido THEN 1 ELSE 0 END) as clientes_alerta
-    FROM clientes c
-    LEFT JOIN ocs o ON c.nit = o.cliente_nit
-    WHERE c.activo = 1
+        SUM(disponible) as total_disponible
+    FROM clientes 
+    WHERE activo = 1
     '''
     
     stats = pd.read_sql_query(query, conn).iloc[0]
     conn.close()
+    
+    # Calcular OCs pendientes
+    ocs_pendientes = get_ocs_pendientes()
+    total_pendientes = ocs_pendientes['valor_pendiente'].sum() if not ocs_pendientes.empty else 0
     
     return {
         'total_clientes': int(stats['total_clientes']),
         'total_cupo_sugerido': float(stats['total_cupo_sugerido']),
         'total_saldo_actual': float(stats['total_saldo_actual']),
         'total_disponible': float(stats['total_disponible']),
-        'total_ocs_pendientes': float(stats['total_ocs_pendientes']),
-        'clientes_sobrepasados': int(stats['clientes_sobrepasados']),
-        'clientes_alerta': int(stats['clientes_alerta'])
+        'total_ocs_pendientes': float(total_pendientes)
     }
-
-# ============================================================================
-# FUNCIONES DE MANTENIMIENTO Y BACKUP
-# ============================================================================
-
-def get_backup_data():
-    """Obtiene todos los datos para backup"""
-    conn = sqlite3.connect('data/database.db')
-    
-    datos = {
-        'clientes': pd.read_sql_query("SELECT * FROM clientes", conn),
-        'ocs': pd.read_sql_query("SELECT * FROM ocs", conn),
-        'movimientos': pd.read_sql_query("SELECT * FROM movimientos", conn),
-        'autorizaciones': pd.read_sql_query("SELECT * FROM autorizaciones_parciales", conn)
-    }
-    
-    conn.close()
-    return datos
-
-def limpiar_ocs_antiguas(dias=90):
-    """Elimina OCs autorizadas antiguas"""
-    conn = sqlite3.connect('data/database.db')
-    cursor = conn.cursor()
-    
-    fecha_limite = (datetime.now() - timedelta(days=dias)).strftime('%Y-%m-%d')
-    
-    # Contar OCs a eliminar
-    cursor.execute(f'''
-    SELECT COUNT(*) FROM ocs 
-    WHERE estado = 'AUTORIZADA'
-    AND fecha_ultima_autorizacion < '{fecha_limite}'
-    ''')
-    count = cursor.fetchone()[0]
-    
-    # Eliminar autorizaciones primero
-    cursor.execute(f'''
-    DELETE FROM autorizaciones_parciales 
-    WHERE oc_id IN (
-        SELECT id FROM ocs 
-        WHERE estado = 'AUTORIZADA'
-        AND fecha_ultima_autorizacion < '{fecha_limite}'
-    )
-    ''')
-    
-    # Eliminar OCs
-    cursor.execute(f'''
-    DELETE FROM ocs 
-    WHERE estado = 'AUTORIZADA'
-    AND fecha_ultima_autorizacion < '{fecha_limite}'
-    ''')
-    
-    conn.commit()
-    conn.close()
-    
-    return count
-
-def optimizar_base_datos():
-    """Ejecuta VACUUM para optimizar la base de datos"""
-    conn = sqlite3.connect('data/database.db')
-    conn.execute("VACUUM")
-    conn.close()
-    return True
-
-# ============================================================================
-# FUNCIONES DE BÚSQUEDA
-# ============================================================================
-
-def buscar_clientes(termino):
-    """Busca clientes por NIT o nombre"""
-    conn = sqlite3.connect('data/database.db')
-    
-    query = '''
-    SELECT * FROM clientes 
-    WHERE (nit LIKE ? OR nombre LIKE ?) AND activo = 1
-    ORDER BY nombre
-    LIMIT 20
-    '''
-    
-    termino_busqueda = f"%{termino}%"
-    df = pd.read_sql_query(query, conn, params=(termino_busqueda, termino_busqueda))
-    conn.close()
-    return df
 
 # ============================================================================
 # INICIALIZACIÓN AUTOMÁTICA
