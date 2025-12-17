@@ -15,7 +15,7 @@ def init_db():
     conn = sqlite3.connect('data/database.db')
     cursor = conn.cursor()
     
-    # Tabla de clientes (CON cartera_vencida)
+    # Tabla de clientes (SIN cartera_vencida)
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS clientes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,8 +23,7 @@ def init_db():
         nombre TEXT NOT NULL,
         cupo_sugerido REAL DEFAULT 0,
         saldo_actual REAL DEFAULT 0,
-        cartera_vencida REAL DEFAULT 0,
-        disponible REAL GENERATED ALWAYS AS (cupo_sugerido - saldo_actual - cartera_vencida),
+        disponible REAL GENERATED ALWAYS AS (cupo_sugerido - saldo_actual),
         fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         activo BOOLEAN DEFAULT 1
     )
@@ -83,30 +82,24 @@ def init_db():
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_oc_estado ON ocs(estado)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_mov_cliente ON movimientos(cliente_nit)')
     
-    # Insertar TUS CLIENTES REALES
+    # Insertar TUS CLIENTES REALES (SIN cartera_vencida)
     cursor.execute("SELECT COUNT(*) FROM clientes")
     if cursor.fetchone()[0] == 0:
         clientes_reales = [
-            # NIT, Nombre, Cupo Sugerido, Saldo Actual, Cartera Vencida
-            ('890905166', 'EMPRESA SOCIAL DEL ESTADO HOSPITAL MENTAL', 
-             7500000000, 7397192942, 3342688638),
-            ('900746052', 'NEURUM SAS', 
-             5500000000, 5184247632, 2279333768),
-            ('800241602', 'FUNDACION COLOMBIANA DE CANCEROLOGIA', 
-             3500000000, 3031469552, 191990541),
-            ('890985122', 'COOPERATIVA DE HOSPITALES DE ANTIOQUIA', 
-             1500000000, 1291931405, 321889542),
-            ('900099945', 'GLOBAL SERVICE PHARMACEUTICAL S.A.S.', 
-             1200000000, 1009298565, 434808971),
-            ('811038014', 'GRUPO ONCOLOGICO INTERNACIONAL S.A.', 
-             900000000, 806853666, 146804409),
+            # NIT, Nombre, Cupo Sugerido, Saldo Actual
+            ('890905166', 'EMPRESA SOCIAL DEL ESTADO HOSPITAL MENTAL', 7500000000, 7397192942),
+            ('900746052', 'NEURUM SAS', 5500000000, 5184247632),
+            ('800241602', 'FUNDACION COLOMBIANA DE CANCEROLOGIA', 3500000000, 3031469552),
+            ('890985122', 'COOPERATIVA DE HOSPITALES DE ANTIOQUIA', 1500000000, 1291931405),
+            ('900099945', 'GLOBAL SERVICE PHARMACEUTICAL S.A.S.', 1200000000, 1009298565),
+            ('811038014', 'GRUPO ONCOLOGICO INTERNACIONAL S.A.', 900000000, 806853666),
         ]
         
-        for nit, nombre, cupo, saldo, cartera in clientes_reales:
+        for nit, nombre, cupo, saldo in clientes_reales:
             cursor.execute('''
-            INSERT INTO clientes (nit, nombre, cupo_sugerido, saldo_actual, cartera_vencida)
-            VALUES (?, ?, ?, ?, ?)
-            ''', (nit, nombre, cupo, saldo, cartera))
+            INSERT INTO clientes (nit, nombre, cupo_sugerido, saldo_actual)
+            VALUES (?, ?, ?, ?)
+            ''', (nit, nombre, cupo, saldo))
         
         # Insertar pagos registrados
         pagos = [
@@ -128,11 +121,11 @@ def init_db():
     return True
 
 # ============================================================================
-# FUNCIONES PARA CLIENTES
+# FUNCIONES PARA CLIENTES (SIN cartera_vencida)
 # ============================================================================
 
 def get_clientes():
-    """Obtiene todos los clientes activos"""
+    """Obtiene todos los clientes activos - SIN cartera_vencida"""
     conn = sqlite3.connect('data/database.db')
     query = '''
     SELECT 
@@ -141,13 +134,13 @@ def get_clientes():
         -- Calcular porcentaje de uso
         CASE 
             WHEN c.cupo_sugerido > 0 
-            THEN ROUND(((c.saldo_actual + c.cartera_vencida) * 100.0 / c.cupo_sugerido), 2)
+            THEN ROUND((c.saldo_actual * 100.0 / c.cupo_sugerido), 2)
             ELSE 0 
         END as porcentaje_uso,
         -- Calcular estado
         CASE 
-            WHEN (c.saldo_actual + c.cartera_vencida) > c.cupo_sugerido THEN 'SOBREPASADO'
-            WHEN (c.saldo_actual + c.cartera_vencida) > (c.cupo_sugerido * 0.8) THEN 'ALERTA'
+            WHEN c.saldo_actual > c.cupo_sugerido THEN 'SOBREPASADO'
+            WHEN c.saldo_actual > (c.cupo_sugerido * 0.8) THEN 'ALERTA'
             ELSE 'NORMAL'
         END as estado
     FROM clientes c
@@ -156,8 +149,8 @@ def get_clientes():
     GROUP BY c.nit
     ORDER BY 
         CASE 
-            WHEN (c.saldo_actual + c.cartera_vencida) > c.cupo_sugerido THEN 1
-            WHEN (c.saldo_actual + c.cartera_vencida) > (c.cupo_sugerido * 0.8) THEN 2
+            WHEN c.saldo_actual > c.cupo_sugerido THEN 1
+            WHEN c.saldo_actual > (c.cupo_sugerido * 0.8) THEN 2
             ELSE 3
         END,
         c.saldo_actual DESC
@@ -167,19 +160,19 @@ def get_clientes():
     return df
 
 def get_cliente_por_nit(nit):
-    """Obtiene un cliente específico por NIT"""
+    """Obtiene un cliente específico por NIT - SIN cartera_vencida"""
     conn = sqlite3.connect('data/database.db')
     query = '''
     SELECT c.*,
            COALESCE(SUM(o.valor_pendiente), 0) as pendientes_total,
            CASE 
                 WHEN c.cupo_sugerido > 0 
-                THEN ROUND(((c.saldo_actual + c.cartera_vencida) * 100.0 / c.cupo_sugerido), 2)
+                THEN ROUND((c.saldo_actual * 100.0 / c.cupo_sugerido), 2)
                 ELSE 0 
            END as porcentaje_uso,
            CASE 
-                WHEN (c.saldo_actual + c.cartera_vencida) > c.cupo_sugerido THEN 'SOBREPASADO'
-                WHEN (c.saldo_actual + c.cartera_vencida) > (c.cupo_sugerido * 0.8) THEN 'ALERTA'
+                WHEN c.saldo_actual > c.cupo_sugerido THEN 'SOBREPASADO'
+                WHEN c.saldo_actual > (c.cupo_sugerido * 0.8) THEN 'ALERTA'
                 ELSE 'NORMAL'
            END as estado
     FROM clientes c
@@ -191,8 +184,8 @@ def get_cliente_por_nit(nit):
     conn.close()
     return df.iloc[0] if not df.empty else None
 
-def actualizar_cliente(nit, cupo_sugerido=None, saldo_actual=None, cartera_vencida=None, nombre=None):
-    """Actualiza los datos de un cliente"""
+def actualizar_cliente(nit, cupo_sugerido=None, saldo_actual=None, nombre=None):
+    """Actualiza los datos de un cliente - SIN cartera_vencida"""
     conn = sqlite3.connect('data/database.db')
     cursor = conn.cursor()
     
@@ -206,10 +199,6 @@ def actualizar_cliente(nit, cupo_sugerido=None, saldo_actual=None, cartera_venci
     if saldo_actual is not None:
         updates.append("saldo_actual = ?")
         params.append(saldo_actual)
-    
-    if cartera_vencida is not None:
-        updates.append("cartera_vencida = ?")
-        params.append(cartera_vencida)
     
     if nombre is not None:
         updates.append("nombre = ?")
@@ -226,16 +215,16 @@ def actualizar_cliente(nit, cupo_sugerido=None, saldo_actual=None, cartera_venci
     conn.close()
     return True
 
-def crear_cliente(nit, nombre, cupo_sugerido, saldo_actual=0, cartera_vencida=0):
-    """Crea un nuevo cliente"""
+def crear_cliente(nit, nombre, cupo_sugerido, saldo_actual=0):
+    """Crea un nuevo cliente - SIN cartera_vencida"""
     conn = sqlite3.connect('data/database.db')
     cursor = conn.cursor()
     
     try:
         cursor.execute('''
-        INSERT INTO clientes (nit, nombre, cupo_sugerido, saldo_actual, cartera_vencida)
-        VALUES (?, ?, ?, ?, ?)
-        ''', (nit, nombre, cupo_sugerido, saldo_actual, cartera_vencida))
+        INSERT INTO clientes (nit, nombre, cupo_sugerido, saldo_actual)
+        VALUES (?, ?, ?, ?)
+        ''', (nit, nombre, cupo_sugerido, saldo_actual))
         
         conn.commit()
         return True
@@ -529,11 +518,11 @@ def get_autorizaciones_oc(oc_id):
     return df
 
 # ============================================================================
-# FUNCIONES DE REPORTES Y ESTADÍSTICAS
+# FUNCIONES DE REPORTES Y ESTADÍSTICAS (SIN cartera_vencida)
 # ============================================================================
 
 def get_estadisticas_generales():
-    """Obtiene estadísticas generales del sistema"""
+    """Obtiene estadísticas generales del sistema - SIN cartera_vencida"""
     conn = sqlite3.connect('data/database.db')
     
     query = '''
@@ -541,7 +530,6 @@ def get_estadisticas_generales():
         COUNT(*) as total_clientes,
         SUM(cupo_sugerido) as total_cupo_sugerido,
         SUM(saldo_actual) as total_saldo_actual,
-        SUM(cartera_vencida) as total_cartera_vencida,
         SUM(disponible) as total_disponible,
         SUM(
             CASE 
@@ -551,8 +539,8 @@ def get_estadisticas_generales():
             END
         ) as total_ocs_pendientes,
         -- Contar clientes en diferentes estados
-        SUM(CASE WHEN (saldo_actual + cartera_vencida) > cupo_sugerido THEN 1 ELSE 0 END) as clientes_sobrepasados,
-        SUM(CASE WHEN (saldo_actual + cartera_vencida) > (cupo_sugerido * 0.8) AND (saldo_actual + cartera_vencida) <= cupo_sugerido THEN 1 ELSE 0 END) as clientes_alerta
+        SUM(CASE WHEN saldo_actual > cupo_sugerido THEN 1 ELSE 0 END) as clientes_sobrepasados,
+        SUM(CASE WHEN saldo_actual > (cupo_sugerido * 0.8) AND saldo_actual <= cupo_sugerido THEN 1 ELSE 0 END) as clientes_alerta
     FROM clientes c
     LEFT JOIN ocs o ON c.nit = o.cliente_nit
     WHERE c.activo = 1
@@ -565,7 +553,6 @@ def get_estadisticas_generales():
         'total_clientes': int(stats['total_clientes']),
         'total_cupo_sugerido': float(stats['total_cupo_sugerido']),
         'total_saldo_actual': float(stats['total_saldo_actual']),
-        'total_cartera_vencida': float(stats['total_cartera_vencida']),
         'total_disponible': float(stats['total_disponible']),
         'total_ocs_pendientes': float(stats['total_ocs_pendientes']),
         'clientes_sobrepasados': int(stats['clientes_sobrepasados']),
