@@ -1,6 +1,6 @@
 """
 Página de gestión de Órdenes de Compra (OCs) para Streamlit
-Versión completa con todas las funciones
+Versión completa con todas las funciones CORREGIDA
 """
 
 import streamlit as st
@@ -13,13 +13,14 @@ from modules.database import (
     get_todas_ocs,
     crear_oc,
     autorizar_oc,
-    get_estadisticas_generales
+    get_estadisticas_generales,
+    get_autorizaciones_oc
 )
 
 # ==================== FUNCIONES AUXILIARES ====================
 
 def mostrar_modal_agregar_oc():
-    """Modal para agregar nueva OC"""
+    """Modal para agregar nueva OC - CORREGIDO"""
     with st.form("form_nueva_oc"):
         st.subheader("➕ Agregar Nueva Orden de Compra")
         
@@ -30,20 +31,24 @@ def mostrar_modal_agregar_oc():
         
         with col1:
             # Seleccionar cliente
-            cliente_nombre = st.selectbox(
-                "Cliente *",
-                clientes['nombre'].tolist(),
-                help="Seleccione el cliente"
-            )
+            if not clientes.empty:
+                cliente_nombre = st.selectbox(
+                    "Cliente *",
+                    clientes['nombre'].tolist(),
+                    help="Seleccione el cliente"
+                )
+                
+                # Obtener NIT del cliente seleccionado
+                cliente_nit = clientes[clientes['nombre'] == cliente_nombre]['nit'].iloc[0]
+            else:
+                st.warning("No hay clientes disponibles")
+                cliente_nit = None
             
-            # Obtener NIT del cliente seleccionado
-            cliente_nit = clientes[clientes['nombre'] == cliente_nombre]['nit'].iloc[0]
-            
-            # Número de OC
+            # Número de OC - CORREGIDO: sin max_length
             numero_oc = st.text_input(
                 "Número de OC *",
-                max_length=50,
-                help="Ej: OC-2024-001, FACT-12345"
+                help="Ej: OC-2024-001, FACT-12345",
+                placeholder="OC-2024-001"
             )
         
         with col2:
@@ -69,20 +74,22 @@ def mostrar_modal_agregar_oc():
         if tipo_oc == "CUPO_NUEVO":
             cupo_referencia = st.text_input(
                 "Cupo de Referencia",
-                max_length=100,
-                help="Número de cupo al que está asociada esta OC"
+                help="Número de cupo al que está asociada esta OC",
+                placeholder="CUPO-001"
             )
         
         # Comentarios
         comentarios = st.text_area(
             "Comentarios (opcional)",
             height=100,
-            help="Información adicional sobre esta OC"
+            help="Información adicional sobre esta OC",
+            placeholder="Descripción o notas adicionales..."
         )
         
-        # Botones de acción
+        # Botón de envío - CORREGIDO: usando st.form_submit_button
         col_submit, col_cancel = st.columns(2)
         
+        submitted = False
         with col_submit:
             submitted = st.form_submit_button(
                 "💾 Crear OC",
@@ -104,6 +111,10 @@ def mostrar_modal_agregar_oc():
             
             if valor_total <= 0:
                 st.error("❌ El valor total debe ser mayor a 0")
+                return False
+            
+            if not cliente_nit:
+                st.error("❌ Debe seleccionar un cliente")
                 return False
             
             try:
@@ -131,7 +142,7 @@ def mostrar_modal_agregar_oc():
     return False
 
 def mostrar_modal_autorizar(oc):
-    """Modal para autorización de OC"""
+    """Modal para autorización de OC - CORREGIDO"""
     with st.form(f"auth_form_{oc['id']}"):
         st.subheader(f"✅ Autorizar OC: {oc['numero_oc']}")
         
@@ -154,17 +165,21 @@ def mostrar_modal_autorizar(oc):
         porcentaje_key = f"porcentaje_{oc['id']}"
         
         with col_perc1:
-            if st.button("25%", key=f"25_{oc['id']}", use_container_width=True):
+            if st.form_submit_button("25%", use_container_width=True):
                 st.session_state[porcentaje_key] = 25
+                st.rerun()
         with col_perc2:
-            if st.button("50%", key=f"50_{oc['id']}", use_container_width=True):
+            if st.form_submit_button("50%", use_container_width=True):
                 st.session_state[porcentaje_key] = 50
+                st.rerun()
         with col_perc3:
-            if st.button("75%", key=f"75_{oc['id']}", use_container_width=True):
+            if st.form_submit_button("75%", use_container_width=True):
                 st.session_state[porcentaje_key] = 75
+                st.rerun()
         with col_perc4:
-            if st.button("100%", key=f"100_{oc['id']}", use_container_width=True):
+            if st.form_submit_button("100%", use_container_width=True):
                 st.session_state[porcentaje_key] = 100
+                st.rerun()
         
         # Calcular valor sugerido
         valor_sugerido = valor_restante
@@ -181,30 +196,31 @@ def mostrar_modal_autorizar(oc):
             format="%.0f"
         )
         
-        # Comentario
+        # Comentario - CORREGIDO: sin max_length
         comentario = st.text_area(
             "Comentario (opcional)",
             placeholder="Ej: Autorización parcial por aprobación de gerencia",
             height=100
         )
         
-        # Botones de acción
+        # Botones de acción - CORREGIDO: usando st.form_submit_button
         col_a, col_b = st.columns(2)
         
+        confirmado = False
         with col_a:
-            confirmar = st.form_submit_button(
+            confirmado = st.form_submit_button(
                 "✅ Confirmar Autorización",
                 type="primary",
                 use_container_width=True
             )
         
         with col_b:
-            cancelar = st.form_submit_button(
+            cancelado = st.form_submit_button(
                 "❌ Cancelar",
                 use_container_width=True
             )
         
-        if confirmar:
+        if confirmado:
             if valor_autorizar <= 0:
                 st.error("❌ El valor a autorizar debe ser mayor a 0")
                 return False
@@ -215,7 +231,7 @@ def mostrar_modal_autorizar(oc):
                     oc_id=oc['id'],
                     valor_autorizado=valor_autorizar,
                     comentario=comentario.strip(),
-                    usuario="Sistema"  # Podrías cambiar esto por usuario logueado
+                    usuario="Sistema"
                 )
                 
                 st.success(f"✅ Autorizado ${valor_autorizar:,.0f} de la OC {oc['numero_oc']}")
@@ -226,7 +242,7 @@ def mostrar_modal_autorizar(oc):
                 st.error(f"❌ Error al autorizar: {str(e)}")
                 return False
         
-        if cancelar:
+        if cancelado:
             st.rerun()
     
     return False
@@ -271,25 +287,27 @@ def mostrar_detalle_oc(oc):
         
         # Historial de autorizaciones (si existe)
         try:
-            conn = sqlite3.connect('data/database.db')
-            autorizaciones = pd.read_sql_query(
-                "SELECT * FROM autorizaciones_parciales WHERE oc_id = ? ORDER BY fecha_autorizacion DESC",
-                conn,
-                params=(oc['id'],)
-            )
-            conn.close()
+            autorizaciones = get_autorizaciones_oc(oc['id'])
             
             if not autorizaciones.empty:
                 st.write("**Historial de Autorizaciones:**")
+                
                 for _, auth in autorizaciones.iterrows():
                     col_a1, col_a2, col_a3 = st.columns([2, 2, 1])
                     with col_a1:
-                        st.write(f"${auth['valor_autorizado']:,.0f}")
+                        st.write(f"**Valor:** ${auth['valor_autorizado']:,.0f}")
                     with col_a2:
-                        st.write(f"{auth['fecha_autorizacion']}")
+                        # Formatear fecha
+                        try:
+                            fecha = pd.to_datetime(auth['fecha_autorizacion']).strftime('%d/%m/%Y %H:%M')
+                            st.write(f"**Fecha:** {fecha}")
+                        except:
+                            st.write(f"**Fecha:** {auth['fecha_autorizacion']}")
                     with col_a3:
                         if auth['comentario']:
-                            st.info("📝")
+                            with st.expander("📝 Comentario"):
+                                st.write(auth['comentario'])
+                st.divider()
             else:
                 st.write("No hay historial de autorizaciones.")
                 
@@ -334,8 +352,11 @@ def mostrar_oc_tarjeta(oc):
             
             # Fecha
             if 'fecha_registro' in oc:
-                fecha = pd.to_datetime(oc['fecha_registro']).strftime('%d/%m/%Y')
-                st.caption(f"Registro: {fecha}")
+                try:
+                    fecha = pd.to_datetime(oc['fecha_registro']).strftime('%d/%m/%Y')
+                    st.caption(f"Registro: {fecha}")
+                except:
+                    st.caption(f"Registro: {oc['fecha_registro']}")
             
             # Valor pendiente
             if 'valor_pendiente' in oc and oc['estado'] != 'AUTORIZADA':
@@ -361,10 +382,16 @@ def mostrar_oc_tarjeta(oc):
         # Mostrar modal de autorización si está activo
         if f'autorizar_oc_{oc["id"]}' in st.session_state:
             mostrar_modal_autorizar(oc)
+            # Limpiar estado después de mostrar
+            if f'autorizar_oc_{oc["id"]}' in st.session_state:
+                del st.session_state[f'autorizar_oc_{oc["id"]}']
         
         # Mostrar detalle si está activo
         if f'detalle_oc_{oc["id"]}' in st.session_state:
             mostrar_detalle_oc(oc)
+            # Limpiar estado después de mostrar
+            if f'detalle_oc_{oc["id"]}' in st.session_state:
+                del st.session_state[f'detalle_oc_{oc["id"]}']
         
         st.divider()
 
@@ -386,8 +413,8 @@ def show():
             st.metric("Cupo Total", f"${stats['total_cupo_sugerido']:,.0f}")
         with col4:
             st.metric("Saldo Total", f"${stats['total_saldo_actual']:,.0f}")
-    except:
-        pass
+    except Exception as e:
+        st.warning(f"No se pudieron cargar todas las estadísticas: {e}")
     
     # Botón para agregar nueva OC
     if st.button("➕ Agregar Nueva OC", 
@@ -399,13 +426,21 @@ def show():
     # Mostrar modal de nueva OC si está activo
     if 'mostrar_modal_nueva_oc' in st.session_state:
         mostrar_modal_agregar_oc()
+        # Limpiar estado
+        if 'mostrar_modal_nueva_oc' in st.session_state:
+            del st.session_state['mostrar_modal_nueva_oc']
     
     st.divider()
     
     # Obtener clientes para filtros
     try:
         clientes = get_clientes()
-        cliente_lista = ["Todos"] + clientes['nombre'].tolist()
+        
+        if not clientes.empty:
+            cliente_lista = ["Todos"] + clientes['nombre'].tolist()
+        else:
+            cliente_lista = ["Todos"]
+            st.warning("No hay clientes registrados. Agrega clientes primero.")
         
         # Filtros
         st.subheader("🔍 Filtros de Búsqueda")
@@ -432,18 +467,19 @@ def show():
         
         # Obtener todas las OCs
         with st.spinner("Cargando Órdenes de Compra..."):
-            ocs = get_todas_ocs()  # Cambié a get_todas_ocs para ver todas
-            
+            ocs = get_todas_ocs()
+        
         # Aplicar filtros
-        if filtro_cliente != "Todos":
-            cliente_nit = clientes[clientes['nombre'] == filtro_cliente]['nit'].iloc[0]
-            ocs = ocs[ocs['cliente_nit'] == cliente_nit]
-        
-        if filtro_estado != "Todos":
-            ocs = ocs[ocs['estado'] == filtro_estado]
-        
-        if filtro_tipo != "Todos":
-            ocs = ocs[ocs['tipo'] == filtro_tipo]
+        if not ocs.empty:
+            if filtro_cliente != "Todos":
+                cliente_nit = clientes[clientes['nombre'] == filtro_cliente]['nit'].iloc[0]
+                ocs = ocs[ocs['cliente_nit'] == cliente_nit]
+            
+            if filtro_estado != "Todos":
+                ocs = ocs[ocs['estado'] == filtro_estado]
+            
+            if filtro_tipo != "Todos":
+                ocs = ocs[ocs['tipo'] == filtro_tipo]
         
         # Mostrar resultados
         st.subheader(f"📊 Resultados: {len(ocs)} OCs encontradas")
@@ -468,7 +504,10 @@ def show():
                     'valor_autorizado', 'valor_pendiente', 'estado', 'tipo'
                 ]
                 
-                df_tabla = ocs[columnas_mostrar].copy()
+                # Filtrar columnas que existen
+                columnas_existentes = [col for col in columnas_mostrar if col in ocs.columns]
+                
+                df_tabla = ocs[columnas_existentes].copy()
                 df_tabla = df_tabla.rename(columns={
                     'numero_oc': 'Número OC',
                     'cliente_nombre': 'Cliente',
@@ -478,6 +517,11 @@ def show():
                     'estado': 'Estado',
                     'tipo': 'Tipo'
                 })
+                
+                # Formatear valores monetarios
+                for col in ['Valor Total', 'Autorizado', 'Pendiente']:
+                    if col in df_tabla.columns:
+                        df_tabla[col] = df_tabla[col].apply(lambda x: f"${x:,.0f}" if pd.notnull(x) else "")
                 
                 st.dataframe(
                     df_tabla,
