@@ -1,8 +1,3 @@
-"""
-Página de gestión de Órdenes de Compra (OCs) para Streamlit
-Versión MEJORADA con edición y eliminación de OCs
-"""
-
 import streamlit as st
 import pandas as pd
 from modules.database import (
@@ -387,7 +382,7 @@ def mostrar_modal_autorizar(oc):
                     oc_id=oc['id'],
                     valor_autorizado=valor_autorizar,
                     comentario=comentario.strip(),
-                    usuario="Sistema"
+                    usuario=st.session_state.get('username', 'Sistema')
                 )
                 
                 st.success(f"✅ Autorizado ${valor_autorizar:,.0f} de la OC {oc['numero_oc']}")
