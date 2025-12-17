@@ -58,7 +58,7 @@ def show_main_app():
     # ✅ IMPORTAR CORRECTAMENTE los módulos con números
     with tab1:
         try:
-            dashboard = importlib.import_module("pages.1_dashboard")
+            dashboard = importlib.import_module("pages/1_dashboard")
             dashboard.show()
         except Exception as e:
             st.error(f"Error cargando Dashboard: {str(e)}")
@@ -66,7 +66,7 @@ def show_main_app():
     
     with tab2:
         try:
-            clientes = importlib.import_module("pages.2_clientes")
+            clientes = importlib.import_module("pages/2_clientes")
             clientes.show()
         except Exception as e:
             st.error(f"Error cargando Clientes: {str(e)}")
@@ -74,7 +74,7 @@ def show_main_app():
     
     with tab3:
         try:
-            ocs = importlib.import_module("pages.3_ocs")
+            ocs = importlib.import_module("pages/3_ocs")
             ocs.show()
         except Exception as e:
             st.error(f"Error cargando OCs: {str(e)}")
@@ -82,7 +82,7 @@ def show_main_app():
     
     with tab4:
         try:
-            mantenimiento = importlib.import_module("pages.4_mantenimiento")
+            mantenimiento = importlib.import_module("pages/4_mantenimiento")
             mantenimiento.show()
         except Exception as e:
             st.error(f"Error cargando Mantenimiento: {str(e)}")
