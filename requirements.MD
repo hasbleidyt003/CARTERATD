@@ -1,4 +1,0 @@
-streamlit==1.28.1
-pandas==1.5.3
-numpy==1.24.3
-sqlite3
