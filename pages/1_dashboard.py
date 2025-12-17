@@ -1,113 +1,193 @@
 import streamlit as st
-from modules.auth import authenticate
-from modules.database import init_db
-import importlib.util
-import sys
-import os
-import warnings
-warnings.filterwarnings('ignore')
+import pandas as pd
+from modules.database import get_clientes, get_ocs_pendientes
 
-# Configuración de página
-st.set_page_config(
-    page_title="Control de Cupos - Medicamentos",
-    page_icon="💊",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
-
-# Inicializar base de datos
-init_db()
-
-# Función robusta para importar páginas
-def import_page(module_name):
-    """Importa páginas que comienzan con números"""
-    module_path = f"pages/{module_name}.py"
+def show():
+    st.header("📊 Dashboard de Control - Cupos Medicamentos")
     
-    if not os.path.exists(module_path):
-        raise FileNotFoundError(f"Archivo no encontrado: {module_path}")
+    # Obtener datos
+    clientes = get_clientes()
+    ocs_pendientes = get_ocs_pendientes()
     
-    # Crear un nombre de módulo válido (sin números al inicio)
-    valid_name = f"page_{module_name.replace('1_', '').replace('2_', '').replace('3_', '').replace('4_', '')}"
+    # Métricas principales
+    col1, col2, col3, col4 = st.columns(4)
     
-    spec = importlib.util.spec_from_file_location(valid_name, module_path)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[valid_name] = module
-    spec.loader.exec_module(module)
-    return module
-
-# Sistema de autenticación
-def main():
-    if 'authenticated' not in st.session_state:
-        st.session_state.authenticated = False
-    
-    if not st.session_state.authenticated:
-        authenticate()
-    else:
-        show_main_app()
-
-def show_main_app():
-    # CSS personalizado
-    try:
-        with open('assets/styles.css', 'r') as f:
-            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-    except:
-        pass
-    
-    # Barra superior
-    col1, col2, col3 = st.columns([3, 2, 1])
     with col1:
-        st.title("💊 Control de Cupos - Medicamentos")
+        total_cupo_sugerido = clientes['cupo_sugerido'].sum() if not clientes.empty else 0
+        st.metric("Cupo Sugerido Total", f"${total_cupo_sugerido:,.0f}")
+    
     with col2:
-        st.info(f"Usuario: {st.session_state.username}")
+        total_saldo = clientes['saldo_actual'].sum() if not clientes.empty else 0
+        st.metric("Saldo Total Clientes", f"${total_saldo:,.0f}")
+    
     with col3:
-        if st.button("🚪 Cerrar Sesión"):
-            for key in list(st.session_state.keys()):
-                del st.session_state[key]
-            st.rerun()
+        if not clientes.empty:
+            clientes_alerta = len(clientes[clientes['estado'] == 'ALERTA']) if 'estado' in clientes.columns else 0
+            clientes_sobrepasado = len(clientes[clientes['estado'] == 'SOBREPASADO']) if 'estado' in clientes.columns else 0
+            st.metric("Clientes Críticos", f"{clientes_alerta}/{clientes_sobrepasado}")
+        else:
+            st.metric("Clientes Críticos", "0/0")
     
-    # Navegación por pestañas
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "🏠 Dashboard", 
-        "👥 Clientes", 
-        "📋 OCs Pendientes", 
-        "🧹 Mantenimiento"
-    ])
+    with col4:
+        total_pendientes = ocs_pendientes['valor_pendiente'].sum() if not ocs_pendientes.empty else 0
+        st.metric("OCs Pendientes", f"${total_pendientes:,.0f}")
     
-    # Importar páginas de forma robusta
-    with tab1:
-        try:
-            dashboard = import_page("1_dashboard")
-            if hasattr(dashboard, 'show'):
-                dashboard.show()
+    st.divider()
+    
+    # Tabla principal de clientes
+    st.subheader("🏥 Estado de Clientes")
+    
+    if not clientes.empty:
+        # Asegurar que tenemos las columnas necesarias
+        required_cols = ['nit', 'nombre', 'cupo_sugerido', 'saldo_actual']
+        if all(col in clientes.columns for col in required_cols):
+            # Preparar datos para mostrar
+            display_df = clientes.copy()
+            
+            # Calcular disponible
+            if 'cartera_vencida' in display_df.columns:
+                display_df['disponible_real'] = display_df['cupo_sugerido'] - display_df['saldo_actual'] - display_df['cartera_vencida']
             else:
-                st.error("El módulo dashboard no tiene función 'show()'")
-        except Exception as e:
-            st.error(f"Error dashboard: {e}")
-            # Mostrar contenido del archivo para debug
-            if os.path.exists('pages/1_dashboard.py'):
-                st.text("Contenido de 1_dashboard.py:")
-                st.code(open('pages/1_dashboard.py', 'r').read())
+                display_df['disponible_real'] = display_df['cupo_sugerido'] - display_df['saldo_actual']
+            
+            # Formatear columnas monetarias
+            monetary_cols = ['cupo_sugerido', 'saldo_actual', 'disponible_real']
+            if 'cartera_vencida' in display_df.columns:
+                monetary_cols.append('cartera_vencida')
+            
+            for col in monetary_cols:
+                if col in display_df.columns:
+                    display_df[f'{col}_fmt'] = display_df[col].apply(lambda x: f"${x:,.0f}")
+            
+            # Columnas a mostrar
+            columns_to_show = ['nit', 'nombre']
+            
+            # Agregar columnas formateadas
+            column_mapping = {
+                'cupo_sugerido_fmt': 'Cupo Sugerido',
+                'saldo_actual_fmt': 'Saldo Actual',
+                'disponible_real_fmt': 'Disponible Real'
+            }
+            
+            if 'cartera_vencida_fmt' in display_df.columns:
+                column_mapping['cartera_vencida_fmt'] = 'Cartera Vencida'
+            
+            if 'porcentaje_uso' in display_df.columns:
+                column_mapping['porcentaje_uso'] = '% Uso'
+            
+            if 'estado' in display_df.columns:
+                column_mapping['estado'] = 'Estado'
+            
+            # Crear DataFrame final
+            final_columns = ['nit', 'nombre']
+            for col in column_mapping.keys():
+                if col in display_df.columns:
+                    final_columns.append(col)
+            
+            # Mostrar tabla
+            st.dataframe(
+                display_df[final_columns],
+                column_config={
+                    "nit": "NIT",
+                    "nombre": "Cliente",
+                    **column_mapping
+                },
+                hide_index=True,
+                use_container_width=True
+            )
+        else:
+            st.error("Faltan columnas necesarias en los datos de clientes")
+            st.write("Columnas disponibles:", list(clientes.columns))
+    else:
+        st.info("No hay clientes registrados en la base de datos")
     
-    with tab2:
-        try:
-            clientes = import_page("2_clientes")
-            clientes.show()
-        except Exception as e:
-            st.error(f"Error clientes: {e}")
+    st.divider()
     
-    with tab3:
-        try:
-            ocs = import_page("3_ocs")
-            ocs.show()
-        except Exception as e:
-            st.error(f"Error OCs: {e}")
+    # Sección de resumen
+    st.subheader("📈 Resumen Visual")
     
-    with tab4:
-        try:
-            mantenimiento = import_page("4_mantenimiento")
-            mantenimiento.show()
-        except Exception as e:
-            st.error(f"Error mantenimiento: {e}")
-
-if __name__ == "__main__":
-    main()
+    if not clientes.empty and len(clientes) > 0:
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.write("**Distribución por Estado**")
+            if 'estado' in clientes.columns:
+                estado_counts = clientes['estado'].value_counts()
+                
+                for estado, count in estado_counts.items():
+                    color = {
+                        'NORMAL': '🟢',
+                        'ALERTA': '🟡',
+                        'SOBREPASADO': '🔴'
+                    }.get(estado, '⚫')
+                    
+                    st.metric(f"{color} {estado}", count)
+            else:
+                st.info("No hay información de estados")
+        
+        with col2:
+            st.write("**Top 5 - Mayor Saldo**")
+            top_clientes = clientes.nlargest(5, 'saldo_actual')
+            
+            for _, cliente in top_clientes.iterrows():
+                cupo = cliente.get('cupo_sugerido', 1)
+                saldo = cliente.get('saldo_actual', 0)
+                
+                if cupo > 0:
+                    porcentaje = min(saldo / cupo, 1.0)
+                    st.progress(
+                        porcentaje,
+                        text=f"{cliente.get('nombre', 'Sin nombre')[:20]}...: ${saldo:,.0f}"
+                    )
+    
+    # Alertas críticas
+    st.divider()
+    st.subheader("🚨 Alertas Prioritarias")
+    
+    if not clientes.empty and 'estado' in clientes.columns:
+        # Clientes sobrepasados
+        sobrepasados = clientes[clientes['estado'] == 'SOBREPASADO']
+        if not sobrepasados.empty:
+            st.error("**Clientes con Cupo Sobrepasado:**")
+            for _, cliente in sobrepasados.iterrows():
+                cupo = cliente.get('cupo_sugerido', 0)
+                saldo = cliente.get('saldo_actual', 0)
+                cartera = cliente.get('cartera_vencida', 0)
+                sobrepaso = (cupo - saldo - cartera) * -1
+                st.write(f"• **{cliente.get('nombre', 'Sin nombre')}** - Sobrepasa: ${sobrepaso:,.0f}")
+        
+        # Clientes en alerta
+        alertas = clientes[clientes['estado'] == 'ALERTA']
+        if not alertas.empty:
+            st.warning("**Clientes en Alerta (>80% uso):**")
+            for _, cliente in alertas.iterrows():
+                st.write(f"• **{cliente.get('nombre', 'Sin nombre')}** - Uso: {cliente.get('porcentaje_uso', 'N/A')}%")
+    else:
+        st.info("No hay información de alertas disponible")
+    
+    # Información de OCs pendientes
+    st.divider()
+    st.subheader("📋 Órdenes de Compra Pendientes")
+    
+    if not ocs_pendientes.empty:
+        st.write(f"Total de OCs pendientes: {len(ocs_pendientes)}")
+        
+        # Mostrar resumen de OCs por cliente
+        if 'cliente_nombre' in ocs_pendientes.columns:
+            ocs_por_cliente = ocs_pendientes.groupby('cliente_nombre')['valor_pendiente'].sum().reset_index()
+            ocs_por_cliente = ocs_por_cliente.sort_values('valor_pendiente', ascending=False)
+            
+            st.dataframe(
+                ocs_por_cliente.rename(columns={
+                    'cliente_nombre': 'Cliente',
+                    'valor_pendiente': 'Valor Pendiente'
+                }),
+                hide_index=True,
+                column_config={
+                    "Valor Pendiente": st.column_config.NumberColumn(
+                        format="$ %d"
+                    )
+                }
+            )
+    else:
+        st.success("✅ No hay OCs pendientes")
