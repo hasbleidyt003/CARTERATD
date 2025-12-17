@@ -56,6 +56,19 @@ def init_db():
     )
     ''')
     
+    # Tabla de autorizaciones parciales
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS autorizaciones_parciales (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        oc_id INTEGER,
+        valor_autorizado REAL NOT NULL,
+        fecha_autorizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        comentario TEXT,
+        usuario TEXT,
+        FOREIGN KEY (oc_id) REFERENCES ocs(id)
+    )
+    ''')
+    
     # Tabla de movimientos/pagos
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS movimientos (
@@ -137,8 +150,12 @@ def init_db():
     
     print("✅ Base de datos inicializada con clientes reales")
 
-# Funciones CRUD actualizadas
+# ============================================================================
+# FUNCIONES CRUD PARA CLIENTES
+# ============================================================================
+
 def get_clientes():
+    """Obtiene todos los clientes activos con información agregada"""
     conn = sqlite3.connect('data/database.db')
     query = '''
     SELECT 
@@ -156,20 +173,22 @@ def get_clientes():
     return df
 
 def get_cliente_por_nit(nit):
+    """Obtiene un cliente específico por NIT"""
     conn = sqlite3.connect('data/database.db')
     query = '''
     SELECT c.*,
            COALESCE(SUM(o.valor_pendiente), 0) as pendientes_total
     FROM clientes c
     LEFT JOIN ocs o ON c.nit = o.cliente_nit AND o.estado IN ('PENDIENTE', 'PARCIAL')
-    WHERE c.nit = ?
+    WHERE c.nit = ? AND c.activo = 1
     GROUP BY c.nit
     '''
     df = pd.read_sql_query(query, conn, params=(nit,))
     conn.close()
     return df.iloc[0] if not df.empty else None
 
-def actualizar_cliente(nit, cupo_sugerido=None, saldo_actual=None, cartera_vencida=None):
+def actualizar_cliente(nit, cupo_sugerido=None, saldo_actual=None, cartera_vencida=None, nombre=None):
+    """Actualiza los datos de un cliente"""
     conn = sqlite3.connect('data/database.db')
     cursor = conn.cursor()
     
@@ -188,6 +207,10 @@ def actualizar_cliente(nit, cupo_sugerido=None, saldo_actual=None, cartera_venci
         updates.append("cartera_vencida = ?")
         params.append(cartera_vencida)
     
+    if nombre is not None:
+        updates.append("nombre = ?")
+        params.append(nombre)
+    
     if updates:
         updates.append("fecha_actualizacion = CURRENT_TIMESTAMP")
         params.append(nit)
@@ -197,26 +220,336 @@ def actualizar_cliente(nit, cupo_sugerido=None, saldo_actual=None, cartera_venci
         conn.commit()
     
     conn.close()
+    return True
 
-def agregar_movimiento(cliente_nit, tipo, valor, descripcion="", referencia="", usuario="Sistema"):
+def crear_cliente(nit, nombre, cupo_sugerido, saldo_actual=0, cartera_vencida=0):
+    """Crea un nuevo cliente"""
+    conn = sqlite3.connect('data/database.db')
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute('''
+        INSERT INTO clientes 
+        (nit, nombre, cupo_sugerido, saldo_actual, cartera_vencida, fecha_actualizacion)
+        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ''', (nit, nombre, cupo_sugerido, saldo_actual, cartera_vencida))
+        
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        raise Exception(f"Ya existe un cliente con NIT: {nit}")
+    except Exception as e:
+        raise Exception(f"Error al crear cliente: {str(e)}")
+    finally:
+        conn.close()
+
+def eliminar_cliente_logico(nit):
+    """Elimina un cliente lógicamente (activo = 0)"""
     conn = sqlite3.connect('data/database.db')
     cursor = conn.cursor()
     
     cursor.execute('''
-    INSERT INTO movimientos (cliente_nit, tipo, valor, descripcion, referencia, usuario)
-    VALUES (?, ?, ?, ?, ?, ?)
-    ''', (cliente_nit, tipo, valor, descripcion, referencia, usuario))
-    
-    # Si es un pago, actualizar saldo del cliente
-    if tipo == 'PAGO':
-        cursor.execute('''
-        UPDATE clientes 
-        SET saldo_actual = saldo_actual - ?, 
-            fecha_actualizacion = CURRENT_TIMESTAMP
-        WHERE nit = ?
-        ''', (valor, cliente_nit))
+    UPDATE clientes 
+    SET activo = 0, fecha_actualizacion = CURRENT_TIMESTAMP
+    WHERE nit = ?
+    ''', (nit,))
     
     conn.commit()
     conn.close()
+    return True
 
-# Resto de funciones permanecen similares...
+# ============================================================================
+# FUNCIONES PARA MOVIMIENTOS
+# ============================================================================
+
+def agregar_movimiento(cliente_nit, tipo, valor, descripcion="", referencia="", usuario="Sistema"):
+    """Registra un movimiento (pago, ajuste, etc.)"""
+    conn = sqlite3.connect('data/database.db')
+    cursor = conn.cursor()
+    
+    try:
+        # Insertar movimiento
+        cursor.execute('''
+        INSERT INTO movimientos 
+        (cliente_nit, tipo, valor, descripcion, referencia, usuario)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ''', (cliente_nit, tipo, valor, descripcion, referencia, usuario))
+        
+        # Si es un pago, actualizar saldo del cliente
+        if tipo == 'PAGO':
+            cursor.execute('''
+            UPDATE clientes 
+            SET saldo_actual = saldo_actual - ?, 
+                fecha_actualizacion = CURRENT_TIMESTAMP
+            WHERE nit = ?
+            ''', (valor, cliente_nit))
+        
+        conn.commit()
+        return True
+    except Exception as e:
+        conn.rollback()
+        raise Exception(f"Error al registrar movimiento: {str(e)}")
+    finally:
+        conn.close()
+
+def get_movimientos_cliente(cliente_nit, limit=50):
+    """Obtiene los movimientos de un cliente"""
+    conn = sqlite3.connect('data/database.db')
+    query = '''
+    SELECT * FROM movimientos 
+    WHERE cliente_nit = ? 
+    ORDER BY fecha_movimiento DESC
+    LIMIT ?
+    '''
+    df = pd.read_sql_query(query, conn, params=(cliente_nit, limit))
+    conn.close()
+    return df
+
+# ============================================================================
+# FUNCIONES PARA OCs
+# ============================================================================
+
+def get_ocs_pendientes(cliente_nit=None):
+    """Obtiene OCs pendientes o parciales"""
+    conn = sqlite3.connect('data/database.db')
+    
+    if cliente_nit:
+        query = '''
+        SELECT o.*, c.nombre as cliente_nombre 
+        FROM ocs o
+        JOIN clientes c ON o.cliente_nit = c.nit
+        WHERE o.estado IN ('PENDIENTE', 'PARCIAL') 
+        AND o.cliente_nit = ?
+        ORDER BY o.fecha_registro DESC
+        '''
+        df = pd.read_sql_query(query, conn, params=(cliente_nit,))
+    else:
+        query = '''
+        SELECT o.*, c.nombre as cliente_nombre 
+        FROM ocs o
+        JOIN clientes c ON o.cliente_nit = c.nit
+        WHERE o.estado IN ('PENDIENTE', 'PARCIAL')
+        ORDER BY o.fecha_registro DESC
+        '''
+        df = pd.read_sql_query(query, conn)
+    
+    conn.close()
+    return df
+
+def get_todas_ocs(cliente_nit=None):
+    """Obtiene todas las OCs"""
+    conn = sqlite3.connect('data/database.db')
+    
+    if cliente_nit:
+        query = '''
+        SELECT o.*, c.nombre as cliente_nombre 
+        FROM ocs o
+        JOIN clientes c ON o.cliente_nit = c.nit
+        WHERE o.cliente_nit = ?
+        ORDER BY o.fecha_registro DESC
+        '''
+        df = pd.read_sql_query(query, conn, params=(cliente_nit,))
+    else:
+        query = '''
+        SELECT o.*, c.nombre as cliente_nombre 
+        FROM ocs o
+        JOIN clientes c ON o.cliente_nit = c.nit
+        ORDER BY o.fecha_registro DESC
+        '''
+        df = pd.read_sql_query(query, conn)
+    
+    conn.close()
+    return df
+
+def crear_oc(cliente_nit, numero_oc, valor_total, tipo="SUELTA", cupo_referencia="", comentarios=""):
+    """Crea una nueva Orden de Compra"""
+    conn = sqlite3.connect('data/database.db')
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute('''
+        INSERT INTO ocs 
+        (cliente_nit, numero_oc, valor_total, tipo, cupo_referencia, comentarios)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ''', (cliente_nit, numero_oc, valor_total, tipo, cupo_referencia, comentarios))
+        
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        raise Exception(f"Ya existe una OC con número: {numero_oc}")
+    except Exception as e:
+        raise Exception(f"Error al crear OC: {str(e)}")
+    finally:
+        conn.close()
+
+def autorizar_oc(oc_id, valor_autorizado, comentario="", usuario="Sistema"):
+    """Autoriza total o parcialmente una OC"""
+    conn = sqlite3.connect('data/database.db')
+    cursor = conn.cursor()
+    
+    try:
+        # Obtener datos actuales de la OC
+        cursor.execute('SELECT valor_autorizado, valor_total FROM ocs WHERE id = ?', (oc_id,))
+        oc = cursor.fetchone()
+        
+        if not oc:
+            raise Exception("OC no encontrada")
+        
+        valor_actual, valor_total = oc
+        
+        # Calcular nuevo valor autorizado
+        nuevo_valor = valor_actual + valor_autorizado
+        
+        # Determinar estado
+        if nuevo_valor >= valor_total:
+            estado = 'AUTORIZADA'
+        elif nuevo_valor > 0:
+            estado = 'PARCIAL'
+        else:
+            estado = 'PENDIENTE'
+        
+        # Actualizar OC
+        cursor.execute('''
+        UPDATE ocs 
+        SET valor_autorizado = ?,
+            estado = ?,
+            fecha_ultima_autorizacion = CURRENT_TIMESTAMP
+        WHERE id = ?
+        ''', (nuevo_valor, estado, oc_id))
+        
+        # Registrar autorización parcial
+        cursor.execute('''
+        INSERT INTO autorizaciones_parciales (oc_id, valor_autorizado, comentario, usuario)
+        VALUES (?, ?, ?, ?)
+        ''', (oc_id, valor_autorizado, comentario, usuario))
+        
+        conn.commit()
+        return True
+    except Exception as e:
+        conn.rollback()
+        raise Exception(f"Error al autorizar OC: {str(e)}")
+    finally:
+        conn.close()
+
+def get_autorizaciones_oc(oc_id):
+    """Obtiene el historial de autorizaciones de una OC"""
+    conn = sqlite3.connect('data/database.db')
+    query = '''
+    SELECT * FROM autorizaciones_parciales 
+    WHERE oc_id = ? 
+    ORDER BY fecha_autorizacion DESC
+    '''
+    df = pd.read_sql_query(query, conn, params=(oc_id,))
+    conn.close()
+    return df
+
+# ============================================================================
+# FUNCIONES DE REPORTES Y ESTADÍSTICAS
+# ============================================================================
+
+def get_estadisticas_generales():
+    """Obtiene estadísticas generales del sistema"""
+    conn = sqlite3.connect('data/database.db')
+    
+    query = '''
+    SELECT 
+        COUNT(*) as total_clientes,
+        SUM(cupo_sugerido) as total_cupo_sugerido,
+        SUM(saldo_actual) as total_saldo_actual,
+        SUM(cartera_vencida) as total_cartera_vencida,
+        COUNT(CASE WHEN estado = 'SOBREPASADO' THEN 1 END) as clientes_sobrepasados,
+        COUNT(CASE WHEN estado = 'ALERTA' THEN 1 END) as clientes_alerta,
+        SUM(
+            CASE 
+                WHEN o.estado IN ('PENDIENTE', 'PARCIAL') 
+                THEN o.valor_pendiente 
+                ELSE 0 
+            END
+        ) as total_ocs_pendientes
+    FROM clientes c
+    LEFT JOIN ocs o ON c.nit = o.cliente_nit
+    WHERE c.activo = 1
+    '''
+    
+    stats = pd.read_sql_query(query, conn).iloc[0]
+    conn.close()
+    
+    return {
+        'total_clientes': int(stats['total_clientes']),
+        'total_cupo_sugerido': float(stats['total_cupo_sugerido']),
+        'total_saldo_actual': float(stats['total_saldo_actual']),
+        'total_cartera_vencida': float(stats['total_cartera_vencida']),
+        'clientes_sobrepasados': int(stats['clientes_sobrepasados']),
+        'clientes_alerta': int(stats['clientes_alerta']),
+        'total_ocs_pendientes': float(stats['total_ocs_pendientes'])
+    }
+
+def get_backup_data():
+    """Obtiene todos los datos para backup"""
+    conn = sqlite3.connect('data/database.db')
+    
+    datos = {
+        'clientes': pd.read_sql_query("SELECT * FROM clientes", conn),
+        'ocs': pd.read_sql_query("SELECT * FROM ocs", conn),
+        'movimientos': pd.read_sql_query("SELECT * FROM movimientos", conn),
+        'autorizaciones': pd.read_sql_query("SELECT * FROM autorizaciones_parciales", conn)
+    }
+    
+    conn.close()
+    return datos
+
+# ============================================================================
+# FUNCIONES DE MANTENIMIENTO
+# ============================================================================
+
+def limpiar_ocs_antiguas(dias=90, mantener_pendientes=True):
+    """Elimina OCs autorizadas antiguas"""
+    conn = sqlite3.connect('data/database.db')
+    cursor = conn.cursor()
+    
+    fecha_limite = (datetime.now() - timedelta(days=dias)).strftime('%Y-%m-%d')
+    
+    # Obtener OCs a eliminar (para backup)
+    query_select = f"""
+    SELECT o.* 
+    FROM ocs o
+    WHERE o.estado = 'AUTORIZADA'
+    AND o.fecha_ultima_autorizacion < '{fecha_limite}'
+    """
+    
+    if mantener_pendientes:
+        query_select += " AND o.estado = 'AUTORIZADA'"
+    
+    cursor.execute(query_select)
+    ocs_a_eliminar = cursor.fetchall()
+    
+    # Eliminar autorizaciones primero
+    query_delete_auth = f"""
+    DELETE FROM autorizaciones_parciales 
+    WHERE oc_id IN (
+        SELECT id FROM ocs 
+        WHERE estado = 'AUTORIZADA'
+        AND fecha_ultima_autorizacion < '{fecha_limite}'
+    )
+    """
+    cursor.execute(query_delete_auth)
+    
+    # Eliminar OCs
+    query_delete = f"""
+    DELETE FROM ocs 
+    WHERE estado = 'AUTORIZADA'
+    AND fecha_ultima_autorizacion < '{fecha_limite}'
+    """
+    cursor.execute(query_delete)
+    
+    conn.commit()
+    conn.close()
+    
+    return len(ocs_a_eliminar)
+
+def optimizar_base_datos():
+    """Ejecuta VACUUM para optimizar la base de datos"""
+    conn = sqlite3.connect('data/database.db')
+    conn.execute("VACUUM")
+    conn.close()
+    return True
