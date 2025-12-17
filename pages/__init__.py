@@ -1,4 +1,3 @@
-python
 """
 Páginas de la aplicación Streamlit
 Contiene:
