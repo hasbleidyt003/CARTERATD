@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from modules.database import get_clientes, actualizar_cliente, agregar_movimiento
+from modules.database import get_clientes, actualizar_cliente, agregar_movimiento, crear_cliente
 import sqlite3
 
 def show():
@@ -104,7 +104,7 @@ def mostrar_clientes():
                             nuevo_cupo,
                             nuevo_saldo,
                             nueva_cartera,
-                            nuevo_nombre
+                            nuevo_nombre  # <-- 5TO PARÁMETRO
                         )
                 
                 with col_b:
@@ -114,44 +114,59 @@ def mostrar_clientes():
                 
                 with col_c:
                     if st.button("➕ Nuevo Pago", key=f"pago_{cliente['nit']}", use_container_width=True):
-                        with st.form(f"pago_form_{cliente['nit']}"):
-                            valor_pago = st.number_input(
-                                "Valor del Pago",
-                                min_value=0.0,
-                                step=1000000.0,
-                                format="%.0f"
-                            )
-                            descripcion = st.text_input("Descripción")
-                            
-                            if st.form_submit_button("💳 Registrar Pago"):
-                                agregar_movimiento(
-                                    cliente_nit=cliente['nit'],
-                                    tipo="PAGO",
-                                    valor=valor_pago,
-                                    descripcion=descripcion,
-                                    referencia=f"PAGO-{cliente['nit']}"
-                                )
-                                st.success(f"✅ Pago de ${valor_pago:,.0f} registrado")
-                                st.rerun()
+                        st.session_state.registrar_pago = cliente['nit']
+                        st.rerun()
+        
+        # Formulario para registrar pago (si está activo)
+        if 'registrar_pago' in st.session_state:
+            with st.form(f"pago_form_{st.session_state.registrar_pago}"):
+                st.subheader(f"💳 Registrar Pago - NIT: {st.session_state.registrar_pago}")
+                
+                cliente_actual = clientes[clientes['nit'] == st.session_state.registrar_pago].iloc[0]
+                st.info(f"Saldo actual: ${cliente_actual['saldo_actual']:,.0f}")
+                
+                valor_pago = st.number_input(
+                    "Valor del Pago",
+                    min_value=0.0,
+                    max_value=float(cliente_actual['saldo_actual']),
+                    step=1000000.0,
+                    format="%.0f"
+                )
+                descripcion = st.text_input("Descripción")
+                
+                col_btn1, col_btn2 = st.columns(2)
+                with col_btn1:
+                    if st.form_submit_button("✅ Confirmar Pago"):
+                        agregar_movimiento(
+                            cliente_nit=st.session_state.registrar_pago,
+                            tipo="PAGO",
+                            valor=valor_pago,
+                            descripcion=descripcion,
+                            referencia=f"PAGO-{st.session_state.registrar_pago}"
+                        )
+                        st.success(f"✅ Pago de ${valor_pago:,.0f} registrado")
+                        del st.session_state.registrar_pago
+                        st.rerun()
+                
+                with col_btn2:
+                    if st.form_submit_button("❌ Cancelar"):
+                        del st.session_state.registrar_pago
+                        st.rerun()
+                        
     else:
         st.info("No hay clientes registrados. Agrega el primero en la pestaña 'Nuevo Cliente'.")
 
 def guardar_cambios_cliente(nit, cupo_sugerido, saldo_actual, cartera_vencida, nombre=None):
     """Guarda los cambios de un cliente en la base de datos"""
     try:
-        # Actualizar datos principales
-        actualizar_cliente(nit, cupo_sugerido, saldo_actual, cartera_vencida)
-        
-        # Actualizar nombre si cambió
-        if nombre:
-            conn = sqlite3.connect('data/database.db')
-            cursor = conn.cursor()
-            cursor.execute(
-                "UPDATE clientes SET nombre = ? WHERE nit = ?",
-                (nombre, nit)
-            )
-            conn.commit()
-            conn.close()
+        # ✅ LLAMADA CORRECTA CON TODOS LOS PARÁMETROS
+        actualizar_cliente(
+            nit=nit,
+            cupo_sugerido=cupo_sugerido,
+            saldo_actual=saldo_actual,
+            cartera_vencida=cartera_vencida,
+            nombre=nombre  # <-- ¡ESTE ES EL PARÁMETRO NUEVO!
+        )
         
         st.success("✅ Cambios guardados exitosamente")
         st.rerun()
@@ -222,18 +237,14 @@ def agregar_cliente():
                 return
             
             try:
-                # Insertar en base de datos
-                conn = sqlite3.connect('data/database.db')
-                cursor = conn.cursor()
-                
-                cursor.execute('''
-                INSERT INTO clientes 
-                (nit, nombre, cupo_sugerido, saldo_actual, cartera_vencida, fecha_actualizacion)
-                VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-                ''', (nit, nombre, cupo_sugerido, saldo_actual, cartera_vencida))
-                
-                conn.commit()
-                conn.close()
+                # Usar la nueva función crear_cliente
+                crear_cliente(
+                    nit=nit,
+                    nombre=nombre,
+                    cupo_sugerido=cupo_sugerido,
+                    saldo_actual=saldo_actual,
+                    cartera_vencida=cartera_vencida
+                )
                 
                 st.success(f"✅ Cliente '{nombre}' creado exitosamente")
                 st.balloons()
@@ -253,90 +264,7 @@ def agregar_cliente():
                 if st.button("➕ Agregar Otro Cliente"):
                     st.rerun()
                 
-            except sqlite3.IntegrityError:
-                st.error(f"❌ Ya existe un cliente con NIT: {nit}")
             except Exception as e:
                 st.error(f"❌ Error al crear cliente: {str(e)}")
 
-# Función adicional para mostrar detalle de cliente
-def mostrar_detalle_cliente():
-    """Muestra detalle completo de un cliente"""
-    if 'cliente_detalle' in st.session_state:
-        nit = st.session_state.cliente_detalle
-        
-        st.subheader(f"📋 Detalle Completo - NIT: {nit}")
-        
-        # Obtener datos del cliente
-        conn = sqlite3.connect('data/database.db')
-        
-        # Datos del cliente
-        query_cliente = '''
-        SELECT * FROM clientes WHERE nit = ?
-        '''
-        cliente = pd.read_sql_query(query_cliente, conn, params=(nit,))
-        
-        if not cliente.empty:
-            cliente = cliente.iloc[0]
-            
-            # Mostrar información
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.write("**Información Básica**")
-                st.write(f"- NIT: {cliente['nit']}")
-                st.write(f"- Nombre: {cliente['nombre']}")
-                st.write(f"- Estado: {cliente.get('estado', 'N/A')}")
-                st.write(f"- Última actualización: {cliente.get('fecha_actualizacion', 'N/A')}")
-            
-            with col2:
-                st.write("**Información Financiera**")
-                st.write(f"- Cupo Sugerido: ${cliente['cupo_sugerido']:,.0f}")
-                st.write(f"- Saldo Actual: ${cliente['saldo_actual']:,.0f}")
-                st.write(f"- Cartera Vencida: ${cliente.get('cartera_vencida', 0):,.0f}")
-                st.write(f"- Disponible: ${cliente.get('disponible', 0):,.0f}")
-                st.write(f"- % Uso: {cliente.get('porcentaje_uso', 0)}%")
-            
-            # Movimientos del cliente
-            st.divider()
-            st.write("**📝 Historial de Movimientos**")
-            
-            query_movimientos = '''
-            SELECT * FROM movimientos 
-            WHERE cliente_nit = ? 
-            ORDER BY fecha_movimiento DESC
-            LIMIT 10
-            '''
-            movimientos = pd.read_sql_query(query_movimientos, conn, params=(nit,))
-            
-            if not movimientos.empty:
-                st.dataframe(
-                    movimientos[['fecha_movimiento', 'tipo', 'valor', 'descripcion', 'referencia']],
-                    hide_index=True
-                )
-            else:
-                st.info("No hay movimientos registrados")
-            
-            # OCs del cliente
-            st.write("**📋 Órdenes de Compra**")
-            
-            query_ocs = '''
-            SELECT * FROM ocs 
-            WHERE cliente_nit = ? 
-            ORDER BY fecha_registro DESC
-            '''
-            ocs = pd.read_sql_query(query_ocs, conn, params=(nit,))
-            
-            if not ocs.empty:
-                st.dataframe(
-                    ocs[['numero_oc', 'valor_total', 'valor_autorizado', 'estado', 'fecha_registro']],
-                    hide_index=True
-                )
-            else:
-                st.info("No hay OCs registradas")
-        
-        conn.close()
-        
-        # Botón para volver
-        if st.button("← Volver a la lista"):
-            del st.session_state.cliente_detalle
-            st.rerun()
+# Si quieres mantener la función de detalle, déjala igual...
