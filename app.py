@@ -27,7 +27,7 @@ def show_login():
     st.markdown("""
     <div style='text-align: center; padding: 50px;'>
         <h1>💊 Control de Cupos</h1>
-        <h3>Sistema de Seguimiento - Medicamentos</h3>
+        <h3>Sistema de Seguimiento</h3>
     </div>
     """, unsafe_allow_html=True)
     
