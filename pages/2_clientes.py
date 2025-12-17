@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
-from modules.database import get_clientes, actualizar_cliente, agregar_movimiento, crear_cliente
 import sqlite3
+import os
 
 def show():
     st.header("👥 Gestión de Clientes")
@@ -14,6 +14,101 @@ def show():
     
     with tab2:
         agregar_cliente()
+
+def get_clientes():
+    """Obtiene clientes directamente con SQL"""
+    conn = sqlite3.connect('data/database.db')
+    query = '''
+    SELECT 
+        c.*,
+        COALESCE(SUM(o.valor_pendiente), 0) as pendientes_total
+    FROM clientes c
+    LEFT JOIN ocs o ON c.nit = o.cliente_nit AND o.estado IN ('PENDIENTE', 'PARCIAL')
+    WHERE c.activo = 1
+    GROUP BY c.nit
+    ORDER BY c.nombre
+    '''
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+    return df
+
+def actualizar_cliente(nit, cupo_sugerido=None, saldo_actual=None, cartera_vencida=None, nombre=None):
+    """Actualiza cliente directamente con SQL"""
+    conn = sqlite3.connect('data/database.db')
+    cursor = conn.cursor()
+    
+    updates = []
+    params = []
+    
+    if cupo_sugerido is not None:
+        updates.append("cupo_sugerido = ?")
+        params.append(cupo_sugerido)
+    
+    if saldo_actual is not None:
+        updates.append("saldo_actual = ?")
+        params.append(saldo_actual)
+    
+    if cartera_vencida is not None:
+        updates.append("cartera_vencida = ?")
+        params.append(cartera_vencida)
+    
+    if nombre is not None:
+        updates.append("nombre = ?")
+        params.append(nombre)
+    
+    if updates:
+        updates.append("fecha_actualizacion = CURRENT_TIMESTAMP")
+        params.append(nit)
+        
+        query = f"UPDATE clientes SET {', '.join(updates)} WHERE nit = ?"
+        cursor.execute(query, params)
+        conn.commit()
+    
+    conn.close()
+    return True
+
+def crear_cliente(nit, nombre, cupo_sugerido, saldo_actual=0, cartera_vencida=0):
+    """Crea nuevo cliente directamente con SQL"""
+    conn = sqlite3.connect('data/database.db')
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute('''
+        INSERT INTO clientes 
+        (nit, nombre, cupo_sugerido, saldo_actual, cartera_vencida, fecha_actualizacion)
+        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ''', (nit, nombre, cupo_sugerido, saldo_actual, cartera_vencida))
+        
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        raise Exception(f"Ya existe un cliente con NIT: {nit}")
+    except Exception as e:
+        raise Exception(f"Error al crear cliente: {str(e)}")
+    finally:
+        conn.close()
+
+def agregar_movimiento(cliente_nit, tipo, valor, descripcion="", referencia="", usuario="Sistema"):
+    """Registra movimiento directamente con SQL"""
+    conn = sqlite3.connect('data/database.db')
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+    INSERT INTO movimientos (cliente_nit, tipo, valor, descripcion, referencia, usuario)
+    VALUES (?, ?, ?, ?, ?, ?)
+    ''', (cliente_nit, tipo, valor, descripcion, referencia, usuario))
+    
+    # Si es un pago, actualizar saldo del cliente
+    if tipo == 'PAGO':
+        cursor.execute('''
+        UPDATE clientes 
+        SET saldo_actual = saldo_actual - ?, 
+            fecha_actualizacion = CURRENT_TIMESTAMP
+        WHERE nit = ?
+        ''', (valor, cliente_nit))
+    
+    conn.commit()
+    conn.close()
 
 def mostrar_clientes():
     """Muestra lista de clientes y permite editar"""
@@ -29,8 +124,11 @@ def mostrar_clientes():
         with col2:
             st.metric("Saldo Total", f"${clientes['saldo_actual'].sum():,.0f}")
         with col3:
-            sobrepasados = len(clientes[clientes['estado'] == 'SOBREPASADO'])
-            st.metric("Clientes Críticos", sobrepasados)
+            if 'estado' in clientes.columns:
+                sobrepasados = len(clientes[clientes['estado'] == 'SOBREPASADO'])
+                st.metric("Clientes Críticos", sobrepasados)
+            else:
+                st.metric("Clientes", len(clientes))
         
         st.divider()
         
@@ -95,24 +193,24 @@ def mostrar_clientes():
                     st.metric("Estado", estado)
                 
                 # Botones de acción
-                col_a, col_b, col_c = st.columns([1, 1, 2])
+                col_a, col_b = st.columns(2)
                 
                 with col_a:
                     if st.button("💾 Guardar", key=f"guardar_{cliente['nit']}", use_container_width=True):
-                        guardar_cambios_cliente(
-                            cliente['nit'],
-                            nuevo_cupo,
-                            nuevo_saldo,
-                            nueva_cartera,
-                            nuevo_nombre  # <-- 5TO PARÁMETRO
-                        )
+                        try:
+                            actualizar_cliente(
+                                nit=cliente['nit'],
+                                cupo_sugerido=nuevo_cupo,
+                                saldo_actual=nuevo_saldo,
+                                cartera_vencida=nueva_cartera,
+                                nombre=nuevo_nombre
+                            )
+                            st.success("✅ Cambios guardados exitosamente")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Error al guardar: {str(e)}")
                 
                 with col_b:
-                    if st.button("📊 Ver Detalle", key=f"detalle_{cliente['nit']}", use_container_width=True):
-                        st.session_state.cliente_detalle = cliente['nit']
-                        st.rerun()
-                
-                with col_c:
                     if st.button("➕ Nuevo Pago", key=f"pago_{cliente['nit']}", use_container_width=True):
                         st.session_state.registrar_pago = cliente['nit']
                         st.rerun()
@@ -156,24 +254,6 @@ def mostrar_clientes():
     else:
         st.info("No hay clientes registrados. Agrega el primero en la pestaña 'Nuevo Cliente'.")
 
-def guardar_cambios_cliente(nit, cupo_sugerido, saldo_actual, cartera_vencida, nombre=None):
-    """Guarda los cambios de un cliente en la base de datos"""
-    try:
-        # ✅ LLAMADA CORRECTA CON TODOS LOS PARÁMETROS
-        actualizar_cliente(
-            nit=nit,
-            cupo_sugerido=cupo_sugerido,
-            saldo_actual=saldo_actual,
-            cartera_vencida=cartera_vencida,
-            nombre=nombre  # <-- ¡ESTE ES EL PARÁMETRO NUEVO!
-        )
-        
-        st.success("✅ Cambios guardados exitosamente")
-        st.rerun()
-        
-    except Exception as e:
-        st.error(f"❌ Error al guardar: {str(e)}")
-
 def agregar_cliente():
     """Formulario para agregar nuevo cliente"""
     st.subheader("➕ Agregar Nuevo Cliente")
@@ -210,21 +290,12 @@ def agregar_cliente():
             help="Deje en 0 si no hay cartera vencida"
         )
         
-        notas = st.text_area("Notas adicionales (opcional)")
-        
         # Validación y botón de envío
-        col_submit1, col_submit2 = st.columns([3, 1])
-        
-        with col_submit1:
-            submitted = st.form_submit_button(
-                "💾 Crear Cliente", 
-                use_container_width=True,
-                type="primary"
-            )
-        
-        with col_submit2:
-            if st.form_submit_button("🔄 Limpiar", use_container_width=True):
-                st.rerun()
+        submitted = st.form_submit_button(
+            "💾 Crear Cliente", 
+            use_container_width=True,
+            type="primary"
+        )
         
         if submitted:
             # Validar campos obligatorios
@@ -237,7 +308,6 @@ def agregar_cliente():
                 return
             
             try:
-                # Usar la nueva función crear_cliente
                 crear_cliente(
                     nit=nit,
                     nombre=nombre,
@@ -266,5 +336,3 @@ def agregar_cliente():
                 
             except Exception as e:
                 st.error(f"❌ Error al crear cliente: {str(e)}")
-
-# Si quieres mantener la función de detalle, déjala igual...
