@@ -1,187 +1,294 @@
+"""
+Dashboard principal del Sistema de Gestión de Cartera TD
+Versión completa con gráficos y estadísticas
+"""
+
 import streamlit as st
 import pandas as pd
-from modules.database import get_clientes, get_todas_ocs, get_estadisticas_generales
-from modules.styles import apply_global_styles, format_currency
+import plotly.express as px
+import plotly.graph_objects as go
+from datetime import datetime, timedelta
+from modules.database import (
+    get_estadisticas_generales,
+    get_estadisticas_por_cliente,
+    get_ocs_pendientes,
+    get_movimientos_recientes,
+    get_historico_pagos
+)
 
 def show():
-    apply_global_styles()
+    """Función principal del dashboard"""
+    st.header("📊 Dashboard - Resumen General")
     
-    st.title("Dashboard de Control - Cupos Medicamentos")
+    # Cargar datos con spinners
+    with st.spinner("Cargando estadísticas..."):
+        try:
+            stats = get_estadisticas_generales()
+            clientes_stats = get_estadisticas_por_cliente()
+            ocs_pendientes = get_ocs_pendientes()
+            movimientos = get_movimientos_recientes(limit=10)
+            historico_pagos = get_historico_pagos(dias=30)
+        except Exception as e:
+            st.error(f"❌ Error al cargar datos: {str(e)}")
+            return
     
-    try:
-        clientes = get_clientes()
-        todas_ocs = get_todas_ocs()
-        ocs_pendientes = todas_ocs[todas_ocs['estado'].isin(['PENDIENTE', 'PARCIAL'])] if not todas_ocs.empty else pd.DataFrame()
-    except Exception as e:
-        st.error(f"Error al cargar datos: {str(e)}")
-        clientes = pd.DataFrame()
-        ocs_pendientes = pd.DataFrame()
-    
-    # MÉTRICAS PRINCIPALES
-    st.subheader("Métricas Principales")
+    # ========== MÉTRICAS PRINCIPALES ==========
+    st.subheader("📈 Métricas Principales")
     
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        total_cupo = clientes['cupo_sugerido'].sum() if not clientes.empty else 0
-        st.metric("Cupo Total", format_currency(total_cupo))
+        st.metric(
+            label="Total Cupo",
+            value=f"${stats['total_cupo_sugerido']:,.0f}",
+            delta=f"${stats['total_disponible']:,.0f} disponible"
+        )
     
     with col2:
-        total_saldo = clientes['saldo_actual'].sum() if not clientes.empty else 0
-        st.metric("Saldo Total", format_currency(total_saldo))
+        st.metric(
+            label="Saldo Actual",
+            value=f"${stats['total_saldo_actual']:,.0f}",
+            delta=f"${stats['total_cartera_vencida']:,.0f} vencido"
+        )
     
     with col3:
-        if not clientes.empty and 'estado' in clientes.columns:
-            alertas = len(clientes[clientes['estado'] == 'ALERTA'])
-            sobrepasados = len(clientes[clientes['estado'] == 'SOBREPASADO'])
-            st.metric("Clientes Críticos", f"{sobrepasados + alertas}")
-        else:
-            st.metric("Clientes", len(clientes) if not clientes.empty else 0)
+        st.metric(
+            label="OCs Pendientes",
+            value=f"${stats['total_ocs_pendientes']:,.0f}",
+            delta=f"{len(ocs_pendientes)} OCs"
+        )
     
     with col4:
-        total_pendientes = ocs_pendientes['valor_pendiente'].sum() if not ocs_pendientes.empty else 0
-        st.metric("OCs Pendientes", format_currency(total_pendientes))
-    
-    st.divider()
-    
-    # TABLA PRINCIPAL DE CLIENTES
-    st.subheader("Estado de Clientes")
-    
-    if not clientes.empty:
-        display_df = clientes.copy()
-        columnas_a_mostrar = ['nombre', 'nit', 'cupo_sugerido', 'saldo_actual', 'disponible', 'porcentaje_uso', 'estado']
-        columnas_existentes = [col for col in columnas_a_mostrar if col in display_df.columns]
-        display_df = display_df[columnas_existentes]
-        
-        rename_map = {
-            'nombre': 'Cliente',
-            'nit': 'NIT',
-            'cupo_sugerido': 'Cupo',
-            'saldo_actual': 'Saldo',
-            'disponible': 'Disponible',
-            'porcentaje_uso': '% Uso',
-            'estado': 'Estado'
-        }
-        display_df = display_df.rename(columns=rename_map)
-        
-        for col in ['Cupo', 'Saldo', 'Disponible']:
-            if col in display_df.columns:
-                display_df[col] = display_df[col].apply(format_currency)
-        
-        if '% Uso' in display_df.columns:
-            display_df['% Uso'] = display_df['% Uso'].apply(lambda x: f"{x}%")
-        
-        st.dataframe(
-            display_df,
-            hide_index=True,
-            use_container_width=True,
-            column_config={
-                "Estado": st.column_config.Column(width="small"),
-                "Cliente": st.column_config.Column(width="large"),
-                "NIT": st.column_config.Column(width="small"),
-                "% Uso": st.column_config.ProgressColumn(format="%f%%", min_value=0, max_value=100)
-            }
+        porcentaje_uso = (stats['total_saldo_actual'] / stats['total_cupo_sugerido'] * 100) if stats['total_cupo_sugerido'] > 0 else 0
+        st.metric(
+            label="% Uso Total",
+            value=f"{porcentaje_uso:.1f}%",
+            delta=f"{stats['clientes_sobrepasados'] + stats['clientes_alerta']} clientes críticos"
         )
-    else:
-        st.info("No hay clientes registrados")
     
     st.divider()
     
-    # ALERTAS CRÍTICAS
-    st.subheader("Alertas Prioritarias")
+    # ========== GRÁFICOS PRINCIPALES ==========
+    col_chart1, col_chart2 = st.columns(2)
     
-    if not clientes.empty and 'estado' in clientes.columns:
-        alert_columns = st.columns(2)
+    with col_chart1:
+        st.subheader("📊 Distribución por Cliente")
         
-        with alert_columns[0]:
-            sobrepasados = clientes[clientes['estado'] == 'SOBREPASADO']
-            if not sobrepasados.empty:
-                st.error("Clientes con Cupo Sobrepasado")
-                for _, cliente in sobrepasados.iterrows():
-                    excedido = abs(cliente['disponible'])
-                    st.markdown(f"""
-                    **{cliente['nombre']}**  
-                    NIT: {cliente['nit']}  
-                    Excedido por: {format_currency(excedido)}  
-                    % Uso: {cliente['porcentaje_uso']}%
-                    """)
-            else:
-                st.success("No hay clientes sobrepasados")
+        if not clientes_stats.empty:
+            # Gráfico de barras de saldo por cliente
+            fig1 = px.bar(
+                clientes_stats.head(10),
+                x='nombre',
+                y='saldo_actual',
+                color='estado',
+                title='Top 10 Clientes por Saldo',
+                labels={'nombre': 'Cliente', 'saldo_actual': 'Saldo Actual', 'estado': 'Estado'},
+                color_discrete_map={
+                    'NORMAL': '#2ecc71',
+                    'ALERTA': '#f39c12',
+                    'SOBREPASADO': '#e74c3c'
+                }
+            )
+            fig1.update_layout(
+                xaxis_tickangle=-45,
+                height=400,
+                showlegend=True
+            )
+            st.plotly_chart(fig1, use_container_width=True)
+        else:
+            st.info("No hay datos de clientes disponibles")
+    
+    with col_chart2:
+        st.subheader("📈 Estado de Cupos")
         
-        with alert_columns[1]:
-            alertas = clientes[clientes['estado'] == 'ALERTA']
-            if not alertas.empty:
-                st.warning("Clientes en Alerta (>80% uso)")
-                for _, cliente in alertas.iterrows():
-                    st.markdown(f"""
-                    **{cliente['nombre']}**  
-                    NIT: {cliente['nit']}  
-                    Cupo usado: {cliente['porcentaje_uso']}%  
-                    Disponible: {format_currency(cliente['disponible'])}
-                    """)
-            else:
-                st.success("No hay clientes en alerta")
-    else:
-        st.info("No hay información de alertas")
+        if not clientes_stats.empty:
+            # Gráfico de dona para estados
+            estados_counts = clientes_stats['estado'].value_counts()
+            
+            fig2 = go.Figure(data=[
+                go.Pie(
+                    labels=estados_counts.index,
+                    values=estados_counts.values,
+                    hole=.4,
+                    marker_colors=['#e74c3c', '#f39c12', '#2ecc71'],
+                    textinfo='label+percent'
+                )
+            ])
+            fig2.update_layout(
+                title_text="Clientes por Estado",
+                height=400,
+                showlegend=False
+            )
+            st.plotly_chart(fig2, use_container_width=True)
+        else:
+            st.info("No hay datos de estados disponibles")
     
     st.divider()
     
-    # RESUMEN DE OCs
-    st.subheader("Resumen de Órdenes de Compra")
+    # ========== TABLAS DE DETALLE ==========
+    col_table1, col_table2 = st.columns(2)
     
-    if not ocs_pendientes.empty:
-        cols_summary = st.columns(3)
+    with col_table1:
+        st.subheader("📋 Clientes en Estado Crítico")
         
-        with cols_summary[0]:
-            st.metric("OCs Pendientes", len(ocs_pendientes))
-        
-        with cols_summary[1]:
-            valor_total_pend = ocs_pendientes['valor_pendiente'].sum()
-            st.metric("Valor Pendiente", format_currency(valor_total_pend))
-        
-        with cols_summary[2]:
-            if not ocs_pendientes.empty:
-                cliente_mas_ocs = ocs_pendientes['cliente_nombre'].mode()[0] if 'cliente_nombre' in ocs_pendientes.columns else "N/A"
-                st.metric("Cliente con más OCs", cliente_mas_ocs)
-        
-        if 'cliente_nombre' in ocs_pendientes.columns and 'valor_pendiente' in ocs_pendientes.columns:
-            resumen_ocs = ocs_pendientes.groupby('cliente_nombre').agg({
-                'numero_oc': 'count',
-                'valor_pendiente': 'sum'
-            }).reset_index()
+        if not clientes_stats.empty:
+            criticos = clientes_stats[
+                (clientes_stats['estado'] == 'SOBREPASADO') | 
+                (clientes_stats['estado'] == 'ALERTA')
+            ]
             
-            resumen_ocs = resumen_ocs.rename(columns={
-                'cliente_nombre': 'Cliente',
-                'numero_oc': 'Cantidad OCs',
-                'valor_pendiente': 'Valor Pendiente'
-            })
-            
-            resumen_ocs['Valor Pendiente'] = resumen_ocs['Valor Pendiente'].apply(format_currency)
-            resumen_ocs = resumen_ocs.sort_values('Cantidad OCs', ascending=False)
+            if not criticos.empty:
+                # Preparar datos para mostrar
+                df_criticos = criticos[['nombre', 'saldo_actual', 'cupo_sugerido', 'estado', 'porcentaje_uso']].copy()
+                df_criticos['uso'] = df_criticos['porcentaje_uso'].apply(lambda x: f"{x:.1f}%")
+                df_criticos['saldo'] = df_criticos['saldo_actual'].apply(lambda x: f"${x:,.0f}")
+                df_criticos['cupo'] = df_criticos['cupo_sugerido'].apply(lambda x: f"${x:,.0f}")
+                
+                st.dataframe(
+                    df_criticos[['nombre', 'saldo', 'cupo', 'uso', 'estado']].rename(columns={
+                        'nombre': 'Cliente',
+                        'saldo': 'Saldo',
+                        'cupo': 'Cupo',
+                        'uso': '% Uso',
+                        'estado': 'Estado'
+                    }),
+                    use_container_width=True,
+                    hide_index=True
+                )
+            else:
+                st.success("✅ Todos los clientes están en estado NORMAL")
+        else:
+            st.info("No hay datos de clientes disponibles")
+    
+    with col_table2:
+        st.subheader("📄 Órdenes de Compra Pendientes")
+        
+        if not ocs_pendientes.empty:
+            df_ocs = ocs_pendientes[['numero_oc', 'cliente_nombre', 'valor_total', 'valor_pendiente', 'estado']].copy()
+            df_ocs['valor_total'] = df_ocs['valor_total'].apply(lambda x: f"${x:,.0f}")
+            df_ocs['valor_pendiente'] = df_ocs['valor_pendiente'].apply(lambda x: f"${x:,.0f}")
             
             st.dataframe(
-                resumen_ocs,
+                df_ocs.rename(columns={
+                    'numero_oc': 'N° OC',
+                    'cliente_nombre': 'Cliente',
+                    'valor_total': 'Valor Total',
+                    'valor_pendiente': 'Pendiente',
+                    'estado': 'Estado'
+                }),
+                use_container_width=True,
                 hide_index=True,
-                use_container_width=True
+                column_config={
+                    'N° OC': st.column_config.TextColumn(width="medium"),
+                    'Cliente': st.column_config.TextColumn(width="large"),
+                    'Valor Total': st.column_config.TextColumn(width="small"),
+                    'Pendiente': st.column_config.TextColumn(width="small"),
+                    'Estado': st.column_config.TextColumn(width="small")
+                }
             )
-    else:
-        st.success("No hay OCs pendientes")
+        else:
+            st.success("✅ No hay OCs pendientes")
     
     st.divider()
     
-    # ACCIONES RÁPIDAS
-    st.subheader("Acciones Rápidas")
+    # ========== ACTIVIDAD RECIENTE ==========
+    st.subheader("🔄 Actividad Reciente")
     
-    col_actions1, col_actions2, col_actions3 = st.columns(3)
+    col_act1, col_act2 = st.columns(2)
     
-    with col_actions1:
-        if st.button("Ver Todos los Clientes", use_container_width=True):
-            st.switch_page("pages/2_Clientes.py")
+    with col_act1:
+        st.markdown("##### Últimos Movimientos")
+        
+        if not movimientos.empty:
+            for _, mov in movimientos.iterrows():
+                with st.container():
+                    col_m1, col_m2, col_m3 = st.columns([3, 2, 1])
+                    
+                    with col_m1:
+                        st.write(f"**{mov['cliente_nombre']}**")
+                        if mov['descripcion']:
+                            st.caption(mov['descripcion'])
+                    
+                    with col_m2:
+                        valor_color = "green" if mov['tipo'] == 'PAGO' else "orange"
+                        st.markdown(f"<span style='color:{valor_color}'><strong>{mov['tipo']}: ${mov['valor']:,.0f}</strong></span>", unsafe_allow_html=True)
+                    
+                    with col_m3:
+                        try:
+                            fecha = pd.to_datetime(mov['fecha_movimiento']).strftime('%d/%m')
+                            st.caption(fecha)
+                        except:
+                            st.caption(mov['fecha_movimiento'])
+                    
+                    st.divider()
+        else:
+            st.info("No hay movimientos recientes")
     
-    with col_actions2:
-        if st.button("Ver Todas las OCs", use_container_width=True):
-            st.switch_page("pages/3_OCs.py")
+    with col_act2:
+        st.markdown("##### Resumen por Estado")
+        
+        if not clientes_stats.empty:
+            # Crear métricas de resumen
+            col_s1, col_s2, col_s3 = st.columns(3)
+            
+            with col_s1:
+                st.metric(
+                    "Normal",
+                    len(clientes_stats[clientes_stats['estado'] == 'NORMAL']),
+                    delta_color="off"
+                )
+            
+            with col_s2:
+                st.metric(
+                    "Alerta",
+                    len(clientes_stats[clientes_stats['estado'] == 'ALERTA']),
+                    delta_color="off"
+                )
+            
+            with col_s3:
+                st.metric(
+                    "Sobrepasado",
+                    len(clientes_stats[clientes_stats['estado'] == 'SOBREPASADO']),
+                    delta_color="off"
+                )
+            
+            # Resumen de pagos del mes
+            if 'total_pagado_mes' in stats:
+                st.metric(
+                    "Total Pagado (Mes)",
+                    f"${stats['total_pagado_mes']:,.0f}",
+                    delta_color="off"
+                )
+            
+            # OCs por estado
+            if not ocs_pendientes.empty:
+                estados_oc = ocs_pendientes['estado'].value_counts()
+                st.markdown("##### OCs por Estado")
+                
+                for estado, count in estados_oc.items():
+                    st.write(f"**{estado}:** {count}")
+        else:
+            st.info("No hay datos de resumen disponibles")
     
-    with col_actions3:
-        if st.button("Actualizar Dashboard", use_container_width=True):
-            st.rerun()
+    # ========== BOTONES DE ACCIÓN RÁPIDA ==========
+    st.divider()
+    st.subheader("⚡ Acciones Rápidas")
+    
+    col_btn1, col_btn2, col_btn3 = st.columns(3)
+    
+    with col_btn1:
+        if st.button("👥 Ver Todos los Clientes", use_container_width=True):
+            st.switch_page("pages/2_clientes.py")
+    
+    with col_btn2:
+        if st.button("📋 Ver Todas las OCs", use_container_width=True):
+            st.switch_page("pages/3_ocs.py")
+    
+    with col_btn3:
+        if st.button("📊 Generar Reporte", use_container_width=True):
+            st.switch_page("pages/4_mantenimiento.py")
+
+# Para pruebas directas
+if __name__ == "__main__":
+    st.set_page_config(page_title="Dashboard", layout="wide")
+    show()
