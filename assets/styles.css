@@ -1,49 +1,227 @@
-/* assets/styles.css */
-:root {
-    --primary: #764ba2;
-    --secondary: #667eea;
-    --success: #1dd1a1;
-    --warning: #feca57;
-    --danger: #ff6b6b;
-    --info: #54a0ff;
+/* Estilos personalizados para Sistema de Cartera TD */
+
+/* ========== ESTILOS GENERALES ========== */
+.stApp {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
 }
 
-.stMetric {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+/* ========== HEADERS ========== */
+h1, h2, h3, h4, h5, h6 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+h1 {
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 0.5rem;
+}
+
+/* ========== TARJETAS Y CONTAINERS ========== */
+div[data-testid="stVerticalBlock"] > div > div {
+    background-color: white;
+    padding: 1.5rem;
     border-radius: 10px;
-    padding: 15px;
-    color: white !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 1rem;
 }
 
+/* ========== BOTONES ========== */
 .stButton > button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    border-radius: 5px;
+    font-weight: 500;
+    transition: all 0.3s ease;
     border: none;
-    border-radius: 8px;
-    padding: 10px 20px;
-    font-weight: bold;
 }
 
 .stButton > button:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-.oc-card {
-    border-left: 4px solid var(--primary);
-    padding: 10px;
-    margin: 10px 0;
-    background: #f8f9fa;
-    border-radius: 8px;
+/* Botón primario */
+.stButton > button:first-child:not(:disabled) {
+    background-color: #3498db;
+    color: white;
 }
 
-.alert-card {
-    border-left: 4px solid var(--danger);
-    background: #fff5f5;
+.stButton > button:first-child:not(:disabled):hover {
+    background-color: #2980b9;
 }
 
-.warning-card {
-    border-left: 4px solid var(--warning);
-    background: #fff9e6;
+/* Botón secundario */
+.stButton > button:not(:first-child):not(:disabled) {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.stButton > button:not(:first-child):not(:disabled):hover {
+    background-color: #7f8c8d;
+}
+
+/* ========== INPUTS ========== */
+.stTextInput > div > div > input,
+.stNumberInput > div > div > input,
+.stSelectbox > div > div > select,
+.stTextArea > div > div > textarea {
+    border-radius: 5px;
+    border: 1px solid #bdc3c7;
+}
+
+.stTextInput > div > div > input:focus,
+.stNumberInput > div > div > input:focus,
+.stSelectbox > div > div > select:focus,
+.stTextArea > div > div > textarea:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+/* ========== DATA TABLES ========== */
+.stDataFrame {
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.dataframe {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.dataframe th {
+    background-color: #2c3e50;
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem;
+}
+
+.dataframe td {
+    padding: 0.5rem;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.dataframe tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* ========== TABS ========== */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 2px;
+}
+
+.stTabs [data-baseweb="tab"] {
+    height: 50px;
+    border-radius: 4px 4px 0 0;
+    padding: 0 20px;
+    font-weight: 500;
+    background-color: #ecf0f1;
+    color: #7f8c8d;
+}
+
+.stTabs [aria-selected="true"] {
+    background-color: #3498db !important;
+    color: white !important;
+}
+
+/* ========== METRICS ========== */
+[data-testid="stMetric"] {
+    background-color: white;
+    padding: 1rem;
+    border-radius: 10px;
+    border-left: 4px solid #3498db;
+}
+
+[data-testid="stMetricDelta"] {
+    font-weight: 500;
+}
+
+/* ========== EXPANDERS ========== */
+.streamlit-expanderHeader {
+    background-color: #ecf0f1;
+    border-radius: 5px;
+    font-weight: 500;
+}
+
+.streamlit-expanderHeader:hover {
+    background-color: #d5dbdb;
+}
+
+/* ========== ALERTAS ========== */
+.stAlert {
+    border-radius: 5px;
+    padding: 1rem;
+}
+
+/* ========== BARRAS DE PROGRESO ========== */
+.stProgress > div > div > div {
+    background-color: #3498db;
+}
+
+/* ========== SPINNERS ========== */
+.stSpinner > div {
+    border-top-color: #3498db;
+}
+
+/* ========== LOGIN ========== */
+.login-container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+    .stButton > button {
+        width: 100% !important;
+        margin-bottom: 0.5rem;
+    }
+    
+    div[data-testid="column"] {
+        width: 100% !important;
+    }
+}
+
+/* ========== ESTADOS ========== */
+.estado-normal {
+    color: #27ae60;
+    font-weight: 600;
+}
+
+.estado-alerta {
+    color: #f39c12;
+    font-weight: 600;
+}
+
+.estado-sobrepasado {
+    color: #e74c3c;
+    font-weight: 600;
+}
+
+/* ========== ICONOS ========== */
+.icono-accion {
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+/* ========== SCROLLBAR ========== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #bdc3c7;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #95a5a6;
 }
