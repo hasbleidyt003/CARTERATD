@@ -1,6 +1,6 @@
 """
 Módulo de base de datos para Sistema de Cartera TD
-Versión compatible con Streamlit - CORREGIDO
+Versión con datos REALES de clientes - SIN datos de ejemplo
 """
 
 import sqlite3
@@ -87,44 +87,41 @@ def init_db():
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_oc_estado ON ocs(estado)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_mov_cliente ON movimientos(cliente_nit)')
     
-    # Insertar datos de ejemplo si no existen
+    # Insertar datos REALES (no de ejemplo)
     cursor.execute("SELECT COUNT(*) FROM clientes")
     if cursor.fetchone()[0] == 0:
-        clientes_ejemplo = [
-            ('890905166', 'EMPRESA SOCIAL DEL ESTADO HOSPITAL MENTAL', 7500000000, 7397192942),
-            ('900746052', 'NEURUM SAS', 5500000000, 5184247632),
-            ('800241602', 'FUNDACION COLOMBIANA DE CANCEROLOGIA', 3500000000, 3031469552),
+        # Datos REALES de los 7 clientes según tu imagen
+        clientes_reales = [
+            # NIT, NOMBRE, CUPO_SUGERIDO (Calculado), SALDO_ACTUAL (TOTAL CARTERA)
+            # AUNA COLOMBIA: 19.493.849.830 + 200M + 2.000M = 21.693.849.830
+            ('901212102', 'AUNA COLOMBIA S.A.S', 21693849830, 19493849830),
+            
+            # PHARMASAN: TOTAL CARTERA + 200M = 5.710.785.209 + 200M = 5.910.785.209
+            ('900249425', 'PHARMASAN S.A.S', 5910785209, 5710785209),
+            
+            # HOSPITAL MENTAL: Sin ajustes
+            ('890905166', 'EMPRESA SOCIAL DEL ESTADO HOSPITAL MENTAL DE ANTIOQUIA', 7500000000, 7397192942),
+            
+            # NEURUM: Sin ajustes
+            ('900746052', 'NEURUM SAS', 5500000000, 5184247683),
+            
+            # FUNDACIÓN CANCER: Sin ajustes
+            ('800241602', 'FUNDACION COLOMBIANA DE CANCEROLOGIA CLINICA VIDA', 3500000000, 3031469552),
+            
+            # COOPERATIVA HOSPITALES: Sin ajustes
             ('890985122', 'COOPERATIVA DE HOSPITALES DE ANTIOQUIA', 1500000000, 1291931405),
-            ('900099945', 'GLOBAL SERVICE PHARMACEUTICAL S.A.S.', 1200000000, 1009298565),
+            
+            # GRUPO ONCOLÓGICO: Sin ajustes
             ('811038014', 'GRUPO ONCOLOGICO INTERNACIONAL S.A.', 900000000, 806853666),
         ]
         
-        for nit, nombre, cupo, saldo in clientes_ejemplo:
+        for nit, nombre, cupo, saldo in clientes_reales:
             cursor.execute('''
             INSERT INTO clientes (nit, nombre, cupo_sugerido, saldo_actual)
             VALUES (?, ?, ?, ?)
             ''', (nit, nombre, cupo, saldo))
         
-        # Insertar OCs de ejemplo
-        ocs_ejemplo = [
-            ('890905166', 'OC-2024-001', 500000000, 'SUELTA'),
-            ('900746052', 'OC-2024-002', 300000000, 'SUELTA'),
-            ('800241602', 'OC-2024-003', 150000000, 'CUPO_NUEVO', 'CUPO-001'),
-        ]
-        
-        for oc in ocs_ejemplo:
-            if len(oc) == 4:
-                nit, num_oc, valor, tipo = oc
-                cupo_ref = ""
-            else:
-                nit, num_oc, valor, tipo, cupo_ref = oc
-            
-            cursor.execute('''
-            INSERT INTO ocs (cliente_nit, numero_oc, valor_total, tipo, cupo_referencia)
-            VALUES (?, ?, ?, ?, ?)
-            ''', (nit, num_oc, valor, tipo, cupo_ref))
-        
-        print(f"✅ Insertados {len(clientes_ejemplo)} clientes de ejemplo")
+        print(f"✅ Insertados {len(clientes_reales)} clientes REALES")
     
     conn.commit()
     conn.close()
@@ -379,6 +376,70 @@ def crear_oc(cliente_nit, numero_oc, valor_total, tipo="SUELTA", cupo_referencia
         raise Exception(f"Ya existe una OC con número: {numero_oc}")
     except Exception as e:
         raise Exception(f"Error al crear OC: {str(e)}")
+    finally:
+        conn.close()
+
+def editar_oc(oc_id, numero_oc=None, valor_total=None, tipo=None, cupo_referencia=None, comentarios=None):
+    """Edita una OC existente"""
+    conn = sqlite3.connect('data/database.db')
+    cursor = conn.cursor()
+    
+    try:
+        updates = []
+        params = []
+        
+        if numero_oc is not None:
+            updates.append("numero_oc = ?")
+            params.append(numero_oc)
+        
+        if valor_total is not None:
+            updates.append("valor_total = ?")
+            params.append(valor_total)
+        
+        if tipo is not None:
+            updates.append("tipo = ?")
+            params.append(tipo)
+        
+        if cupo_referencia is not None:
+            updates.append("cupo_referencia = ?")
+            params.append(cupo_referencia)
+        
+        if comentarios is not None:
+            updates.append("comentarios = ?")
+            params.append(comentarios)
+        
+        if updates:
+            params.append(oc_id)
+            query = f"UPDATE ocs SET {', '.join(updates)} WHERE id = ?"
+            cursor.execute(query, params)
+            conn.commit()
+        
+        return True
+    except sqlite3.IntegrityError:
+        raise Exception(f"Ya existe una OC con número: {numero_oc}")
+    except Exception as e:
+        conn.rollback()
+        raise Exception(f"Error al editar OC: {str(e)}")
+    finally:
+        conn.close()
+
+def eliminar_oc(oc_id):
+    """Elimina una OC y sus autorizaciones asociadas"""
+    conn = sqlite3.connect('data/database.db')
+    cursor = conn.cursor()
+    
+    try:
+        # Eliminar autorizaciones primero
+        cursor.execute('DELETE FROM autorizaciones_parciales WHERE oc_id = ?', (oc_id,))
+        
+        # Eliminar la OC
+        cursor.execute('DELETE FROM ocs WHERE id = ?', (oc_id,))
+        
+        conn.commit()
+        return True
+    except Exception as e:
+        conn.rollback()
+        raise Exception(f"Error al eliminar OC: {str(e)}")
     finally:
         conn.close()
 
