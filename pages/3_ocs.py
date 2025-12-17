@@ -1,26 +1,27 @@
 """
 Página de gestión de Órdenes de Compra (OCs) para Streamlit
-Versión completa con todas las funciones CORREGIDA
+Versión MEJORADA con edición y eliminación de OCs
 """
 
 import streamlit as st
 import pandas as pd
-import sqlite3
-from datetime import datetime
 from modules.database import (
     get_clientes, 
     get_ocs_pendientes, 
     get_todas_ocs,
     crear_oc,
+    editar_oc,
+    eliminar_oc,
     autorizar_oc,
     get_estadisticas_generales,
-    get_autorizaciones_oc
+    get_autorizaciones_oc,
+    get_oc_por_id
 )
 
 # ==================== FUNCIONES AUXILIARES ====================
 
 def mostrar_modal_agregar_oc():
-    """Modal para agregar nueva OC - CORREGIDO"""
+    """Modal para agregar nueva OC"""
     with st.form("form_nueva_oc"):
         st.subheader("➕ Agregar Nueva Orden de Compra")
         
@@ -44,7 +45,7 @@ def mostrar_modal_agregar_oc():
                 st.warning("No hay clientes disponibles")
                 cliente_nit = None
             
-            # Número de OC - CORREGIDO: sin max_length
+            # Número de OC
             numero_oc = st.text_input(
                 "Número de OC *",
                 help="Ej: OC-2024-001, FACT-12345",
@@ -86,7 +87,7 @@ def mostrar_modal_agregar_oc():
             placeholder="Descripción o notas adicionales..."
         )
         
-        # Botón de envío - CORREGIDO: usando st.form_submit_button
+        # Botón de envío
         col_submit, col_cancel = st.columns(2)
         
         submitted = False
@@ -141,8 +142,163 @@ def mostrar_modal_agregar_oc():
     
     return False
 
+def mostrar_modal_editar_oc(oc):
+    """Modal para editar una OC existente"""
+    with st.form(f"edit_form_{oc['id']}"):
+        st.subheader(f"✏️ Editar OC: {oc['numero_oc']}")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Número de OC (puede cambiar)
+            nuevo_numero_oc = st.text_input(
+                "Número de OC *",
+                value=oc['numero_oc'],
+                help="Nuevo número de OC"
+            )
+            
+            # Valor total
+            nuevo_valor_total = st.number_input(
+                "Valor Total *",
+                min_value=0.0,
+                value=float(oc['valor_total']),
+                step=100000.0,
+                format="%.0f",
+                help="Nuevo valor total"
+            )
+        
+        with col2:
+            # Tipo de OC
+            nuevo_tipo = st.selectbox(
+                "Tipo de OC",
+                ["SUELTA", "CUPO_NUEVO"],
+                index=0 if oc['tipo'] == 'SUELTA' else 1,
+                help="Tipo de orden"
+            )
+            
+            # Cupo de referencia
+            nuevo_cupo_ref = st.text_input(
+                "Cupo de Referencia",
+                value=oc['cupo_referencia'] if oc['cupo_referencia'] else "",
+                help="Referencia del cupo (solo para tipo CUPO_NUEVO)",
+                placeholder="CUPO-001",
+                disabled=(nuevo_tipo != 'CUPO_NUEVO')
+            )
+        
+        # Comentarios
+        nuevos_comentarios = st.text_area(
+            "Comentarios",
+            value=oc['comentarios'] if oc['comentarios'] else "",
+            height=100,
+            placeholder="Actualice los comentarios..."
+        )
+        
+        # Botones de acción
+        col_save, col_cancel = st.columns(2)
+        
+        guardado = False
+        with col_save:
+            guardado = st.form_submit_button(
+                "💾 Guardar Cambios",
+                type="primary",
+                use_container_width=True
+            )
+        
+        with col_cancel:
+            cancelado = st.form_submit_button(
+                "❌ Cancelar",
+                use_container_width=True
+            )
+        
+        if guardado:
+            # Validaciones
+            if not nuevo_numero_oc.strip():
+                st.error("❌ El número de OC es obligatorio")
+                return False
+            
+            if nuevo_valor_total <= 0:
+                st.error("❌ El valor total debe ser mayor a 0")
+                return False
+            
+            try:
+                # Actualizar la OC
+                editar_oc(
+                    oc_id=oc['id'],
+                    numero_oc=nuevo_numero_oc.strip(),
+                    valor_total=nuevo_valor_total,
+                    tipo=nuevo_tipo,
+                    cupo_referencia=nuevo_cupo_ref.strip(),
+                    comentarios=nuevos_comentarios.strip()
+                )
+                
+                st.success(f"✅ OC '{nuevo_numero_oc}' actualizada exitosamente")
+                st.rerun()
+                return True
+                
+            except Exception as e:
+                st.error(f"❌ Error al editar OC: {str(e)}")
+                return False
+        
+        if cancelado:
+            st.rerun()
+    
+    return False
+
+def mostrar_modal_eliminar_oc(oc):
+    """Modal para confirmar eliminación de OC"""
+    with st.form(f"delete_form_{oc['id']}"):
+        st.subheader(f"🗑️ Eliminar OC: {oc['numero_oc']}")
+        
+        st.warning(f"⚠️ **¡ADVERTENCIA!** Estás a punto de eliminar la OC:")
+        st.info(f"**Cliente:** {oc['cliente_nombre']}")
+        st.info(f"**Número OC:** {oc['numero_oc']}")
+        st.info(f"**Valor:** ${oc['valor_total']:,.0f}")
+        st.info(f"**Estado:** {oc['estado']}")
+        
+        st.error("**Esta acción NO se puede deshacer.**")
+        
+        # Confirmación
+        confirmacion = st.text_input(
+            "Escribe 'ELIMINAR' para confirmar:",
+            placeholder="ELIMINAR",
+            help="Debes escribir exactamente 'ELIMINAR' para proceder"
+        )
+        
+        # Botones
+        col_del, col_can = st.columns(2)
+        
+        eliminado = False
+        with col_del:
+            eliminado = st.form_submit_button(
+                "🔥 Confirmar Eliminación",
+                type="secondary",
+                use_container_width=True,
+                disabled=(confirmacion != "ELIMINAR")
+            )
+        
+        with col_can:
+            cancelado = st.form_submit_button(
+                "❌ Cancelar",
+                use_container_width=True
+            )
+        
+        if eliminado and confirmacion == "ELIMINAR":
+            try:
+                eliminar_oc(oc['id'])
+                st.success(f"✅ OC '{oc['numero_oc']}' eliminada exitosamente")
+                st.rerun()
+                return True
+            except Exception as e:
+                st.error(f"❌ Error al eliminar OC: {str(e)}")
+                return False
+        
+        if cancelado:
+            st.rerun()
+    
+    return False
+
 def mostrar_modal_autorizar(oc):
-    """Modal para autorización de OC - CORREGIDO"""
+    """Modal para autorización de OC"""
     with st.form(f"auth_form_{oc['id']}"):
         st.subheader(f"✅ Autorizar OC: {oc['numero_oc']}")
         
@@ -196,14 +352,14 @@ def mostrar_modal_autorizar(oc):
             format="%.0f"
         )
         
-        # Comentario - CORREGIDO: sin max_length
+        # Comentario
         comentario = st.text_area(
             "Comentario (opcional)",
             placeholder="Ej: Autorización parcial por aprobación de gerencia",
             height=100
         )
         
-        # Botones de acción - CORREGIDO: usando st.form_submit_button
+        # Botones de acción
         col_a, col_b = st.columns(2)
         
         confirmado = False
@@ -315,7 +471,7 @@ def mostrar_detalle_oc(oc):
             st.write(f"No se pudo cargar el historial: {e}")
 
 def mostrar_oc_tarjeta(oc):
-    """Muestra una OC como tarjeta interactiva"""
+    """Muestra una OC como tarjeta interactiva con botones de edición/eliminación"""
     with st.container():
         # Determinar color según estado
         estado_colores = {
@@ -365,13 +521,31 @@ def mostrar_oc_tarjeta(oc):
         with col3:
             # Botones de acción según estado
             if oc['estado'] in ['PENDIENTE', 'PARCIAL']:
+                # Botón autorizar
                 if st.button("✅ Autorizar", 
                            key=f"auth_btn_{oc['id']}", 
                            use_container_width=True,
                            help="Autorizar total o parcialmente"):
                     st.session_state[f'autorizar_oc_{oc["id"]}'] = True
                     st.rerun()
+                
+                # Botón editar
+                if st.button("✏️ Editar", 
+                           key=f"edit_btn_{oc['id']}", 
+                           use_container_width=True,
+                           help="Editar esta OC"):
+                    st.session_state[f'editar_oc_{oc["id"]}'] = True
+                    st.rerun()
+                
+                # Botón eliminar
+                if st.button("🗑️ Eliminar", 
+                           key=f"del_btn_{oc['id']}", 
+                           use_container_width=True,
+                           help="Eliminar esta OC"):
+                    st.session_state[f'eliminar_oc_{oc["id"]}'] = True
+                    st.rerun()
             else:
+                # Para OCs autorizadas, solo mostrar detalle
                 if st.button("📋 Detalle", 
                            key=f"det_btn_{oc['id']}", 
                            use_container_width=True,
@@ -385,6 +559,20 @@ def mostrar_oc_tarjeta(oc):
             # Limpiar estado después de mostrar
             if f'autorizar_oc_{oc["id"]}' in st.session_state:
                 del st.session_state[f'autorizar_oc_{oc["id"]}']
+        
+        # Mostrar modal de edición si está activo
+        if f'editar_oc_{oc["id"]}' in st.session_state:
+            mostrar_modal_editar_oc(oc)
+            # Limpiar estado después de mostrar
+            if f'editar_oc_{oc["id"]}' in st.session_state:
+                del st.session_state[f'editar_oc_{oc["id"]}']
+        
+        # Mostrar modal de eliminación si está activo
+        if f'eliminar_oc_{oc["id"]}' in st.session_state:
+            mostrar_modal_eliminar_oc(oc)
+            # Limpiar estado después de mostrar
+            if f'eliminar_oc_{oc["id"]}' in st.session_state:
+                del st.session_state[f'eliminar_oc_{oc["id"]}']
         
         # Mostrar detalle si está activo
         if f'detalle_oc_{oc["id"]}' in st.session_state:
@@ -498,7 +686,7 @@ def show():
                 for _, oc in ocs.iterrows():
                     mostrar_oc_tarjeta(oc)
             else:
-                # Mostrar como tabla
+                # Mostrar como tabla con acciones
                 columnas_mostrar = [
                     'numero_oc', 'cliente_nombre', 'valor_total', 
                     'valor_autorizado', 'valor_pendiente', 'estado', 'tipo'
@@ -526,7 +714,16 @@ def show():
                 st.dataframe(
                     df_tabla,
                     use_container_width=True,
-                    hide_index=True
+                    hide_index=True,
+                    column_config={
+                        "Número OC": st.column_config.Column(width="medium"),
+                        "Cliente": st.column_config.Column(width="large"),
+                        "Valor Total": st.column_config.Column(width="small"),
+                        "Autorizado": st.column_config.Column(width="small"),
+                        "Pendiente": st.column_config.Column(width="small"),
+                        "Estado": st.column_config.Column(width="small"),
+                        "Tipo": st.column_config.Column(width="small")
+                    }
                 )
         else:
             st.info("📭 No hay OCs que coincidan con los filtros seleccionados")
