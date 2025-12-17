@@ -61,7 +61,7 @@ def show_main_app():
             dashboard = importlib.import_module("pages/1_dashboard")
             dashboard.show()
         except Exception as e:
-            st.error(f"Error cargando Dashboard: {str(e)}")
+            st.error(f"Error cargando dashboard: {str(e)}")
             st.info("Asegúrate que existe: pages/1_dashboard.py")
     
     with tab2:
@@ -69,7 +69,7 @@ def show_main_app():
             clientes = importlib.import_module("pages/2_clientes")
             clientes.show()
         except Exception as e:
-            st.error(f"Error cargando Clientes: {str(e)}")
+            st.error(f"Error cargando clientes: {str(e)}")
             st.info("Asegúrate que existe: pages/2_clientes.py")
     
     with tab3:
@@ -77,7 +77,7 @@ def show_main_app():
             ocs = importlib.import_module("pages/3_ocs")
             ocs.show()
         except Exception as e:
-            st.error(f"Error cargando OCs: {str(e)}")
+            st.error(f"Error cargando ocs: {str(e)}")
             st.info("Asegúrate que existe: pages/3_ocs.py")
     
     with tab4:
@@ -85,7 +85,7 @@ def show_main_app():
             mantenimiento = importlib.import_module("pages/4_mantenimiento")
             mantenimiento.show()
         except Exception as e:
-            st.error(f"Error cargando Mantenimiento: {str(e)}")
+            st.error(f"Error cargando mantenimiento: {str(e)}")
             st.info("Asegúrate que existe: pages/4_mantenimiento.py")
 
 if __name__ == "__main__":
