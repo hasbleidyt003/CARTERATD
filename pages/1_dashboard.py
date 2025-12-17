@@ -3,14 +3,14 @@ import pandas as pd
 from modules.database import get_clientes, get_todas_ocs
 
 def show():
-    st.header("📊 Dashboard de Control - Cupos Medicamentos")
+    st.title("📊 Dashboard de Control - Cupos Medicamentos")
     
     try:
         # Obtener datos
         clientes = get_clientes()
         todas_ocs = get_todas_ocs()
         
-        # Calcular OCs pendientes
+        # Filtrar OCs pendientes o parciales
         if not todas_ocs.empty and 'estado' in todas_ocs.columns:
             ocs_pendientes = todas_ocs[todas_ocs['estado'].isin(['PENDIENTE', 'PARCIAL'])]
         else:
@@ -41,12 +41,15 @@ def show():
             st.metric("Saldo Total", "$0")
     
     with col3:
-        if not clientes.empty and 'estado' in clientes.columns:
-            alertas = len(clientes[clientes['estado'] == 'ALERTA'])
-            sobrepasados = len(clientes[clientes['estado'] == 'SOBREPASADO'])
-            st.metric("Clientes Críticos", f"{alertas}/{sobrepasados}")
+        if not clientes.empty:
+            if 'estado' in clientes.columns:
+                alertas = len(clientes[clientes['estado'] == 'ALERTA'])
+                sobrepasados = len(clientes[clientes['estado'] == 'SOBREPASADO'])
+                st.metric("Clientes Críticos", f"{alertas}/{sobrepasados}")
+            else:
+                st.metric("Clientes", len(clientes))
         else:
-            st.metric("Clientes Críticos", "0/0")
+            st.metric("Clientes", "0")
     
     with col4:
         if not ocs_pendientes.empty and 'valor_pendiente' in ocs_pendientes.columns:
@@ -63,24 +66,6 @@ def show():
     if not clientes.empty:
         # Preparar datos para mostrar
         display_df = clientes.copy()
-        
-        # Calcular disponible
-        display_df['disponible'] = display_df['cupo_sugerido'] - display_df['saldo_actual']
-        
-        # Calcular porcentaje de uso
-        display_df['porcentaje_uso'] = (display_df['saldo_actual'] / display_df['cupo_sugerido'] * 100).round(1)
-        
-        # Determinar estado si no existe
-        if 'estado' not in display_df.columns:
-            def determinar_estado(row):
-                if row['disponible'] < 0:
-                    return 'SOBREPASADO'
-                elif row['porcentaje_uso'] > 80:
-                    return 'ALERTA'
-                else:
-                    return 'NORMAL'
-            
-            display_df['estado'] = display_df.apply(determinar_estado, axis=1)
         
         # Seleccionar y ordenar columnas
         columnas_a_mostrar = ['nombre', 'nit', 'cupo_sugerido', 'saldo_actual', 
@@ -145,9 +130,9 @@ def show():
                 st.info("No hay información de estados")
         
         with col2:
-            st.write("**Top 5 - Mayor Saldo**")
+            st.write("**Top 3 - Mayor Saldo**")
             if 'saldo_actual' in clientes.columns and 'nombre' in clientes.columns:
-                top_clientes = clientes.nlargest(5, 'saldo_actual')
+                top_clientes = clientes.nlargest(3, 'saldo_actual')
                 
                 for _, cliente in top_clientes.iterrows():
                     nombre = cliente['nombre'][:25] + "..." if len(cliente['nombre']) > 25 else cliente['nombre']
@@ -167,10 +152,8 @@ def show():
         if not sobrepasados.empty:
             st.error("**🔴 Clientes con Cupo Sobrepasado:**")
             for _, cliente in sobrepasados.iterrows():
-                cupo = cliente.get('cupo_sugerido', 0)
-                saldo = cliente.get('saldo_actual', 0)
-                sobrepaso = abs(cupo - saldo)
-                st.write(f"• **{cliente.get('nombre', 'Sin nombre')}** - Sobrepasa: ${sobrepaso:,.0f}")
+                sobrepaso = abs(cliente['disponible'])
+                st.write(f"• **{cliente['nombre']}** - Sobrepasa: ${sobrepaso:,.0f}")
         else:
             st.success("✅ No hay clientes sobrepasados")
         
@@ -179,11 +162,9 @@ def show():
         if not alertas.empty:
             st.warning("**🟡 Clientes en Alerta (>80% uso):**")
             for _, cliente in alertas.iterrows():
-                porcentaje = cliente.get('porcentaje_uso', 0)
-                if isinstance(porcentaje, (int, float)):
-                    st.write(f"• **{cliente.get('nombre', 'Sin nombre')}** - Uso: {porcentaje:.1f}%")
-                else:
-                    st.write(f"• **{cliente.get('nombre', 'Sin nombre')}**")
+                st.write(f"• **{cliente['nombre']}** - Uso: {cliente['porcentaje_uso']}%")
+        else:
+            st.success("✅ No hay clientes en alerta")
     else:
         st.info("No hay información de alertas disponible")
     
