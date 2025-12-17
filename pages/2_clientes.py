@@ -4,14 +4,16 @@ Página de gestión de clientes
 
 import streamlit as st
 import pandas as pd
-import sqlite3
-from datetime import datetime
+from modules.database import (
+    get_clientes, 
+    actualizar_cliente, 
+    crear_cliente,
+    agregar_movimiento,
+    get_cliente_por_nit
+)
 
 def show():
     st.title("👥 Gestión de Clientes")
-    
-    # Inicializar base de datos si no existe
-    init_database()
     
     # Pestañas
     tab1, tab2, tab3 = st.tabs(["📋 Clientes", "➕ Nuevo", "📊 Resumen"])
@@ -24,115 +26,6 @@ def show():
     
     with tab3:
         mostrar_resumen()
-
-def init_database():
-    """Inicializa la base de datos con clientes predeterminados"""
-    conn = sqlite3.connect('data/database.db')
-    cursor = conn.cursor()
-    
-    # Crear tabla de clientes si no existe
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS clientes (
-        nit TEXT PRIMARY KEY,
-        nombre TEXT NOT NULL,
-        cupo_sugerido REAL DEFAULT 0,
-        saldo_actual REAL DEFAULT 0,
-        activo INTEGER DEFAULT 1,
-        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    ''')
-    
-    # Insertar clientes predeterminados si no existen
-    clientes_predeterminados = [
-        ('901212102', 'AUNA COLOMBIA S.A.S.', 21693849830, 19493849830),
-        ('890905166', 'EMPRESA SOCIAL DEL ESTADO HOSPITAL MENTAL DE ANTIOQ', 7500000000, 7397192942),
-        ('900249425', 'PHARMASAN S.A.S', 5910785209, 5710785209),
-        ('900746052', 'NEURUM SAS', 5500000000, 5184247632),
-        ('800241602', 'FUNDACION COLOMBIANA DE CANCEROLOGIA CLINICA VIDA', 3500000000, 3031469552),
-        ('890985122', 'COOPERATIVA DE HOSPITALES DE ANTIOQUIA', 1500000000, 1291931405),
-        ('811038014', 'GRUPO ONCOLOGICO INTERNACIONAL S.A.', 900000000, 806853666)
-    ]
-    
-    for nit, nombre, cupo_sugerido, saldo_actual in clientes_predeterminados:
-        cursor.execute('''
-        INSERT OR IGNORE INTO clientes (nit, nombre, cupo_sugerido, saldo_actual, activo)
-        VALUES (?, ?, ?, ?, 1)
-        ''', (nit, nombre, cupo_sugerido, saldo_actual))
-    
-    conn.commit()
-    conn.close()
-
-def get_clientes():
-    """Obtiene todos los clientes activos"""
-    conn = sqlite3.connect('data/database.db')
-    query = '''
-    SELECT 
-        nit,
-        nombre,
-        cupo_sugerido,
-        saldo_actual,
-        (cupo_sugerido - saldo_actual) as disponible,
-        CASE 
-            WHEN saldo_actual > cupo_sugerido THEN 'SOBREPASADO'
-            WHEN (saldo_actual * 100.0 / cupo_sugerido) > 80 THEN 'ALERTA'
-            ELSE 'NORMAL'
-        END as estado,
-        (saldo_actual * 100.0 / cupo_sugerido) as porcentaje_uso
-    FROM clientes 
-    WHERE activo = 1
-    ORDER BY nombre
-    '''
-    df = pd.read_sql_query(query, conn)
-    conn.close()
-    return df
-
-def actualizar_cliente(nit, nombre=None, cupo_sugerido=None, saldo_actual=None):
-    """Actualiza los datos de un cliente"""
-    conn = sqlite3.connect('data/database.db')
-    cursor = conn.cursor()
-    
-    updates = []
-    params = []
-    
-    if nombre:
-        updates.append("nombre = ?")
-        params.append(nombre)
-    if cupo_sugerido is not None:
-        updates.append("cupo_sugerido = ?")
-        params.append(cupo_sugerido)
-    if saldo_actual is not None:
-        updates.append("saldo_actual = ?")
-        params.append(saldo_actual)
-    
-    if updates:
-        updates.append("fecha_actualizacion = ?")
-        params.append(datetime.now())
-        params.append(nit)
-        
-        query = f"UPDATE clientes SET {', '.join(updates)} WHERE nit = ?"
-        cursor.execute(query, params)
-    
-    conn.commit()
-    conn.close()
-    return True
-
-def crear_cliente(nit, nombre, cupo_sugerido, saldo_actual=0):
-    """Crea un nuevo cliente"""
-    conn = sqlite3.connect('data/database.db')
-    cursor = conn.cursor()
-    
-    try:
-        cursor.execute('''
-        INSERT INTO clientes (nit, nombre, cupo_sugerido, saldo_actual, activo)
-        VALUES (?, ?, ?, ?, 1)
-        ''', (nit, nombre, cupo_sugerido, saldo_actual))
-        conn.commit()
-        return True
-    except sqlite3.IntegrityError:
-        raise Exception(f"Ya existe un cliente con NIT: {nit}")
-    finally:
-        conn.close()
 
 def mostrar_clientes():
     """Muestra la lista de clientes con opciones de edición"""
@@ -213,8 +106,8 @@ def mostrar_clientes():
                                 st.rerun()
                         
                         with col_btn2:
-                            if st.form_submit_button("📝 Ver Detalles", use_container_width=True):
-                                st.session_state[f"detalle_{cliente['nit']}"] = True
+                            if st.form_submit_button("💳 Registrar Pago", use_container_width=True):
+                                st.session_state[f"pago_{cliente['nit']}"] = True
                                 st.rerun()
                 
                 with col_b:
@@ -227,7 +120,7 @@ def mostrar_clientes():
                         st.metric("Disponible", f"${cliente['disponible']:,.0f}")
                     with col_m2:
                         st.metric("Saldo", f"${cliente['saldo_actual']:,.0f}")
-                        st.metric("% Uso", f"{cliente['porcentaje_uso']:.1f}%")
+                        st.metric("% Uso", f"{cliente['porcentaje_uso']}%")
                     
                     # Estado con color
                     estado_color = {
@@ -238,7 +131,46 @@ def mostrar_clientes():
                     st.write(f"**Estado:** {estado_color.get(cliente['estado'], '⚪')} {cliente['estado']}")
                     
                     # Barra de progreso
-                    st.progress(min(cliente['porcentaje_uso'] / 100, 1))
+                    st.progress(min(float(cliente['porcentaje_uso']), 100) / 100)
+                
+                # Modal para registrar pago
+                if f"pago_{cliente['nit']}" in st.session_state:
+                    with st.form(key=f"pago_form_{cliente['nit']}"):
+                        st.subheader(f"💳 Registrar Pago - {cliente['nombre']}")
+                        
+                        valor_pago = st.number_input(
+                            "Valor del Pago",
+                            min_value=0.0,
+                            value=0.0,
+                            step=1000000.0,
+                            format="%.0f"
+                        )
+                        
+                        descripcion = st.text_input("Descripción", placeholder="Ej: Transferencia bancaria")
+                        referencia = st.text_input("Referencia", placeholder="Ej: PAGO-001")
+                        
+                        col_sub, col_can = st.columns(2)
+                        with col_sub:
+                            if st.form_submit_button("✅ Confirmar Pago", use_container_width=True):
+                                try:
+                                    agregar_movimiento(
+                                        cliente_nit=cliente['nit'],
+                                        tipo="PAGO",
+                                        valor=valor_pago,
+                                        descripcion=descripcion,
+                                        referencia=referencia,
+                                        usuario=st.session_state.get('username', 'Admin')
+                                    )
+                                    st.success(f"✅ Pago de ${valor_pago:,.0f} registrado")
+                                    del st.session_state[f"pago_{cliente['nit']}"]
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"❌ Error: {str(e)}")
+                        
+                        with col_can:
+                            if st.form_submit_button("❌ Cancelar", use_container_width=True):
+                                del st.session_state[f"pago_{cliente['nit']}"]
+                                st.rerun()
         
         # Mostrar también en tabla
         st.divider()
@@ -251,7 +183,6 @@ def mostrar_clientes():
         # Formatear valores
         for col in ['Cupo Sugerido', 'Saldo Actual', 'Disponible']:
             df_tabla[col] = df_tabla[col].apply(lambda x: f"${x:,.0f}")
-        df_tabla['% Uso'] = df_tabla['% Uso'].apply(lambda x: f"{x:.1f}%")
         
         st.dataframe(df_tabla, use_container_width=True, hide_index=True)
         
@@ -364,8 +295,8 @@ def mostrar_resumen():
                     st.subheader(f"#{i}")
                 with col_info:
                     st.write(f"**{cliente['nombre']}**")
-                    st.progress(min(cliente['porcentaje_uso'] / 100, 1))
-                    st.caption(f"{cliente['porcentaje_uso']:.1f}%")
+                    st.progress(min(float(cliente['porcentaje_uso']), 100) / 100)
+                    st.caption(f"{cliente['porcentaje_uso']}%")
         
         st.divider()
         
