@@ -1,49 +1,95 @@
-/* assets/styles.css */
-:root {
-    --primary: #764ba2;
-    --secondary: #667eea;
-    --success: #1dd1a1;
-    --warning: #feca57;
-    --danger: #ff6b6b;
-    --info: #54a0ff;
-}
+"""
+ESTILOS GLOBALES Y CONFIGURACIONES
+"""
 
-.stMetric {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 10px;
-    padding: 15px;
-    color: white !important;
-}
+def apply_global_styles():
+    """Aplica estilos globales a todas las páginas"""
+    st.markdown("""
+    <style>
+    /* Estilos globales */
+    .stMetric {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid #e0e0e0;
+    }
+    
+    /* Botones principales */
+    .stButton > button {
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    /* Títulos */
+    h1, h2, h3 {
+        color: #1E293B;
+        font-weight: 700;
+        margin-top: 1rem !important;
+    }
+    
+    /* Separadores */
+    hr {
+        margin: 2rem 0 !important;
+    }
+    
+    /* Tarjetas */
+    .stExpander {
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+    }
+    
+    /* Badges de estado */
+    .badge-normal { color: #10B981; background-color: #D1FAE5; padding: 4px 8px; border-radius: 12px; font-size: 12px; }
+    .badge-alerta { color: #F59E0B; background-color: #FEF3C7; padding: 4px 8px; border-radius: 12px; font-size: 12px; }
+    .badge-sobrepasado { color: #EF4444; background-color: #FEE2E2; padding: 4px 8px; border-radius: 12px; font-size: 12px; }
+    
+    /* Barras de progreso */
+    .stProgress > div > div {
+        height: 8px !important;
+        border-radius: 4px;
+    }
+    
+    /* Dataframes */
+    .dataframe {
+        border-radius: 10px !important;
+        overflow: hidden !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-.stButton > button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 20px;
-    font-weight: bold;
-}
+def get_status_badge(status, value=None):
+    """Devuelve un badge de estado con icono y color"""
+    status_config = {
+        'NORMAL': {'icon': '🟢', 'color': 'success', 'bg': '#D1FAE5'},
+        'ALERTA': {'icon': '🟡', 'color': 'warning', 'bg': '#FEF3C7'},
+        'SOBREPASADO': {'icon': '🔴', 'color': 'error', 'bg': '#FEE2E2'},
+        'PENDIENTE': {'icon': '⏳', 'color': 'warning', 'bg': '#FEF3C7'},
+        'PARCIAL': {'icon': '🟠', 'color': 'warning', 'bg': '#FEF3C7'},
+        'AUTORIZADA': {'icon': '✅', 'color': 'success', 'bg': '#D1FAE5'}
+    }
+    
+    config = status_config.get(status, {'icon': '⚪', 'color': 'info', 'bg': '#E0E7FF'})
+    
+    if value is not None:
+        return f"<span style='background-color: {config['bg']}; padding: 4px 12px; border-radius: 16px; font-size: 14px;'>{config['icon']} {status} ({value})</span>"
+    return f"<span style='background-color: {config['bg']}; padding: 4px 12px; border-radius: 16px; font-size: 14px;'>{config['icon']} {status}</span>"
 
-.stButton > button:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
+def format_currency(value):
+    """Formatea valores monetarios"""
+    if value is None:
+        return "$0"
+    return f"${value:,.0f}"
 
-.oc-card {
-    border-left: 4px solid var(--primary);
-    padding: 10px;
-    margin: 10px 0;
-    background: #f8f9fa;
-    border-radius: 8px;
-}
-
-.alert-card {
-    border-left: 4px solid var(--danger);
-    background: #fff5f5;
-}
-
-.warning-card {
-    border-left: 4px solid var(--warning);
-    background: #fff9e6;
-}
+def format_percentage(value):
+    """Formatea porcentajes"""
+    if value is None:
+        return "0%"
+    return f"{value:.1f}%"
