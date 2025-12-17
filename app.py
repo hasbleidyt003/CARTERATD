@@ -1,71 +1,75 @@
 import streamlit as st
-from modules.auth import authenticate
-from modules.database import init_db
-import warnings
-warnings.filterwarnings('ignore')
 
 # Configuración de página
 st.set_page_config(
     page_title="Control de Cupos - Medicamentos",
     page_icon="💊",
-    layout="wide",
-    initial_sidebar_state="collapsed"
+    layout="wide"
 )
 
-# Inicializar base de datos
-init_db()
+# ==================== AUTENTICACIÓN ====================
+USUARIOS = {
+    "cartera": "admin123",
+    "viewer": "view123"
+}
 
-# Sistema de autenticación
-def main():
-    # Mostrar login si no está autenticado
+def check_auth():
+    """Verifica si el usuario está autenticado"""
     if 'authenticated' not in st.session_state:
         st.session_state.authenticated = False
+    if 'username' not in st.session_state:
+        st.session_state.username = ""
     
-    if not st.session_state.authenticated:
-        authenticate()
-    else:
-        # Mostrar aplicación principal
-        show_main_app()
+    return st.session_state.authenticated
 
-def show_main_app():
-    # CSS personalizado
-    with open('assets/styles.css', 'r') as f:
-        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+def show_login():
+    """Muestra la página de login"""
+    st.markdown("""
+    <div style='text-align: center; padding: 50px;'>
+        <h1>💊 Control de Cupos</h1>
+        <h3>Sistema de Seguimiento - Medicamentos</h3>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # Barra superior
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        with st.form("login_form"):
+            st.subheader("🔐 Acceso al Sistema")
+            
+            username = st.text_input("Usuario")
+            password = st.text_input("Contraseña", type="password")
+            
+            submitted = st.form_submit_button("Ingresar", use_container_width=True)
+            
+            if submitted:
+                if username in USUARIOS and USUARIOS[username] == password:
+                    st.session_state.authenticated = True
+                    st.session_state.username = username
+                    st.rerun()
+                else:
+                    st.error("❌ Usuario o contraseña incorrectos")
+
+# ==================== APLICACIÓN PRINCIPAL ====================
+def main():
+    # Verificar autenticación
+    if not check_auth():
+        show_login()
+        return
+    
+    # Si está autenticado, Streamlit mostrará automáticamente las páginas
+    # No necesitamos hacer nada más aquí
+    
+    # Solo mostrar header común
     col1, col2, col3 = st.columns([3, 2, 1])
     with col1:
         st.title("💊 Control de Cupos - Medicamentos")
     with col2:
-        st.info(f"Usuario: {st.session_state.username}")
+        st.info(f"👤 Usuario: {st.session_state.username}")
     with col3:
-        if st.button("🚪 Cerrar Sesión"):
+        if st.button("🚪 Cerrar Sesión", use_container_width=True):
             st.session_state.authenticated = False
+            st.session_state.username = ""
             st.rerun()
-    
-    # Navegación por pestañas
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "🏠 Dashboard", 
-        "👥 Clientes", 
-        "📋 OCs Pendientes", 
-        "🧹 Mantenimiento"
-    ])
-    
-    with tab1:
-        import pages.Dashboard as dashboard
-        dashboard.show()
-    
-    with tab2:
-        import pages.Clientes as clientes
-        clientes.show()
-    
-    with tab3:
-        import pages.OCs as ocs
-        ocs.show()
-    
-    with tab4:
-        import pages.Mantenimiento as mantenimiento
-        mantenimiento.show()
 
 if __name__ == "__main__":
     main()
