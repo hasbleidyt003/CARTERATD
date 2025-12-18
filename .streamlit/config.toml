@@ -1,9 +1,14 @@
 [theme]
+# Colores principales - Azules brillantes sobre fondo claro
 primaryColor = "#0066FF"
 backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F7FAFC"
+secondaryBackgroundColor = "#F8FAFC"
 textColor = "#1A1A1A"
 font = "sans serif"
+
+# Personalización adicional
+fontSize = "16px"
+fontHead = "sans serif"
 
 [server]
 port = 8501
@@ -16,3 +21,8 @@ gatherUsageStats = false
 
 [client]
 caching = true
+showErrorDetails = true
+
+[runner]
+magicEnabled = true
+installTracer = false
