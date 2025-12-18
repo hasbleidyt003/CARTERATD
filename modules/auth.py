@@ -1,6 +1,6 @@
 """
-AUTENTICACIÓN COMPACTA - SISTEMA TODODROGAS
-Login pequeño y centrado
+AUTENTICACIÓN - ESTILO CORPORATIVO MINIMALISTA
+Fondo 90% blanco, azul muy sutil
 """
 
 import streamlit as st
@@ -52,196 +52,212 @@ def authenticate(username, password):
         conn.close()
 
 def show_login_screen():
-    """Login pequeño y centrado"""
+    """Login estilo corporativo minimalista"""
     
-    # Ocultar elementos de Streamlit
+    # CSS corporativo minimalista
     st.markdown("""
     <style>
-        /* Ocultar elementos no necesarios */
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        header {visibility: hidden;}
+        /* Reset completo */
+        #MainMenu, footer, header {
+            visibility: hidden;
+        }
         
-        /* Fondo general */
+        /* Fondo 90% blanco, 10% azul sutil */
         .stApp {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            background: linear-gradient(
+                135deg,
+                #ffffff 0%,
+                #ffffff 60%,
+                #f9fbff 85%,
+                #f5f9ff 100%
+            );
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         
-        /* Card pequeña centrada */
-        .login-small {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-            padding: 30px; /* REDUCIDO */
-            width: 100%;
-            max-width: 350px; /* REDUCIDO */
-            margin: 20px;
+        /* Card vidrio suave */
+        .login-card-corp {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
             border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.04),
+                0 1px 2px rgba(0, 0, 0, 0.02);
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            margin: 20px;
         }
         
-        /* Header compacto */
-        .login-header-small {
+        /* Header minimalista */
+        .login-header-corp {
             text-align: center;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px; /* Píldora pegada al título */
+            margin-bottom: 35px;
         }
         
-        .logo-small {
-            font-size: 2.2rem; /* Ajustado */
-            color: #0066CC;
+        .logo-corp {
+            font-size: 2.5rem;
+            color: #2c5282;
+            margin-bottom: 12px;
+            opacity: 0.9;
         }
         
-        .title-small {
-            font-size: 1.8rem;
+        .title-corp {
+            font-size: 2rem;
             font-weight: 700;
-            color: #1e40af;
-        }
-        
-        .subtitle-small {
-            color: #64748b;
-            font-size: 0.9rem;
-            text-align: center;
-            margin-top: 5px;
-        }
-        
-        /* Inputs con fondo azul claro */
-        .input-small {
-            margin-bottom: 15px;
-        }
-        
-        .input-label-small {
-            color: #475569;
-            font-size: 0.85rem;
-            font-weight: 600;
+            color: #1a365d;
             margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+        
+        .subtitle-corp {
+            color: #718096;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+        
+        /* Formulario minimalista */
+        .form-corp {
+            width: 100%;
+        }
+        
+        /* Labels sutiles */
+        .label-corp {
+            color: #4a5568;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 8px;
             display: block;
         }
         
-        .input-field-small {
+        /* Inputs con borde sutil */
+        .input-corp {
             width: 100%;
-            padding: 10px 14px; /* REDUCIDO */
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 0.95rem;
-            transition: all 0.2s;
-            background-color: #f0f8ff; /* AZUL CLARO */
+            padding: 14px 16px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            color: #2d3748;
+            background: #ffffff;
+            transition: all 0.2s ease;
+            margin-bottom: 20px;
         }
         
-        .input-field-small:focus {
+        .input-corp:focus {
             outline: none;
-            border-color: #0066CC;
-            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
-            background-color: #e6f2ff; /* AZUL MÁS INTENSO AL FOCUS */
+            border-color: #90cdf4;
+            box-shadow: 0 0 0 3px rgba(144, 205, 244, 0.1);
         }
         
-        /* Botón principal - EL ÚNICO BOTÓN */
+        /* Botón azul sutil pero visible */
         .stButton > button {
-            background: #0066CC;
+            background: linear-gradient(135deg, #4299e1, #3182ce);
             color: white;
             border: none;
-            border-radius: 10px;
-            padding: 12px;
+            border-radius: 12px;
+            padding: 16px 32px;
             font-size: 1rem;
             font-weight: 600;
             width: 100%;
-            margin-top: 10px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.15);
         }
         
         .stButton > button:hover {
-            background: #0052a3;
+            background: linear-gradient(135deg, #3182ce, #2c5282);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(66, 153, 225, 0.2);
         }
         
-        /* Mensajes pequeños */
-        .alert-small {
-            padding: 12px 16px;
-            border-radius: 10px;
-            margin: 15px 0;
-            font-size: 0.9rem;
+        /* Mensajes sutiles */
+        .alert-corp {
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-size: 0.95rem;
+            border: 1px solid transparent;
         }
         
-        .success-small {
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #a7f3d0;
+        .success-corp {
+            background: #f0fff4;
+            color: #276749;
+            border-color: #c6f6d5;
         }
         
-        .error-small {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
+        .error-corp {
+            background: #fff5f5;
+            color: #c53030;
+            border-color: #fed7d7;
         }
         
-        .warning-small {
-            background: #fef3c7;
-            color: #92400e;
-            border: 1px solid #fde68a;
+        .warning-corp {
+            background: #fffaf0;
+            color: #c05621;
+            border-color: #feebc8;
         }
         
-        /* Footer mínimo */
-        .footer-small {
+        /* Footer minimalista */
+        .footer-corp {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #f1f5f9;
             color: #94a3b8;
-            font-size: 0.75rem;
+            font-size: 0.85rem;
+        }
+        
+        /* Loading spinner sutil */
+        .stSpinner > div {
+            border-color: #4299e1 transparent transparent transparent;
         }
     </style>
     """, unsafe_allow_html=True)
     
-    # Contenedor pequeño centrado
-    st.markdown('<div class="login-small">', unsafe_allow_html=True)
+    # Contenedor principal
+    st.markdown('<div class="login-card-corp">', unsafe_allow_html=True)
     
-    # Header - Píldora PEGADA al título
-    st.markdown('<div class="login-header-small">', unsafe_allow_html=True)
-    st.markdown('<div class="logo-small">💊</div>', unsafe_allow_html=True)
-    st.markdown('<div class="title-small">TODODROGAS</div>', unsafe_allow_html=True)
+    # Header
+    st.markdown('<div class="login-header-corp">', unsafe_allow_html=True)
+    st.markdown('<div class="logo-corp">💊</div>', unsafe_allow_html=True)
+    st.markdown('<div class="title-corp">TODODROGAS</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitle-corp">Gestión de Cupos Corporativa</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Subtítulo
-    st.markdown('<div class="subtitle-small">Control de Cupos</div>', unsafe_allow_html=True)
-    
-    # Formulario - SOLO UN BOTÓN (ACCEDER)
+    # Formulario
     with st.form("login_form"):
         # Usuario
-        st.markdown('<div class="input-small">', unsafe_allow_html=True)
-        st.markdown('<label class="input-label-small">Usuario</label>', unsafe_allow_html=True)
-        username = st.text_input("", placeholder="Ingresa tu usuario", label_visibility="collapsed")
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('<label class="label-corp">Usuario</label>', unsafe_allow_html=True)
+        username = st.text_input("", placeholder="usuario@tododrogas.com", label_visibility="collapsed")
         
         # Contraseña
-        st.markdown('<div class="input-small">', unsafe_allow_html=True)
-        st.markdown('<label class="input-label-small">Contraseña</label>', unsafe_allow_html=True)
-        password = st.text_input("", type="password", placeholder="Ingresa tu contraseña", label_visibility="collapsed")
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('<label class="label-corp">Contraseña</label>', unsafe_allow_html=True)
+        password = st.text_input("", type="password", placeholder="············", label_visibility="collapsed")
         
-        # ⭐⭐ SOLO ESTE BOTÓN - EL BOTÓN "ACCEDER" ⭐⭐
-        submit_button = st.form_submit_button("ACCEDER", use_container_width=True)
+        # Solo este botón - ACCEDER
+        submit_button = st.form_submit_button("ACCEDER AL SISTEMA", use_container_width=True)
         
         if submit_button:
             if username and password:
-                with st.spinner("Verificando..."):
-                    time.sleep(1)
+                with st.spinner("Verificando credenciales..."):
+                    time.sleep(1.2)
                     authenticated, user = authenticate(username, password)
                     
                     if authenticated:
                         st.session_state.user = user
                         st.session_state.authenticated = True
-                        st.markdown('<div class="alert-small success-small">✓ Acceso concedido</div>', unsafe_allow_html=True)
+                        st.markdown('<div class="alert-corp success-corp">✓ Acceso autorizado</div>', unsafe_allow_html=True)
                         time.sleep(1)
                         st.rerun()
                     else:
-                        st.markdown('<div class="alert-small error-small">✗ Credenciales incorrectas</div>', unsafe_allow_html=True)
+                        st.markdown('<div class="alert-corp error-corp">✗ Credenciales no válidas</div>', unsafe_allow_html=True)
             else:
-                st.markdown('<div class="alert-small warning-small">⚠️ Completa todos los campos</div>', unsafe_allow_html=True)
+                st.markdown('<div class="alert-corp warning-corp">⚠️ Complete todos los campos</div>', unsafe_allow_html=True)
     
-    # Footer mínimo
-    st.markdown('<div class="footer-small">© 2024</div>', unsafe_allow_html=True)
+    # Footer
+    st.markdown('<div class="footer-corp">© 2025 Tododrogas • Sistema Corporativo</div>', unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -267,7 +283,7 @@ def require_admin():
     user = check_authentication()
     
     if user.get('rol') != 'admin':
-        st.error("⛔ Acceso restringido a administradores")
+        st.error("⛔ Acceso restringido")
         st.stop()
     
     return user
