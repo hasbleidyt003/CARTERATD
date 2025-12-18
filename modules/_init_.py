@@ -1,64 +1,18 @@
 """
-Paquete modules para CarteraTD
+Módulos del Sistema de Gestión de Cupos - Tododrogas
 
-Este paquete contiene los módulos principales de la aplicación:
-- database: Manejo de base de datos
-- auth: Autenticación de usuarios  
-- utils: Funciones utilitarias
+Contiene:
+- database: Funciones de base de datos
+- auth: Autenticación y seguridad
+- utils: Utilidades generales
 """
 
 __version__ = "1.0.0"
-__author__ = "Tu Nombre"
-__email__ = "tu@email.com"
+__author__ = "Equipo Tododrogas"
 
-# Importaciones principales para facilitar el acceso
-from modules.database import (
-    get_connection,
-    create_tables,
-    execute_query,
-    fetch_all,
-    fetch_one
-)
+# Importaciones principales
+from .database import init_db, get_clientes, get_ocs_pendientes, crear_oc, autorizar_oc
+from .auth import authenticate, create_user, get_users, change_password
+from .utils import format_currency, calculate_percentage, validate_nit
 
-from modules.auth import (
-    hash_password,
-    verify_login,
-    check_authentication,
-    login_form,
-    logout_button
-)
-
-from modules.utils import (
-    format_currency,
-    format_date,
-    export_to_excel,
-    validate_email,
-    calculate_age
-)
-
-# Lista de módulos disponibles
-__all__ = [
-    # Database
-    'get_connection',
-    'create_tables', 
-    'execute_query',
-    'fetch_all',
-    'fetch_one',
-    
-    # Auth
-    'hash_password',
-    'verify_login',
-    'check_authentication',
-    'login_form',
-    'logout_button',
-    
-    # Utils
-    'format_currency',
-    'format_date',
-    'export_to_excel',
-    'validate_email',
-    'calculate_age'
-]
-
-# Mensaje de inicialización
-print(f"Inicializando módulos CarteraTD v{__version__}")
+__all__ = ['database', 'auth', 'utils']
