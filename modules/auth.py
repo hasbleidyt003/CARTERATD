@@ -39,137 +39,132 @@ def authenticate(username: str, password: str):
         conn.close()
 
 def show_login_screen():
-    # CSS minimalista y elegante con glassmorphism azul purista
     st.markdown("""
     <style>
-        /* Ocultar elementos de Streamlit */
+        /* Ocultar Streamlit */
         #MainMenu, footer, header {display: none !important;}
         .stApp {margin: 0; padding: 0; overflow: hidden;}
 
-        /* Fondo azul purista con degradado sutil */
+        /* Fondo blanco futurista con toque azul muy suave */
         .stApp {
-            background: linear-gradient(135deg, #e0f2ff 0%, #c0e0ff 50%, #a0cfff 100%);
+            background: linear-gradient(135deg, #f8fbff 0%, #eef5ff 50%, #e5f0ff 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        /* Brillo ambiental sutil */
-        .stApp::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at 30% 70%, rgba(255,255,255,0.4), transparent 50%),
-                        radial-gradient(circle at 70% 30%, rgba(255,255,255,0.3), transparent 50%);
-            pointer-events: none;
-        }
-
-        /* Tarjeta de vidrio */
-        .glass-container {
-            background: rgba(255, 255, 255, 0.22);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 20px 40px rgba(0, 100, 200, 0.15);
-            padding: 50px 60px;
-            width: 100%;
-            max-width: 440px;
             position: relative;
-            overflow: hidden;
         }
 
-        /* Borde luminoso sutil */
-        .glass-container::before {
-            content: '';
+        /* Elemento decorativo flotante superior */
+        .floating-element {
             position: absolute;
-            inset: 0;
+            top: 80px;
+            left: 15%;
+            width: 280px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px);
             border-radius: 24px;
-            padding: 1.5px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.6), rgba(100,180,255,0.4), rgba(0,120,255,0.6));
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            pointer-events: none;
+            border: 1px solid rgba(180, 220, 255, 0.5);
+            box-shadow: 0 10px 30px rgba(100, 180, 255, 0.1);
+            animation: float 6s ease-in-out infinite;
         }
 
-        /* Título principal */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        /* Tarjeta principal - glass muy blanco y futurista */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 28px;
+            border: 1px solid rgba(200, 230, 255, 0.6);
+            box-shadow: 0 20px 50px rgba(100, 160, 255, 0.12),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            padding: 60px 70px;
+            width: 100%;
+            max-width: 460px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Título futurista */
         .title {
-            font-size: 3.2rem;
+            font-size: 3.4rem;
             font-weight: 900;
-            background: linear-gradient(135deg, #0044aa, #0077ff, #00aaff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #0055cc;
             text-align: center;
             margin-bottom: 8px;
-            letter-spacing: -1px;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 8px rgba(0, 100, 255, 0.1);
         }
 
         .subtitle {
             text-align: center;
-            color: rgba(0, 50, 100, 0.9);
+            color: #446688;
             font-size: 1.15rem;
             font-weight: 500;
-            margin-bottom: 40px;
-            letter-spacing: 0.3px;
+            margin-bottom: 50px;
         }
 
-        /* Inputs personalizados */
+        /* Inputs - más blancos y suaves */
         .stTextInput > div > div > input {
-            background: rgba(255, 255, 255, 0.9) !important;
-            border: 2px solid rgba(255, 255, 255, 0.7) !important;
-            border-radius: 16px !important;
-            padding: 16px 20px !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            border: 1px solid rgba(180, 210, 255, 0.6) !important;
+            border-radius: 18px !important;
+            padding: 18px 22px !important;
             font-size: 1.05rem !important;
-            color: #002244 !important;
-            box-shadow: 0 4px 15px rgba(0, 100, 200, 0.1);
+            color: #223344 !important;
+            box-shadow: 0 4px 20px rgba(100, 160, 255, 0.08);
         }
 
         .stTextInput > div > div > input:focus {
-            border-color: #0099ff !important;
-            box-shadow: 0 0 0 4px rgba(0, 153, 255, 0.2), 0 4px 15px rgba(0, 100, 200, 0.15) !important;
-            background: rgba(255, 255, 255, 0.98) !important;
+            border-color: #66aaff !important;
+            box-shadow: 0 0 0 4px rgba(100, 180, 255, 0.2), 0 8px 25px rgba(100, 160, 255, 0.15) !important;
+            background: #ffffff !important;
         }
 
-        /* Botón principal */
+        /* Botón futurista con glow */
         .stButton > button {
-            background: linear-gradient(135deg, #0066ff, #0088ff, #00bbff) !important;
+            background: linear-gradient(135deg, #4488ff, #66aaff, #88bbff) !important;
             color: white !important;
             border: none !important;
-            border-radius: 16px !important;
+            border-radius: 18px !important;
             padding: 18px !important;
             font-size: 1.1rem !important;
             font-weight: 700 !important;
             width: 100% !important;
-            margin-top: 20px;
-            box-shadow: 0 10px 25px rgba(0, 102, 255, 0.3);
-            transition: all 0.3s ease;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(100, 160, 255, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            transition: all 0.4s ease;
         }
 
         .stButton > button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(0, 102, 255, 0.4);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(100, 160, 255, 0.4);
         }
 
         /* Mensajes */
         .alert {
             padding: 16px 20px;
-            border-radius: 12px;
+            border-radius: 14px;
             text-align: center;
             font-weight: 600;
             margin: 20px 0;
             backdrop-filter: blur(10px);
         }
-        .success {background: rgba(0, 220, 120, 0.25); border: 1px solid rgba(0, 220, 120, 0.5); color: #004422;}
-        .error {background: rgba(255, 100, 100, 0.25); border: 1px solid rgba(255, 0, 0, 0.5); color: #440000;}
-        .warning {background: rgba(255, 200, 80, 0.25); border: 1px solid rgba(255, 150, 0, 0.5); color: #443300;}
+        .success {background: rgba(100, 255, 180, 0.2); border: 1px solid rgba(0, 220, 140, 0.5); color: #004433;}
+        .error {background: rgba(255, 140, 140, 0.2); border: 1px solid rgba(255, 80, 80, 0.5); color: #440000;}
+        .warning {background: rgba(255, 220, 140, 0.2); border: 1px solid rgba(255, 180, 80, 0.5); color: #443300;}
 
         .footer {
             text-align: center;
-            margin-top: 40px;
-            color: rgba(0, 50, 100, 0.8);
+            margin-top: 50px;
+            color: #557799;
             font-size: 0.95rem;
             font-weight: 500;
         }
@@ -179,34 +174,23 @@ def show_login_screen():
     # Tarjeta principal
     st.markdown('<div class="glass-container">', unsafe_allow_html=True)
 
-    # Header
     st.markdown('<h1 class="title">TODODROGAS</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="subtitle">Sistema Corporativo de Gestión</p>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Sistema Corporativo de Gestión de Cupos</p>', unsafe_allow_html=True)
 
-    # Formulario
-    with st.form("login_form", clear_on_submit=False):
-        username = st.text_input(
-            label="Usuario",
-            placeholder="Ingrese su usuario",
-            label_visibility="collapsed"
-        )
-        password = st.text_input(
-            label="Contraseña",
-            type="password",
-            placeholder="Ingrese su contraseña",
-            label_visibility="collapsed"
-        )
+    with st.form("login_form"):
+        username = st.text_input("Usuario", placeholder="Ingrese su usuario", label_visibility="collapsed")
+        password = st.text_input("Contraseña", type="password", placeholder="Ingrese su contraseña", label_visibility="collapsed")
         submit = st.form_submit_button("ACCEDER AL SISTEMA")
 
         if submit:
             if username and password:
-                with st.spinner("Validando credenciales..."):
+                with st.spinner("Validando..."):
                     time.sleep(0.8)
                     success, user = authenticate(username, password)
                 if success:
                     st.session_state.user = user
                     st.session_state.authenticated = True
-                    st.markdown('<div class="alert success">✓ Acceso autorizado. Bienvenido.</div>', unsafe_allow_html=True)
+                    st.markdown('<div class="alert success">✓ Acceso autorizado</div>', unsafe_allow_html=True)
                     time.sleep(1)
                     st.rerun()
                 else:
@@ -214,11 +198,9 @@ def show_login_screen():
             else:
                 st.markdown('<div class="alert warning">⚠️ Complete todos los campos</div>', unsafe_allow_html=True)
 
-    # Footer
-    st.markdown('<div class="footer">© 2025 Tododrogas S.A.S • Versión 3.0</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Funciones de autenticación (sin cambios)
+# Funciones de autenticación (iguales)
 def check_authentication():
     if 'authenticated' not in st.session_state:
         st.session_state.authenticated = False
