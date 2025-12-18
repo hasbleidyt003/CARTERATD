@@ -414,6 +414,7 @@ def show_login_screen():
     
     # Header sin píldora, solo azul purista
     st.markdown('<div class="glass-header">', unsafe_allow_html=True)
+    st.markdown('<div class="glass-logo">💊</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-title">TODODROGAS</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-subtitle">Sistema Corporativo de Gestión</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
