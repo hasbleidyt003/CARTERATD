@@ -76,9 +76,9 @@ def show_login_screen():
             background: white;
             border-radius: 16px;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-            padding: 40px;
+            padding: 30px; /* REDUCIDO */
             width: 100%;
-            max-width: 380px;
+            max-width: 350px; /* REDUCIDO */
             margin: 20px;
             border: 1px solid rgba(0, 0, 0, 0.05);
         }
@@ -86,34 +86,34 @@ def show_login_screen():
         /* Header compacto */
         .login-header-small {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px; /* Píldora pegada al título */
         }
         
         .logo-small {
-            font-size: 2.5rem;
+            font-size: 2.2rem; /* Ajustado */
             color: #0066CC;
-            margin-bottom: 10px;
         }
         
         .title-small {
             font-size: 1.8rem;
             font-weight: 700;
             color: #1e40af;
-            margin-bottom: 5px;
-            width: 100%;
-            text-align: center;
-            word-wrap: break-word;
         }
         
         .subtitle-small {
             color: #64748b;
             font-size: 0.9rem;
             text-align: center;
+            margin-top: 5px;
         }
         
-        /* Inputs pequeños */
+        /* Inputs con fondo azul claro */
         .input-small {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         
         .input-label-small {
@@ -126,37 +126,36 @@ def show_login_screen():
         
         .input-field-small {
             width: 100%;
-            padding: 12px 16px;
+            padding: 10px 14px; /* REDUCIDO */
             border: 2px solid #e2e8f0;
             border-radius: 10px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             transition: all 0.2s;
+            background-color: #f0f8ff; /* AZUL CLARO */
         }
         
         .input-field-small:focus {
             outline: none;
             border-color: #0066CC;
             box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+            background-color: #e6f2ff; /* AZUL MÁS INTENSO AL FOCUS */
         }
         
-        /* Botón pequeño */
-        .btn-small {
+        /* Botón principal - EL ÚNICO BOTÓN */
+        .stButton > button {
             background: #0066CC;
             color: white;
             border: none;
             border-radius: 10px;
-            padding: 14px;
+            padding: 12px;
             font-size: 1rem;
             font-weight: 600;
             width: 100%;
-            cursor: pointer;
-            transition: all 0.2s;
             margin-top: 10px;
         }
         
-        .btn-small:hover {
+        .stButton > button:hover {
             background: #0052a3;
-            transform: translateY(-1px);
         }
         
         /* Mensajes pequeños */
@@ -185,9 +184,12 @@ def show_login_screen():
             border: 1px solid #fde68a;
         }
         
-        /* Botón de Streamlit sin borde */
-        .stButton > button {
-            border: none !important;
+        /* Footer mínimo */
+        .footer-small {
+            text-align: center;
+            margin-top: 20px;
+            color: #94a3b8;
+            font-size: 0.75rem;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -195,14 +197,16 @@ def show_login_screen():
     # Contenedor pequeño centrado
     st.markdown('<div class="login-small">', unsafe_allow_html=True)
     
-    # Header - TÍTULO CENTRADO
+    # Header - Píldora PEGADA al título
     st.markdown('<div class="login-header-small">', unsafe_allow_html=True)
     st.markdown('<div class="logo-small">💊</div>', unsafe_allow_html=True)
-    st.markdown('<div class="title-small" style="text-align: center; width: 100%;">TODODROGAS</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitle-small">Control de Cupos</div>', unsafe_allow_html=True)
+    st.markdown('<div class="title-small">TODODROGAS</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Formulario
+    # Subtítulo
+    st.markdown('<div class="subtitle-small">Control de Cupos</div>', unsafe_allow_html=True)
+    
+    # Formulario - SOLO UN BOTÓN (ACCEDER)
     with st.form("login_form"):
         # Usuario
         st.markdown('<div class="input-small">', unsafe_allow_html=True)
@@ -216,10 +220,8 @@ def show_login_screen():
         password = st.text_input("", type="password", placeholder="Ingresa tu contraseña", label_visibility="collapsed")
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Botón de acceso (SIN BOTÓN DE STREAMLIT - usando CSS)
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            submit_button = st.form_submit_button("ACCEDER", use_container_width=True)
+        # ⭐⭐ SOLO ESTE BOTÓN - EL BOTÓN "ACCEDER" ⭐⭐
+        submit_button = st.form_submit_button("ACCEDER", use_container_width=True)
         
         if submit_button:
             if username and password:
@@ -239,7 +241,7 @@ def show_login_screen():
                 st.markdown('<div class="alert-small warning-small">⚠️ Completa todos los campos</div>', unsafe_allow_html=True)
     
     # Footer mínimo
-    st.markdown('<div style="text-align: center; margin-top: 20px; color: #94a3b8; font-size: 0.8rem;">© 2024</div>', unsafe_allow_html=True)
+    st.markdown('<div class="footer-small">© 2024</div>', unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
 
