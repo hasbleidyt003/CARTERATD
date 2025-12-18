@@ -1,6 +1,7 @@
 """
 AUTENTICACIÓN - GLASSMORPHISM CORPORATIVO
 Balance 70% blanco / 30% azul sutil con efecto cristal real
+Píldora con color original preservado
 """
 
 import streamlit as st
@@ -52,9 +53,9 @@ def authenticate(username, password):
         conn.close()
 
 def show_login_screen():
-    """Login con verdadero efecto Glassmorphism"""
+    """Login con verdadero efecto Glassmorphism - Píldora con color original"""
     
-    # CSS con Glassmorphism real
+    # CSS con Glassmorphism real - COLOR ORIGINAL DE PÍLDORA PRESERVADO
     st.markdown("""
     <style>
         /* RESET COMPLETO */
@@ -119,7 +120,7 @@ def show_login_screen():
             z-index: 0;
         }
         
-        /* 3) HEADER GLASS */
+        /* 3) HEADER GLASS - PÍLDORA CON COLOR ORIGINAL */
         .glass-header {
             text-align: center;
             margin-bottom: 45px;
@@ -127,9 +128,10 @@ def show_login_screen():
             z-index: 1;
         }
         
+        /* COLOR ORIGINAL DE PÍLDORA PRESERVADO - NO CAMBIAR */
         .glass-logo {
             font-size: 3.2rem;
-            background: linear-gradient(135deg, #2b6cb0 0%, #4299e1 100%);
+            background: linear-gradient(135deg, #4299e1 0%, #63b3ed 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -270,7 +272,7 @@ def show_login_screen():
             z-index: 1;
         }
         
-        /* 10) EFECTO DE LUZ EN BORDE */
+        /* 10) EFECTO DE LUZ EN BORDE - COLOR ORIGINAL */
         .glass-card::after {
             content: '';
             position: absolute;
@@ -307,8 +309,9 @@ def show_login_screen():
     # Contenedor principal con efecto glass
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     
-    # Header con efecto glass
+    # Header con efecto glass - PÍLDORA CON COLOR ORIGINAL
     st.markdown('<div class="glass-header">', unsafe_allow_html=True)
+    st.markdown('<div class="glass-logo">💊</div>', unsafe_allow_html=True)  # COLOR ORIGINAL PRESERVADO
     st.markdown('<div class="glass-title">TODODROGAS</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-subtitle">Sistema Corporativo de Gestión</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -348,7 +351,7 @@ def show_login_screen():
                 st.markdown('<div class="glass-alert glass-warning">⚠️ Complete todos los campos</div>', unsafe_allow_html=True)
     
     # Footer
-    
+ 
     st.markdown('</div>', unsafe_allow_html=True)
 
 def check_authentication():
