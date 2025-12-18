@@ -1,121 +1,255 @@
-/* ===== ESTILOS PRINCIPALES RAPPI-STYLE ===== */
+/* ===== ESTILOS PRINCIPALES FUTURISTAS ===== */
 
 :root {
-    --primary-color: #0066CC;
-    --primary-dark: #004499;
-    --secondary-color: #00B8A9;
-    --danger-color: #FF3B30;
-    --warning-color: #FF9500;
-    --success-color: #00B8A9;
-    --background-color: #FFFFFF;
-    --surface-color: #F8F9FA;
+    --primary-color: #0066FF;
+    --primary-light: #4D94FF;
+    --primary-glow: rgba(0, 102, 255, 0.15);
+    --secondary-color: #00D4FF;
+    --accent-color: #8A2BE2;
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     --text-primary: #1A1A1A;
-    --text-secondary: #666666;
-    --border-color: #E5E7EB;
+    --text-secondary: #4A5568;
+    --background-gradient: linear-gradient(135deg, #FFFFFF 0%, #F7FAFC 100%);
+    --card-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(247, 250, 252, 0.95) 100%);
 }
 
-/* ===== ANIMACIONES ORACLE MINING ===== */
-@keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
+/* ===== FONDO GENERAL ===== */
+
+.stApp {
+    background: var(--background-gradient) !important;
+    background-attachment: fixed !important;
 }
 
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+/* ===== EFECTOS GLASSMORPHISM ===== */
+
+.glass-card {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-radius: 24px !important;
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: var(--glass-shadow) !important;
+    padding: 2rem !important;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@keyframes shimmer {
-    0% { background-position: -1000px 0; }
-    100% { background-position: 1000px 0; }
+.glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent, 
+        var(--primary-light), 
+        transparent);
 }
 
-/* ===== COMPONENTES RAPPI-STYLE ===== */
-
-/* Cards Modernas */
-.rappi-card {
-    background: var(--background-color);
-    border-radius: 16px;
-    padding: 24px;
-    margin-bottom: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    border: 1px solid var(--border-color);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.glass-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
-.rappi-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 30px rgba(0, 102, 204, 0.15);
-}
+/* ===== BOTONES GLASS ===== */
 
-/* Botones Rappi */
-.rappi-button {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    color: white !important;
-    border: none !important;
-    border-radius: 12px !important;
-    font-weight: 600 !important;
+.glass-button {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 16px !important;
+    color: var(--text-primary) !important;
     padding: 14px 28px !important;
+    font-weight: 600 !important;
     transition: all 0.3s ease !important;
-    box-shadow: 0 6px 15px rgba(0, 102, 204, 0.2) !important;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 
+        0 4px 15px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
 }
 
-.rappi-button:hover {
+.glass-button:hover {
+    background: rgba(255, 255, 255, 1) !important;
     transform: translateY(-2px) !important;
-    box-shadow: 0 10px 25px rgba(0, 102, 204, 0.3) !important;
-    background: linear-gradient(135deg, var(--primary-dark), #003366) !important;
+    box-shadow: 
+        0 8px 25px rgba(0, 102, 255, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    border-color: var(--primary-light) !important;
 }
 
-/* Badges de Estado */
-.status-badge {
-    display: inline-block;
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.glass-button::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.4),
+        transparent
+    );
+    transition: left 0.6s ease;
 }
 
-.status-pending {
-    background: linear-gradient(135deg, #FFD166, #FFB347);
-    color: #8A5700;
+.glass-button:hover::after {
+    left: 100%;
 }
 
-.status-partial {
-    background: linear-gradient(135deg, #118AB2, #0A6C8F);
-    color: white;
-}
+/* ===== BOTÓN PRIMARIO GLASS ===== */
 
-.status-authorized {
-    background: linear-gradient(135deg, #06D6A0, #0CB48C);
-    color: #00563F;
-}
-
-/* Inputs Modernos */
-.rappi-input {
-    border-radius: 12px !important;
-    border: 2px solid var(--border-color) !important;
-    transition: all 0.3s ease !important;
-    padding: 12px 16px !important;
-}
-
-.rappi-input:focus {
-    border-color: var(--primary-color) !important;
-    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1) !important;
-}
-
-/* Métricas Oracle Style */
-.oracle-metric {
-    background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
-    color: white;
-    border-radius: 16px;
-    padding: 24px;
+.primary-glass-button {
+    background: linear-gradient(
+        135deg,
+        rgba(0, 102, 255, 0.9),
+        rgba(77, 148, 255, 0.9)
+    ) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    color: white !important;
+    border-radius: 16px !important;
+    padding: 14px 28px !important;
+    font-weight: 600 !important;
+    box-shadow: 
+        0 4px 20px rgba(0, 102, 255, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
     position: relative;
     overflow: hidden;
 }
 
-.oracle-metric::before {
+.primary-glass-button:hover {
+    background: linear-gradient(
+        135deg,
+        rgba(0, 102, 255, 1),
+        rgba(77, 148, 255, 1)
+    ) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 
+        0 8px 30px rgba(0, 102, 255, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+}
+
+.primary-glass-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.8), 
+        transparent);
+}
+
+/* ===== LOGIN SCREEN FUTURISTA ===== */
+
+.futuristic-login {
+    background: var(--background-gradient) !important;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.login-glass-container {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(30px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+    border-radius: 32px !important;
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: 
+        0 25px 50px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+    padding: 3rem !important;
+    width: 100%;
+    max-width: 420px;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-glass-container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+        circle,
+        var(--primary-glow) 0%,
+        transparent 70%
+    );
+    animation: pulse-glow 8s ease-in-out infinite;
+    z-index: -1;
+}
+
+@keyframes pulse-glow {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.05); }
+}
+
+/* ===== INPUTS GLASS ===== */
+
+.glass-input {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 16px !important;
+    padding: 14px 20px !important;
+    color: var(--text-primary) !important;
+    font-size: 1rem !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 
+        0 4px 15px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+
+.glass-input:focus {
+    background: rgba(255, 255, 255, 1) !important;
+    border-color: var(--primary-light) !important;
+    box-shadow: 
+        0 0 0 3px rgba(0, 102, 255, 0.1),
+        0 4px 20px rgba(0, 102, 255, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    outline: none !important;
+}
+
+.glass-input::placeholder {
+    color: rgba(74, 85, 104, 0.6) !important;
+}
+
+/* ===== METRICS CARDS ===== */
+
+.glass-metric {
+    background: var(--card-gradient) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    padding: 1.5rem !important;
+    box-shadow: 
+        0 8px 25px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.glass-metric::before {
     content: '';
     position: absolute;
     top: 0;
@@ -123,207 +257,279 @@
     right: 0;
     height: 4px;
     background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    border-radius: 4px 4px 0 0;
 }
 
-.oracle-metric .value {
-    font-size: 2.5rem;
-    font-weight: 800;
-    line-height: 1;
-    margin: 10px 0;
-    background: linear-gradient(135deg, #FFFFFF, #E0E0E0);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+.glass-metric:hover {
+    transform: translateY(-5px);
+    box-shadow: 
+        0 15px 35px rgba(0, 102, 255, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
 }
 
-/* Efectos Dinámicos */
-.dynamic-bg {
-    background: linear-gradient(-45deg, #0066CC, #004499, #00B8A9, #0088AA);
-    background-size: 400% 400%;
-    animation: gradient 15s ease infinite;
-}
+/* ===== TABLES GLASS ===== */
 
-@keyframes gradient {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-/* Tablas Elegantes */
-.rappi-table {
-    border-radius: 12px !important;
+.glass-table {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-radius: 20px !important;
+    border: 1px solid var(--glass-border) !important;
     overflow: hidden !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
-    border: 1px solid var(--border-color) !important;
+    box-shadow: var(--glass-shadow) !important;
 }
 
-.rappi-table th {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)) !important;
+.glass-table th {
+    background: linear-gradient(
+        135deg,
+        rgba(0, 102, 255, 0.9),
+        rgba(77, 148, 255, 0.9)
+    ) !important;
+    backdrop-filter: blur(10px) !important;
     color: white !important;
-    font-weight: 700 !important;
-    padding: 16px !important;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-weight: 600 !important;
+    padding: 1rem !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
-.rappi-table tr:nth-child(even) {
-    background-color: var(--surface-color) !important;
+.glass-table td {
+    background: rgba(255, 255, 255, 0.7) !important;
+    padding: 1rem !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
 }
 
-.rappi-table tr:hover {
-    background-color: rgba(0, 102, 204, 0.05) !important;
+.glass-table tr:hover td {
+    background: rgba(0, 102, 255, 0.05) !important;
 }
 
-/* Progress Bars */
-.rappi-progress {
+/* ===== NAVBAR GLASS ===== */
+
+.glass-navbar {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.08) !important;
+    padding: 1rem 2rem !important;
+}
+
+/* ===== SIDEBAR GLASS ===== */
+
+.glass-sidebar {
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* ===== BADGES GLASS ===== */
+
+.glass-badge {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 20px !important;
+    padding: 6px 16px !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+    display: inline-block !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* ===== PROGRESS BARS ===== */
+
+.glass-progress {
     height: 8px;
-    border-radius: 4px;
-    background-color: var(--border-color);
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    border-radius: 4px !important;
+    overflow: hidden;
+    position: relative;
+}
+
+.glass-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)) !important;
+    border-radius: 4px !important;
+    position: relative;
     overflow: hidden;
 }
 
-.rappi-progress-bar {
+.glass-progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.4),
+        transparent
+    );
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* ===== REFLEJOS Y EFECTOS DE LUZ ===== */
+
+.light-reflection {
+    position: relative;
+    overflow: hidden;
+}
+
+.light-reflection::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
     height: 100%;
-    border-radius: 4px;
-    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-    transition: width 0.6s ease;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    animation: slide-reflection 3s infinite;
 }
 
-/* Navbar Rappi */
-.rappi-navbar {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    padding: 1rem 2rem;
-    margin: -1rem -1rem 2rem -1rem;
-    border-radius: 0 0 20px 20px;
-    box-shadow: 0 10px 30px rgba(0, 102, 204, 0.2);
-    color: white;
+@keyframes slide-reflection {
+    0% { left: -100%; }
+    100% { left: 100%; }
 }
 
-/* Sidebar Moderna */
-.rappi-sidebar {
-    background: var(--surface-color);
-    border-right: 1px solid var(--border-color);
-    padding: 1rem;
+/* ===== EFECTO NEON PARA TEXTOS IMPORTANTES ===== */
+
+.neon-text {
+    color: var(--text-primary) !important;
+    text-shadow: 
+        0 0 10px rgba(0, 102, 255, 0.3),
+        0 0 20px rgba(0, 102, 255, 0.2),
+        0 0 30px rgba(0, 102, 255, 0.1) !important;
+    animation: neon-pulse 4s ease-in-out infinite;
 }
 
-/* Cards de Acción */
-.action-card {
-    background: var(--background-color);
-    border-radius: 16px;
-    padding: 20px;
-    text-align: center;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    border: 2px solid transparent;
+@keyframes neon-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.9; }
 }
 
-.action-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--primary-color);
-    box-shadow: 0 10px 25px rgba(0, 102, 204, 0.15);
+/* ===== TOGGLE SWITCH GLASS ===== */
+
+.glass-toggle {
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 20px !important;
+    padding: 4px !important;
 }
 
-.action-card .icon {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
-    display: block;
+.glass-toggle .st-bd {
+    background: white !important;
+    border-radius: 16px !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
 }
 
-/* Loading Effects */
-.loading-shimmer {
-    background: linear-gradient(90deg, 
-        var(--surface-color) 25%, 
-        rgba(255, 255, 255, 0.5) 50%, 
-        var(--surface-color) 75%);
-    background-size: 1000px 100%;
-    animation: shimmer 2s infinite linear;
-}
+/* ===== CUSTOM SCROLLBAR ===== */
 
-/* Responsive */
-@media (max-width: 768px) {
-    .rappi-card {
-        padding: 16px;
-        margin-bottom: 12px;
-    }
-    
-    .rappi-button {
-        padding: 12px 20px !important;
-        font-size: 0.9rem !important;
-    }
-    
-    .oracle-metric .value {
-        font-size: 2rem;
-    }
-}
-
-/* Scrollbar Personalizada */
 ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--surface-color);
-    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+    border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    border-radius: 10px;
+    background: rgba(0, 102, 255, 0.5);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, var(--primary-dark), #0088AA);
+    background: rgba(0, 102, 255, 0.7);
 }
 
-/* Tooltips Elegantes */
-.tooltip-container {
-    position: relative;
-    display: inline-block;
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 768px) {
+    .glass-card {
+        padding: 1.5rem !important;
+        border-radius: 20px !important;
+    }
+    
+    .login-glass-container {
+        padding: 2rem !important;
+        margin: 1rem !important;
+    }
+    
+    .glass-button,
+    .primary-glass-button {
+        padding: 12px 20px !important;
+    }
 }
 
-.tooltip-text {
-    visibility: hidden;
-    background: var(--text-primary);
-    color: white;
-    text-align: center;
-    padding: 8px 12px;
-    border-radius: 8px;
-    position: absolute;
-    z-index: 1000;
-    bottom: 125%;
-    left: 50%;
-    transform: translateX(-50%);
-    white-space: nowrap;
-    font-size: 0.85rem;
-    opacity: 0;
-    transition: opacity 0.3s;
+/* ===== UTILITY CLASSES ===== */
+
+.text-gradient {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
-.tooltip-container:hover .tooltip-text {
-    visibility: visible;
-    opacity: 1;
+.border-gradient {
+    border: 2px solid transparent;
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(135deg, var(--primary-color), var(--secondary-color)) border-box;
 }
 
-/* Efectos de Foco */
-.focus-effect {
-    position: relative;
-    overflow: hidden;
+/* ===== STREAMLIT OVERRIDES ===== */
+
+.stButton > button {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 16px !important;
+    color: var(--text-primary) !important;
+    transition: all 0.3s ease !important;
 }
 
-.focus-effect::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(0, 102, 204, 0.2);
-    transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
+.stButton > button:hover {
+    background: white !important;
+    transform: translateY(-2px) !important;
+    border-color: var(--primary-light) !important;
+    box-shadow: 0 8px 25px rgba(0, 102, 255, 0.15) !important;
 }
 
-.focus-effect:active::after {
-    width: 200px;
-    height: 200px;
+.stSelectbox, .stTextInput > div > div {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 16px !important;
+}
+
+/* ===== CARD HOVER EFFECTS ===== */
+
+.hover-lift {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: 
+        0 20px 40px rgba(0, 102, 255, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.3) !important;
 }
