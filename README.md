@@ -1,25 +1,37 @@
-# Sistema de Gestión de Cartera TD
+# 💊 Sistema de Gestión de Cupos - Tododrogas
 
-Sistema completo para la gestión de cupos de crédito de clientes del sector salud, con control de órdenes de compra, movimientos y reportes.
+Sistema empresarial para control y gestión de cupos de crédito y órdenes de compra.
 
-## 🚀 Características
+## 🚀 Características Principales
 
-- **Gestión de Clientes**: CRUD completo de clientes con cupos de crédito
-- **Órdenes de Compra**: Control de OCs pendientes y autorizaciones parciales
-- **Movimientos y Pagos**: Registro de pagos y ajustes
-- **Dashboard Interactivo**: Gráficos y métricas en tiempo real
-- **Reportes Avanzados**: Exportación a Excel, estadísticas por cliente
-- **Backup y Seguridad**: Sistema de backup automático
-- **Autenticación**: Control de acceso por usuarios y roles
+### 📊 Dashboard Ejecutivo
+- Resumen en tiempo real de cupos
+- Gráficos interactivos estilo Rappi
+- Métricas clave con visualización Oracle Mining
 
-## 📋 Requisitos Previos
+### 👥 Gestión de Clientes
+- Tabla completa con cifras reales
+- Control de cupos asignados y disponibles
+- Análisis de uso por cliente
 
-- Python 3.9 o superior
-- pip (gestor de paquetes Python)
+### 📋 Órdenes de Compra (OCs)
+- Creación, edición y autorización de OCs
+- Seguimiento de impacto en cupo disponible
+- Historial completo de modificaciones
 
-## 🔧 Instalación
+### 📈 Análisis y Reportes
+- Gráficos interactivos
+- Análisis de disponibilidad
+- Exportación a Excel
 
-1. **Clonar o descargar el repositorio**
-   ```bash
-   git clone [URL_DEL_REPOSITORIO]
-   cd sistema-cartera-td
+### 🔐 Sistema de Seguridad
+- Login estilo Rappi
+- Roles de usuario (Admin/Usuario)
+- Encriptación de contraseñas
+
+## 🛠️ Instalación
+
+1. Clonar repositorio
+```bash
+git clone https://github.com/tu-usuario/tododrogas.git
+cd tododrogas
