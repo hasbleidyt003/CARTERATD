@@ -1,5 +1,5 @@
 """
-MÓDULO DE AUTENTICACIÓN - ESTILO FUTURISTA
+AUTENTICACIÓN CON ESTILO BRILLANTE
 """
 
 import streamlit as st
@@ -51,94 +51,78 @@ def authenticate(username, password):
         conn.close()
 
 def show_login_screen():
-    """Login estilo glass futurista"""
+    """Login estilo glass con efectos brillantes"""
     
+    # CSS inline para el login
     st.markdown("""
     <style>
-        .main .block-container {
+        .stApp {
+            background: transparent !important;
+        }
+        
+        .stApp > header {
+            display: none !important;
+        }
+        
+        #MainMenu, footer, header {
+            display: none !important;
+        }
+        
+        .block-container {
             padding-top: 0 !important;
-        }
-        
-        .login-wrapper {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #FFFFFF 0%, #F7FAFC 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
-        
-        .glass-login {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(30px);
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 3rem;
-            width: 100%;
-            max-width: 400px;
-        }
-        
-        .login-title {
-            text-align: center;
-            font-size: 2rem;
-            font-weight: 800;
-            color: #1A1A1A;
-            margin-bottom: 0.5rem;
-        }
-        
-        .login-subtitle {
-            text-align: center;
-            color: #4A5568;
-            margin-bottom: 2rem;
-        }
-        
-        .glass-input {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            padding: 14px 16px;
-            width: 100%;
-            margin-bottom: 1rem;
-        }
-        
-        .glass-btn {
-            background: linear-gradient(135deg, #0066FF, #4D94FF);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 14px;
-            width: 100%;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .glass-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 102, 255, 0.3);
+            padding-bottom: 0 !important;
         }
     </style>
     """, unsafe_allow_html=True)
     
-    st.markdown('<div class="login-wrapper">', unsafe_allow_html=True)
-    st.markdown('<div class="glass-login">', unsafe_allow_html=True)
+    # Contenedor principal del login
+    st.markdown('<div class="login-container">', unsafe_allow_html=True)
+    st.markdown('<div class="login-glass-card">', unsafe_allow_html=True)
     
-    # Título
-    st.markdown('<div class="login-title">💊</div>', unsafe_allow_html=True)
-    st.markdown('<div class="login-title">TODODROGAS</div>', unsafe_allow_html=True)
-    st.markdown('<div class="login-subtitle">Sistema de Gestión de Cupos</div>', unsafe_allow_html=True)
+    # Icono y título
+    st.markdown('<div class="login-icon">💊</div>', unsafe_allow_html=True)
+    st.markdown('<h1 class="login-title">TODODROGAS</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="login-subtitle">Sistema de Gestión de Cupos</p>', unsafe_allow_html=True)
     
-    # Formulario
-    with st.form("login_form"):
-        username = st.text_input("👤 Usuario", placeholder="Ingresa tu usuario")
-        password = st.text_input("🔒 Contraseña", type="password", placeholder="Ingresa tu contraseña")
+    # Formulario de login
+    with st.form("login_form", clear_on_submit=False):
+        # Campo de usuario
+        st.markdown('<div style="margin-bottom: 1rem;">', unsafe_allow_html=True)
+        username = st.text_input(
+            "",
+            placeholder="👤 Ingresa tu usuario",
+            label_visibility="collapsed",
+            key="username_input"
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
         
-        if st.form_submit_button("🚀 Ingresar", use_container_width=True):
+        # Campo de contraseña
+        st.markdown('<div style="margin-bottom: 1.5rem;">', unsafe_allow_html=True)
+        password = st.text_input(
+            "",
+            type="password",
+            placeholder="🔒 Ingresa tu contraseña",
+            label_visibility="collapsed",
+            key="password_input"
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Opciones adicionales
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            remember = st.checkbox("Recordarme", value=True)
+        
+        # Botón de ingreso
+        submit_button = st.form_submit_button(
+            "🚀 INGRESAR AL SISTEMA",
+            use_container_width=True,
+            type="primary"
+        )
+        
+        if submit_button:
             if username and password:
-                with st.spinner("Verificando..."):
-                    time.sleep(1)
+                with st.spinner("Verificando credenciales..."):
+                    time.sleep(1.5)  # Simulación de validación
                     authenticated, user = authenticate(username, password)
                     
                     if authenticated:
@@ -148,16 +132,32 @@ def show_login_screen():
                         time.sleep(1)
                         st.rerun()
                     else:
-                        st.error("❌ Credenciales incorrectas")
+                        st.error("❌ Usuario o contraseña incorrectos")
             else:
-                st.warning("⚠️ Completa todos los campos")
+                st.warning("⚠️ Por favor completa todos los campos")
     
-    # Credenciales de prueba
-    with st.expander("🔑 Credenciales de prueba"):
+    # Información del sistema (sin credenciales)
+    st.markdown('<div style="margin-top: 2rem; text-align: center;">', unsafe_allow_html=True)
+    st.markdown('<hr style="border: none; height: 1px; background: linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent); margin: 1.5rem 0;">', unsafe_allow_html=True)
+    
+    # Información de ayuda
+    with st.expander("🆘 ¿Necesitas ayuda?", expanded=False):
         st.info("""
-        **Admin:** admin / admin123  
-        **Usuario:** cartera / cartera123
+        **Para acceder al sistema:**
+        
+        1. Contacta al administrador del sistema
+        2. Solicita tus credenciales de acceso
+        3. Si olvidaste tu contraseña, contacta al soporte técnico
+        
+        **Soporte:** soporte@tododrogas.com
         """)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Footer del login
+    st.markdown('<div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid rgba(0,0,0,0.05);">', unsafe_allow_html=True)
+    st.markdown('<p style="text-align: center; color: #666; font-size: 0.9rem; margin: 0;">© 2024 Tododrogas • Versión 1.0</p>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
