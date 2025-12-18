@@ -143,6 +143,93 @@ st.markdown("""
         font-size: 0.9rem;
         opacity: 0.9;
     }
+    
+    /* Botones estilizados */
+    .rappi-button {
+        background: linear-gradient(135deg, #0066CC, #004499);
+        color: white;
+        border: none;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        width: 100%;
+    }
+    
+    .rappi-button:hover {
+        background: linear-gradient(135deg, #004499, #003377);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+    }
+    
+    .rappi-button:disabled {
+        background: #E5E7EB;
+        color: #999;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+    
+    /* Estilos para la tabla */
+    .rappi-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .rappi-table th {
+        background: #F8F9FA;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #1A1A1A;
+        border-bottom: 2px solid #E5E7EB;
+    }
+    
+    .rappi-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #E5E7EB;
+        background: white;
+    }
+    
+    .rappi-table tr:hover td {
+        background: #F8F9FA;
+    }
+    
+    /* Alertas y badges */
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-normal {
+        background: #E6F7FF;
+        color: #0066CC;
+        border: 1px solid #B3E0FF;
+    }
+    
+    .status-alerta {
+        background: #FFF7E6;
+        color: #FF9500;
+        border: 1px solid #FFE0B3;
+    }
+    
+    .status-sobrepasado {
+        background: #FFE6E6;
+        color: #FF3B30;
+        border: 1px solid #FFB3B3;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -166,6 +253,15 @@ def create_client_card(cliente):
     
     color = get_color_by_percentage(cliente['porcentaje_uso'])
     
+    # Determinar el estado para el badge
+    estado = ""
+    if cliente['porcentaje_uso'] >= 100:
+        estado = '<span class="status-badge status-sobrepasado">ALERTA CRÍTICA</span>'
+    elif cliente['porcentaje_uso'] >= 90:
+        estado = '<span class="status-badge status-alerta">ALERTA</span>'
+    else:
+        estado = '<span class="status-badge status-normal">NORMAL</span>'
+    
     return f'''
     <div class="client-card">
         <div class="client-header">
@@ -174,7 +270,7 @@ def create_client_card(cliente):
                 <div class="client-nit">NIT: {cliente['nit']}</div>
             </div>
             <div>
-                {get_status_badge(cliente['porcentaje_uso'])}
+                {estado}
             </div>
         </div>
         
@@ -303,7 +399,12 @@ def show_clients_page():
     
     # Filtro por estado
     if estado_filter != "TODOS":
-        filtered_df = filtered_df[filtered_df['estado'] == estado_filter]
+        if estado_filter == "NORMAL":
+            filtered_df = filtered_df[filtered_df['porcentaje_uso'] < 90]
+        elif estado_filter == "ALERTA":
+            filtered_df = filtered_df[(filtered_df['porcentaje_uso'] >= 90) & (filtered_df['porcentaje_uso'] < 100)]
+        elif estado_filter == "SOBREPASADO":
+            filtered_df = filtered_df[filtered_df['porcentaje_uso'] >= 100]
     
     # Ordenar
     if sort_by == "Nombre (A-Z)":
@@ -369,8 +470,8 @@ def show_clients_page():
         )
         
         # Columnas a mostrar
-        columnas = ['nombre', 'nit', 'Cupo Asignado', 'En Uso', 'Disponible', '% Uso', 'Progreso', 'estado']
-        nombres_columnas = ['Cliente', 'NIT', 'Cupo', 'En Uso', 'Disponible', '% Uso', 'Progreso', 'Estado']
+        columnas = ['nombre', 'nit', 'Cupo Asignado', 'En Uso', 'Disponible', '% Uso', 'Progreso']
+        nombres_columnas = ['Cliente', 'NIT', 'Cupo', 'En Uso', 'Disponible', '% Uso', 'Progreso']
         
         st.markdown(
             display_df[columnas].rename(columns=dict(zip(columnas, nombres_columnas))).to_html(
@@ -390,14 +491,15 @@ def show_clients_page():
     with col1:
         if st.button("📤 Exportar a Excel", use_container_width=True):
             try:
-                from modules.database import exportar_datos_a_excel
-                ruta = exportar_datos_a_excel()
-                st.success(f"✅ Datos exportados correctamente: {ruta}")
+                # Crear archivo Excel
+                output = pd.ExcelWriter('clientes_export.xlsx', engine='xlsxwriter')
+                display_df.to_excel(output, index=False, sheet_name='Clientes')
+                output.close()
                 
-                with open(ruta, "rb") as file:
+                with open('clientes_export.xlsx', 'rb') as f:
                     st.download_button(
-                        label="⬇️ Descargar archivo",
-                        data=file,
+                        label="⬇️ Descargar Excel",
+                        data=f,
                         file_name="clientes_tododrogas.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     )
