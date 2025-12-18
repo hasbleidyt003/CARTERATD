@@ -1,6 +1,6 @@
 """
-AUTENTICACIÓN - ESTILO 30% AZUL CORPORATIVO
-Balance 70% blanco / 30% azul sutil
+AUTENTICACIÓN - GLASSMORPHISM CORPORATIVO
+Balance 70% blanco / 30% azul sutil con efecto cristal real
 """
 
 import streamlit as st
@@ -52,258 +52,304 @@ def authenticate(username, password):
         conn.close()
 
 def show_login_screen():
-    """Login con 30% presencia azul"""
+    """Login con verdadero efecto Glassmorphism"""
     
-    # CSS 70% blanco / 30% azul
+    # CSS con Glassmorphism real
     st.markdown("""
     <style>
-        /* Reset */
+        /* RESET COMPLETO */
         #MainMenu, footer, header {
-            visibility: hidden;
+            display: none;
+        }
+        .stApp {
+            overflow: hidden;
         }
         
-        /* Fondo 70% blanco, 30% azul sutil */
+        /* 1) FONDO CON GRADIENTE SUAVE - 70% BLANCO / 30% AZUL SUTIL */
         .stApp {
             background: linear-gradient(
-                145deg,
-                #ffffff 0%,
-                #f8fafc 30%,
-                #edf4ff 50%,
-                #e6f0ff 70%,
-                #dbe8ff 100%
+                140deg,
+                #ffffff 0%,          /* 70% - Blanco puro */
+                #f9fbff 30%,         /* Blanco con toque azul */
+                #f0f5ff 60%,         /* 20% - Azul muy claro */
+                #e8f0ff 100%         /* 10% - Azul ligero */
             );
             min-height: 100vh;
+            margin: 0;
+            padding: 0;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         
-        /* Card con 30% influencia azul */
-        .login-card-30blue {
-            background: linear-gradient(145deg, #ffffff, #f5f9ff);
-            border-radius: 22px;
-            border: 1px solid rgba(66, 153, 225, 0.15);
+        /* 2) GLASS CARD - EFECTO CRISTAL REAL */
+        .glass-card {
+            backdrop-filter: blur(16px) saturate(180%);
+            background: rgba(255, 255, 255, 0.38);
+            border: 1px solid rgba(255, 255, 255, 0.62);
+            border-radius: 24px;
             box-shadow: 
-                0 10px 40px rgba(66, 153, 225, 0.08),
-                0 2px 8px rgba(66, 153, 225, 0.04),
-                inset 0 1px 0 rgba(255, 255, 255, 0.8);
-            padding: 45px 40px;
+                0 12px 40px rgba(66, 153, 225, 0.12),
+                0 4px 15px rgba(0, 0, 0, 0.06),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+            padding: 50px 45px;
             width: 100%;
-            max-width: 420px;
+            max-width: 440px;
             margin: 20px;
             position: relative;
             overflow: hidden;
         }
         
-        /* Borde azul sutil */
-        .login-card-30blue::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #4299e1, #63b3ed, #4299e1);
-            opacity: 0.4;
-        }
-        
-        /* Header con 30% azul */
-        .login-header-30blue {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        
-        .logo-30blue {
-            font-size: 2.8rem;
-            background: linear-gradient(135deg, #2b6cb0, #4299e1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 15px;
-            filter: drop-shadow(0 2px 4px rgba(66, 153, 225, 0.2));
-        }
-        
-        .title-30blue {
-            font-size: 2.2rem;
-            font-weight: 800;
-            color: #1a365d;
-            margin-bottom: 8px;
-            letter-spacing: -0.5px;
-        }
-        
-        .subtitle-30blue {
-            color: #4a5568;
-            font-size: 1rem;
-            font-weight: 400;
-            opacity: 0.8;
-        }
-        
-        /* Formulario con 30% elementos azules */
-        .form-30blue {
-            width: 100%;
-        }
-        
-        /* Labels con tono azul */
-        .label-30blue {
-            color: #2d3748;
-            font-size: 0.92rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-            display: block;
-            padding-left: 4px;
-        }
-        
-        /* Inputs con borde azul sutil */
-        .input-30blue {
-            width: 100%;
-            padding: 15px 18px;
-            border: 1.8px solid #cbd5e0;
-            border-radius: 14px;
-            font-size: 1.05rem;
-            color: #2d3748;
-            background: rgba(255, 255, 255, 0.9);
-            transition: all 0.25s ease;
-            margin-bottom: 22px;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
-        }
-        
-        .input-30blue:focus {
-            outline: none;
-            border-color: #63b3ed;
-            background: rgba(255, 255, 255, 1);
-            box-shadow: 
-                0 0 0 3px rgba(99, 179, 237, 0.15),
-                inset 0 1px 3px rgba(0, 0, 0, 0.04);
-        }
-        
-        /* Botón - 30% de presencia azul (más intenso) */
-        .stButton > button {
-            background: linear-gradient(135deg, #3182ce, #2b6cb0);
-            color: white;
-            border: none;
-            border-radius: 14px;
-            padding: 18px 32px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            width: 100%;
-            transition: all 0.25s ease;
-            box-shadow: 
-                0 6px 20px rgba(49, 130, 206, 0.25),
-                0 2px 8px rgba(49, 130, 206, 0.15);
-            letter-spacing: 0.3px;
-            margin-top: 10px;
-        }
-        
-        .stButton > button:hover {
-            background: linear-gradient(135deg, #2b6cb0, #2c5282);
-            transform: translateY(-2px);
-            box-shadow: 
-                0 8px 25px rgba(43, 108, 176, 0.3),
-                0 3px 10px rgba(43, 108, 176, 0.2);
-        }
-        
-        /* Mensajes con 30% tono azul */
-        .alert-30blue {
-            padding: 16px 20px;
-            border-radius: 14px;
-            margin: 25px 0;
-            font-size: 0.98rem;
-            border: 1px solid;
-            background: rgba(255, 255, 255, 0.95);
-        }
-        
-        .success-30blue {
-            color: #22543d;
-            border-color: #9ae6b4;
-            background: linear-gradient(135deg, #f0fff4, #e6fffa);
-        }
-        
-        .error-30blue {
-            color: #742a2a;
-            border-color: #fc8181;
-            background: linear-gradient(135deg, #fff5f5, #fed7d7);
-        }
-        
-        .warning-30blue {
-            color: #744210;
-            border-color: #fbd38d;
-            background: linear-gradient(135deg, #fffaf0, #feebc8);
-        }
-        
-        /* Footer con 30% tono azul */
-        .footer-30blue {
-            text-align: center;
-            margin-top: 35px;
-            padding-top: 25px;
-            border-top: 1px solid #e2e8f0;
-            color: #4a5568;
-            font-size: 0.9rem;
-            opacity: 0.7;
-        }
-        
-        /* Placeholders azul muy sutil */
-        .input-30blue::placeholder {
-            color: #a0aec0;
-            opacity: 0.7;
-        }
-        
-        /* Efecto de profundidad */
-        .login-card-30blue::after {
+        /* Efecto de vidrio esmerilado */
+        .glass-card::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(145deg, transparent, rgba(66, 153, 225, 0.02));
+            background: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.15) 0%,
+                rgba(255, 255, 255, 0.05) 50%,
+                rgba(255, 255, 255, 0.1) 100%
+            );
             pointer-events: none;
-            border-radius: 22px;
+            border-radius: 24px;
+            z-index: 0;
+        }
+        
+        /* 3) HEADER GLASS */
+        .glass-header {
+            text-align: center;
+            margin-bottom: 45px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .glass-logo {
+            font-size: 3.2rem;
+            background: linear-gradient(135deg, #2b6cb0 0%, #4299e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 18px;
+            filter: drop-shadow(0 4px 8px rgba(66, 153, 225, 0.2));
+        }
+        
+        .glass-title {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: #1a365d;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 4px rgba(255, 255, 255, 0.8);
+        }
+        
+        .glass-subtitle {
+            color: #4a5568;
+            font-size: 1.05rem;
+            font-weight: 400;
+            opacity: 0.85;
+        }
+        
+        /* 4) INPUTS GLASS - TRANSLÚCIDOS */
+        .stTextInput > div > div > input {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(8px) !important;
+            border: 1.5px solid rgba(200, 200, 200, 0.35) !important;
+            border-radius: 14px !important;
+            padding: 16px 20px !important;
+            font-size: 1.08rem !important;
+            color: #2d3748 !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 
+                inset 0 1px 3px rgba(0, 0, 0, 0.05),
+                0 2px 4px rgba(0, 0, 0, 0.04) !important;
+        }
+        
+        .stTextInput > div > div > input:focus {
+            background: rgba(255, 255, 255, 0.85) !important;
+            border-color: #63b3ed !important;
+            box-shadow: 
+                0 0 0 3px rgba(99, 179, 237, 0.18),
+                inset 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+            outline: none !important;
+        }
+        
+        .stTextInput > div > div > input::placeholder {
+            color: #a0aec0 !important;
+            opacity: 0.7 !important;
+        }
+        
+        /* 5) BOTÓN PRINCIPAL - 30% AZUL INTENSO */
+        .stButton > button {
+            background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 14px !important;
+            padding: 18px 32px !important;
+            font-size: 1.12rem !important;
+            font-weight: 700 !important;
+            width: 100% !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 
+                0 8px 25px rgba(49, 130, 206, 0.3),
+                0 3px 10px rgba(43, 108, 176, 0.2) !important;
+            letter-spacing: 0.3px !important;
+            margin-top: 15px !important;
+            backdrop-filter: blur(4px) !important;
+        }
+        
+        .stButton > button:hover {
+            background: linear-gradient(135deg, #2b6cb0 0%, #2c5282 100%) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 
+                0 12px 30px rgba(43, 108, 176, 0.35),
+                0 4px 12px rgba(43, 108, 176, 0.25) !important;
+        }
+        
+        /* 6) LABELS GLASS */
+        .glass-label {
+            color: #2d3748;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: block;
+            padding-left: 5px;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+        }
+        
+        /* 7) MENSAJES GLASS */
+        .glass-alert {
+            padding: 18px 22px;
+            border-radius: 14px;
+            margin: 28px 0;
+            font-size: 1rem;
+            border: 1px solid;
+            backdrop-filter: blur(12px);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .glass-success {
+            color: #22543d;
+            border-color: rgba(154, 230, 180, 0.5);
+            background: rgba(240, 255, 244, 0.6);
+        }
+        
+        .glass-error {
+            color: #742a2a;
+            border-color: rgba(252, 129, 129, 0.5);
+            background: rgba(255, 245, 245, 0.6);
+        }
+        
+        .glass-warning {
+            color: #744210;
+            border-color: rgba(251, 211, 141, 0.5);
+            background: rgba(255, 250, 240, 0.6);
+        }
+        
+        /* 8) FOOTER GLASS */
+        .glass-footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 28px;
+            border-top: 1px solid rgba(226, 232, 240, 0.5);
+            color: #4a5568;
+            font-size: 0.92rem;
+            opacity: 0.8;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+        }
+        
+        /* 9) CONTENEDOR DE FORMULARIO */
+        .glass-form-container {
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* 10) EFECTO DE LUZ EN BORDE */
+        .glass-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, 
+                rgba(66, 153, 225, 0.3) 0%,
+                rgba(99, 179, 237, 0.5) 50%,
+                rgba(66, 153, 225, 0.3) 100%);
+            border-radius: 24px 24px 0 0;
+            opacity: 0.6;
+        }
+        
+        /* 11) MEJORA PARA STREAMLIT NATIVO */
+        .stTextInput {
+            margin-bottom: 22px;
+        }
+        
+        /* 12) ANIMACIÓN SUTIL */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .glass-card {
+            animation: float 6s ease-in-out infinite;
         }
     </style>
     """, unsafe_allow_html=True)
     
-    # Contenedor principal
-    st.markdown('<div class="login-card-30blue">', unsafe_allow_html=True)
+    # Contenedor principal con efecto glass
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     
-    # Header con 30% presencia azul
-    st.markdown('<div class="login-header-30blue">', unsafe_allow_html=True)
-    st.markdown('<div class="logo-30blue">💊</div>', unsafe_allow_html=True)
-    st.markdown('<div class="title-30blue">TODODROGAS</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitle-30blue">Sistema Corporativo de Gestión</div>', unsafe_allow_html=True)
+    # Header con efecto glass
+    st.markdown('<div class="glass-header">', unsafe_allow_html=True)
+    st.markdown('<div class="glass-logo">💊</div>', unsafe_allow_html=True)
+    st.markdown('<div class="glass-title">TODODROGAS</div>', unsafe_allow_html=True)
+    st.markdown('<div class="glass-subtitle">Sistema Corporativo de Gestión</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Formulario
     with st.form("login_form"):
+        st.markdown('<div class="glass-form-container">', unsafe_allow_html=True)
+        
         # Usuario
-        st.markdown('<label class="label-30blue">Usuario Corporativo</label>', unsafe_allow_html=True)
-        username = st.text_input("", placeholder="usuario.corporativo@tododrogas.co", label_visibility="collapsed")
+        st.markdown('<label class="glass-label">Usuario</label>', unsafe_allow_html=True)
+        username = st.text_input("", placeholder="Ingrese su usuario", label_visibility="collapsed", key="username_input")
         
         # Contraseña
-        st.markdown('<label class="label-30blue">Credencial de Acceso</label>', unsafe_allow_html=True)
-        password = st.text_input("", type="password", placeholder="··················", label_visibility="collapsed")
+        st.markdown('<label class="glass-label">Contraseña</label>', unsafe_allow_html=True)
+        password = st.text_input("", type="password", placeholder="Ingrese su contraseña", label_visibility="collapsed", key="password_input")
         
         # Botón principal
         submit_button = st.form_submit_button("🔐 ACCEDER AL SISTEMA", use_container_width=True)
         
+        st.markdown('</div>', unsafe_allow_html=True)
+        
         if submit_button:
             if username and password:
                 with st.spinner("Validando credenciales..."):
-                    time.sleep(1.3)
+                    time.sleep(1.2)
                     authenticated, user = authenticate(username, password)
                     
                     if authenticated:
                         st.session_state.user = user
                         st.session_state.authenticated = True
-                        st.markdown('<div class="alert-30blue success-30blue">✓ Acceso autorizado al sistema corporativo</div>', unsafe_allow_html=True)
-                        time.sleep(1.2)
+                        st.markdown('<div class="glass-alert glass-success">✓ Acceso autorizado. Redirigiendo...</div>', unsafe_allow_html=True)
+                        time.sleep(1)
                         st.rerun()
                     else:
-                        st.markdown('<div class="alert-30blue error-30blue">✗ Credenciales no válidas. Verifique sus datos.</div>', unsafe_allow_html=True)
+                        st.markdown('<div class="glass-alert glass-error">✗ Credenciales incorrectas. Intente nuevamente.</div>', unsafe_allow_html=True)
             else:
-                st.markdown('<div class="alert-30blue warning-30blue">⚠️ Complete todos los campos requeridos</div>', unsafe_allow_html=True)
+                st.markdown('<div class="glass-alert glass-warning">⚠️ Complete todos los campos</div>', unsafe_allow_html=True)
     
     # Footer
-    st.markdown('<div class="footer-30blue">© 2024 Tododrogas S.A.S • Sistema v3.0</div>', unsafe_allow_html=True)
+    st.markdown('<div class="glass-footer">© 2024 Tododrogas S.A.S • v3.0</div>', unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
 
