@@ -4,21 +4,17 @@ __pycache__/
 *$py.class
 *.so
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Streamlit
+.streamlit/
+data/database.db
+data/backups/
+*.log
 
 # IDE
 .vscode/
@@ -26,14 +22,10 @@ wheels/
 *.swp
 *.swo
 
-# Database
-data/database.db
-data/backups/
+# OS
+.DS_Store
+Thumbs.db
 
-# Environment
+# Datos sensibles
+secrets.toml
 .env
-venv/
-env/
-
-# Streamlit
-.streamlit/secrets.toml
