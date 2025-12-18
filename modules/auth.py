@@ -1,5 +1,6 @@
 """
-AUTENTICACIÓN - DISEÑO COMPACTO Y CENTRADO
+MÓDULO DE AUTENTICACIÓN - SISTEMA TODODROGAS
+Login minimalista glass azul
 """
 
 import streamlit as st
@@ -51,14 +52,14 @@ def authenticate(username, password):
         conn.close()
 
 def show_login_screen():
-    """Login compacto y centrado con píldora al lado izquierdo"""
+    """Login minimalista glass azul centrado"""
     
-    # CSS compacto y centrado
+    # CSS minimalista
     st.markdown("""
     <style>
-        /* Reset Streamlit */
+        /* Reset básico */
         .stApp {
-            background: linear-gradient(135deg, #FFFFFF 0%, #F5F9FF 100%) !important;
+            background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
             min-height: 100vh;
         }
         
@@ -71,414 +72,181 @@ def show_login_screen():
         }
         
         .block-container {
-            padding-top: 0 !important;
-            padding-bottom: 0 !important;
+            padding: 0 !important;
             max-width: 100% !important;
         }
         
-        /* Contenedor principal centrado */
-        .login-container-compact {
+        /* Contenedor centrado */
+        .login-center {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1rem;
-            background: linear-gradient(135deg, 
-                #FFFFFF 0%, 
-                #F5F9FF 30%, 
-                #EDF4FF 70%, 
-                #FFFFFF 100%);
-            position: relative;
+            padding: 20px;
         }
         
-        /* Fondo con líneas azules sutiles */
-        .login-container-compact::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                linear-gradient(90deg, transparent 98%, rgba(0, 102, 255, 0.05) 100%),
-                linear-gradient(180deg, transparent 98%, rgba(0, 102, 255, 0.05) 100%);
-            background-size: 40px 40px;
-            opacity: 0.3;
-            pointer-events: none;
-        }
-        
-        /* Panel glass compacto */
-        .glass-panel-compact {
+        /* Card glass */
+        .login-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
             box-shadow: 
-                0 20px 50px rgba(0, 0, 0, 0.08),
-                0 0 30px rgba(0, 102, 255, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.8);
-            padding: 2.5rem;
+                0 15px 35px rgba(0, 0, 0, 0.1),
+                0 0 25px rgba(0, 102, 255, 0.1);
+            padding: 40px;
             width: 100%;
-            max-width: 450px;
-            position: relative;
+            max-width: 400px;
         }
         
-        /* Borde azul sutil */
-        .glass-panel-compact::after {
-            content: '';
-            position: absolute;
-            top: -1px;
-            left: -1px;
-            right: -1px;
-            bottom: -1px;
-            border-radius: 25px;
-            background: linear-gradient(135deg, 
-                rgba(0, 102, 255, 0.2), 
-                rgba(0, 212, 255, 0.2));
-            z-index: -1;
-            opacity: 0.5;
-        }
-        
-        /* Header con píldora al lado izquierdo */
-        .login-header-compact {
+        /* Header con píldora al lado */
+        .login-header {
             display: flex;
             align-items: center;
-            gap: 1.2rem;
-            margin-bottom: 2.5rem;
+            gap: 15px;
+            margin-bottom: 30px;
             justify-content: center;
         }
         
-        /* Píldora grande al lado izquierdo */
-        .pill-left {
-            font-size: 3rem;
-            width: 80px;
-            height: 80px;
+        /* Píldora */
+        .pill {
+            font-size: 2.5rem;
+            width: 60px;
+            height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: linear-gradient(135deg, #0066FF 0%, #00D4FF 100%);
             color: white;
-            border-radius: 20px;
-            box-shadow: 
-                0 10px 30px rgba(0, 102, 255, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.4);
-            flex-shrink: 0;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 102, 255, 0.3);
         }
         
-        /* Título al lado derecho de la píldora */
-        .title-compact {
-            font-size: 2.5rem;
+        /* Título */
+        .title {
+            font-size: 2rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #1A1A1A 0%, #0066FF 50%, #00D4FF 100%);
+            background: linear-gradient(135deg, #1A1A1A 0%, #0066FF 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            letter-spacing: -1px;
-            line-height: 1;
         }
         
-        .subtitle-compact {
-            color: #4A5568;
-            font-size: 1rem;
-            font-weight: 400;
-            margin-top: 0.3rem;
-        }
-        
-        /* Formulario compacto */
-        .form-compact {
-            margin-top: 1.5rem;
-        }
-        
-        /* Campos de entrada glass azul */
-        .input-glass-azul {
-            background: rgba(0, 102, 255, 0.08) !important;
-            backdrop-filter: blur(10px) !important;
-            border: 2px solid rgba(0, 102, 255, 0.15) !important;
-            border-radius: 14px !important;
-            padding: 16px 20px 16px 50px !important;
-            width: 100% !important;
-            font-size: 1rem !important;
-            color: white !important;
-            transition: all 0.3s ease !important;
-            box-shadow: 
-                inset 0 2px 6px rgba(0, 102, 255, 0.15),
-                0 4px 15px rgba(0, 102, 255, 0.1) !important;
-            font-weight: 500 !important;
-            margin-bottom: 1.2rem !important;
-        }
-        
-        .input-glass-azul:focus {
-            outline: none !important;
-            background: rgba(0, 102, 255, 0.12) !important;
-            border-color: rgba(0, 102, 255, 0.3) !important;
-            box-shadow: 
-                inset 0 2px 8px rgba(0, 102, 255, 0.2),
-                0 6px 20px rgba(0, 102, 255, 0.15) !important;
-            transform: translateY(-1px);
-        }
-        
-        .input-glass-azul::placeholder {
-            color: rgba(255, 255, 255, 0.7) !important;
-        }
-        
-        /* Iconos dentro de inputs */
-        .input-wrapper {
-            position: relative;
-            width: 100%;
-        }
-        
-        .input-icon-azul {
-            position: absolute;
-            left: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: white;
-            font-size: 1.1rem;
-            z-index: 2;
-            opacity: 0.8;
-        }
-        
-        /* Botón compacto */
-        .btn-compact {
-            background: linear-gradient(135deg, 
-                rgba(0, 102, 255, 0.9) 0%,
-                rgba(0, 212, 255, 0.9) 100%) !important;
-            border: none !important;
-            border-radius: 14px !important;
-            color: white !important;
-            padding: 16px !important;
-            font-size: 1rem !important;
-            font-weight: 600 !important;
-            width: 100% !important;
-            cursor: pointer !important;
-            transition: all 0.3s ease !important;
-            position: relative !important;
-            overflow: hidden !important;
-            box-shadow: 
-                0 8px 25px rgba(0, 102, 255, 0.25),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-            margin-top: 0.5rem !important;
-            letter-spacing: 0.5px !important;
-        }
-        
-        .btn-compact:hover {
-            background: linear-gradient(135deg, 
-                rgba(0, 102, 255, 1) 0%,
-                rgba(0, 212, 255, 1) 100%) !important;
-            transform: translateY(-2px) !important;
-            box-shadow: 
-                0 12px 35px rgba(0, 102, 255, 0.35),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
-        }
-        
-        /* Efecto de destello */
-        .btn-compact::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.2),
-                transparent
-            );
-            transition: left 0.5s ease;
-        }
-        
-        .btn-compact:hover::before {
-            left: 100%;
-        }
-        
-        /* Checkbox minimal */
-        .checkbox-compact {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 1.2rem 0;
-            color: #4A5568;
+        .subtitle {
+            color: #666;
             font-size: 0.9rem;
+            margin-top: 5px;
         }
         
-        /* Footer compacto */
-        .footer-compact {
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid rgba(0, 0, 0, 0.05);
-            text-align: center;
-            color: #718096;
-            font-size: 0.85rem;
+        /* Inputs glass azules */
+        .input-group {
+            margin-bottom: 20px;
         }
         
-        /* Mensajes compactos */
-        .alert-compact {
-            background: rgba(0, 102, 255, 0.08);
-            border: 1px solid rgba(0, 102, 255, 0.15);
+        .input-label {
+            color: #333;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .input-field {
+            background: rgba(0, 102, 255, 0.1);
+            border: 2px solid rgba(0, 102, 255, 0.2);
             border-radius: 12px;
-            padding: 1rem;
-            margin: 1rem 0;
-            backdrop-filter: blur(10px);
+            padding: 14px 16px;
+            width: 100%;
+            font-size: 1rem;
+            color: #333;
+            transition: all 0.3s;
         }
         
-        /* Responsive */
-        @media (max-width: 768px) {
-            .glass-panel-compact {
-                padding: 2rem 1.5rem;
-                margin: 0.5rem;
-            }
-            
-            .login-header-compact {
-                flex-direction: column;
-                text-align: center;
-                gap: 1rem;
-            }
-            
-            .pill-left {
-                width: 70px;
-                height: 70px;
-                font-size: 2.5rem;
-            }
-            
-            .title-compact {
-                font-size: 2rem;
-            }
+        .input-field:focus {
+            outline: none;
+            border-color: #0066FF;
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+            background: rgba(0, 102, 255, 0.15);
+        }
+        
+        /* Botón */
+        .login-btn {
+            background: linear-gradient(135deg, #0066FF 0%, #00D4FF 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            padding: 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 102, 255, 0.3);
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            text-align: center;
+            color: #888;
+            font-size: 0.85rem;
         }
     </style>
     """, unsafe_allow_html=True)
     
-    # Contenedor principal centrado
-    st.markdown('<div class="login-container-compact">', unsafe_allow_html=True)
-    st.markdown('<div class="glass-panel-compact">', unsafe_allow_html=True)
+    # Contenedor principal
+    st.markdown('<div class="login-center">', unsafe_allow_html=True)
+    st.markdown('<div class="login-card">', unsafe_allow_html=True)
     
-    # Header con píldora al lado izquierdo y título al lado derecho
-    st.markdown('<div class="login-header-compact">', unsafe_allow_html=True)
-    
-    # Píldora al lado izquierdo
-    st.markdown('<div class="pill-left">💊</div>', unsafe_allow_html=True)
-    
-    # Título al lado derecho de la píldora
-    st.markdown('''
-    <div>
-        <div class="title-compact">TODODROGAS</div>
-        <div class="subtitle-compact">Sistema de Gestión de Cupos</div>
-    </div>
-    ''', unsafe_allow_html=True)
-    
+    # Header con píldora y título
+    st.markdown('<div class="login-header">', unsafe_allow_html=True)
+    st.markdown('<div class="pill">💊</div>', unsafe_allow_html=True)
+    st.markdown('<div><div class="title">TODODROGAS</div><div class="subtitle">Sistema de Gestión</div></div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Formulario compacto
-    with st.form("login_form", clear_on_submit=False):
-        st.markdown('<div class="form-compact">', unsafe_allow_html=True)
-        
-        # Campo de usuario
-        st.markdown('<div class="input-wrapper">', unsafe_allow_html=True)
-        st.markdown('<div class="input-icon-azul">👤</div>', unsafe_allow_html=True)
-        
-        username = st.text_input(
-            "",
-            placeholder="Usuario",
-            label_visibility="collapsed",
-            key="username_input"
-        )
+    # Formulario simple
+    with st.form("login_form"):
+        # Usuario
+        st.markdown('<div class="input-group">', unsafe_allow_html=True)
+        st.markdown('<label class="input-label">Usuario</label>', unsafe_allow_html=True)
+        username = st.text_input("", placeholder="Ingresa tu usuario", label_visibility="collapsed")
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Campo de contraseña
-        st.markdown('<div class="input-wrapper">', unsafe_allow_html=True)
-        st.markdown('<div class="input-icon-azul">🔒</div>', unsafe_allow_html=True)
-        
-        password = st.text_input(
-            "",
-            type="password",
-            placeholder="Contraseña",
-            label_visibility="collapsed",
-            key="password_input"
-        )
+        # Contraseña
+        st.markdown('<div class="input-group">', unsafe_allow_html=True)
+        st.markdown('<label class="input-label">Contraseña</label>', unsafe_allow_html=True)
+        password = st.text_input("", type="password", placeholder="Ingresa tu contraseña", label_visibility="collapsed")
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Checkbox recordar sesión
-        col1, col2 = st.columns([1, 8])
-        with col1:
-            remember = st.checkbox("", value=True, key="remember_checkbox")
-        with col2:
-            st.markdown('<div class="checkbox-compact">Recordar mi sesión</div>', unsafe_allow_html=True)
-        
-        # Botón de acceso
-        submit_button = st.form_submit_button(
-            "ACCEDER",
-            use_container_width=True,
-            type="primary"
-        )
+        # Botón
+        submit_button = st.form_submit_button("ACCEDER", use_container_width=True, type="primary")
         
         if submit_button:
             if username and password:
-                # Barra de progreso simple
-                progress_bar = st.progress(0)
-                for i in range(100):
-                    time.sleep(0.01)
-                    progress_bar.progress(i + 1)
-                
-                # Validación
-                authenticated, user = authenticate(username, password)
-                
-                # Limpiar barra
-                progress_bar.empty()
-                
-                if authenticated:
-                    # Mensaje de éxito
-                    st.markdown(f'''
-                    <div class="alert-compact">
-                        <div style="color: #0066FF; font-weight: 600;">
-                            ✓ Acceso concedido
-                        </div>
-                        <div style="color: #1A1A1A; margin-top: 0.5rem;">
-                            Redirigiendo...
-                        </div>
-                    </div>
-                    ''', unsafe_allow_html=True)
-                    
-                    # Guardar sesión
-                    st.session_state.user = user
-                    st.session_state.authenticated = True
-                    
-                    # Redirección rápida
+                with st.spinner("Verificando..."):
                     time.sleep(1)
-                    st.rerun()
-                else:
-                    # Mensaje de error
-                    st.markdown('''
-                    <div class="alert-compact" style="border-color: rgba(255, 107, 107, 0.3); background: rgba(255, 107, 107, 0.08);">
-                        <div style="color: #FF6B6B; font-weight: 600;">
-                            ✗ Credenciales incorrectas
-                        </div>
-                    </div>
-                    ''', unsafe_allow_html=True)
+                    authenticated, user = authenticate(username, password)
+                    
+                    if authenticated:
+                        st.session_state.user = user
+                        st.session_state.authenticated = True
+                        st.success(f"¡Bienvenido, {user['nombre']}!")
+                        time.sleep(1)
+                        st.rerun()
+                    else:
+                        st.error("❌ Credenciales incorrectas")
             else:
-                # Mensaje de advertencia
-                st.markdown('''
-                <div class="alert-compact" style="border-color: rgba(255, 149, 0, 0.3); background: rgba(255, 149, 0, 0.08);">
-                    <div style="color: #FF9500; font-weight: 600;">
-                        ⚠ Completa todos los campos
-                    </div>
-                </div>
-                ''', unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+                st.warning("⚠️ Completa todos los campos")
     
     # Footer
-    st.markdown('<div class="footer-compact">', unsafe_allow_html=True)
-    
-    # Información simple
-    with st.expander("ℹ️ Información", expanded=False):
-        st.markdown(f'''
-        **Sistema:** Tododrogas v2.0  
-        **Estado:** Operativo  
-        **Fecha:** {datetime.now().strftime("%d/%m/%Y")}
-        ''')
-    
-    st.markdown('<div style="margin-top: 1rem;">© 2024 Tododrogas</div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('<div class="footer">© 2024 Tododrogas</div>', unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
