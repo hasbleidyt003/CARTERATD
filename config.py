@@ -1,3 +1,15 @@
+"""
+Configuración del Sistema de Gestión de Cupos TD
+Versión Profesional - Futurista
+"""
+
+import os
+from pathlib import Path
+
+# ============================================================================
+# CONFIGURACIÓN GLOBAL
+# ============================================================================
+
 class Config:
     # Rutas del sistema
     BASE_DIR = Path(__file__).parent
@@ -80,3 +92,11 @@ class Config:
             'disponible': 93146334
         }
     ]
+
+# Instancia global de configuración
+config = Config()
+
+# Crear directorios necesarios
+os.makedirs(config.DATA_DIR, exist_ok=True)
+os.makedirs(config.BACKUP_DIR, exist_ok=True)
+os.makedirs(config.LOGS_DIR, exist_ok=True)
