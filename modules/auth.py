@@ -53,7 +53,21 @@ def show_login_screen():
             position: relative;
         }
         
-       
+        /* Tarjeta principal - glass muy blanco y futurista */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 28px;
+            border: 1px solid rgba(200, 230, 255, 0.6);
+            box-shadow: 0 20px 50px rgba(100, 160, 255, 0.12),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            padding: 60px 70px;
+            width: 100%;
+            max-width: 460px;
+            position: relative;
+            z-index: 10;
+            margin: 20px;
         }
         
         /* Título futurista */
@@ -101,8 +115,22 @@ def show_login_screen():
         .stTextInput > div > div > input::placeholder {
             color: #8899aa !important;
         }
-
-
+        
+        /* Botón futurista con glow */
+        .stButton > button {
+            background: linear-gradient(135deg, #4488ff, #66aaff, #88bbff) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 18px !important;
+            padding: 18px !important;
+            font-size: 1.1rem !important;
+            font-weight: 700 !important;
+            width: 100% !important;
+            margin-top: 10px;
+            box-shadow: 0 10px 30px rgba(100, 160, 255, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            transition: all 0.4s ease;
+            cursor: pointer;
         }
         
         .stButton > button:hover {
@@ -146,10 +174,7 @@ def show_login_screen():
             font-weight: 500;
         }
         
-        /* Animación de flotación para la tarjeta */
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
+
         }
         
         .glass-container {
