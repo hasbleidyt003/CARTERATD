@@ -1,8 +1,7 @@
-streamlit>=1.24.0
+streamlit>=1.28.0
 pandas>=2.0.0
-plotly>=5.0.0
-openpyxl>=3.0.0
-numpy==1.24.3
-python-dateutil==2.8.2
-pytz==2023.3
-altair==5.2.0
+plotly>=5.18.0
+sqlite3
+python-dateutil
+openpyxl
+numpy
