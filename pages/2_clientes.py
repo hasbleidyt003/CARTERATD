@@ -231,6 +231,26 @@ st.markdown("""
         border: 1px solid #FFB3B3;
     }
 </style>
+
+<script>
+// Funciones JavaScript para manejar los botones
+function viewClient(nit) {
+    alert('Ver detalle del cliente: ' + nit);
+    // En una implementación real, esto redirigiría a una página de detalle
+    // window.location.href = '/detalle_cliente?nit=' + nit;
+}
+
+function editCupo(nit) {
+    alert('Editar cupo del cliente: ' + nit);
+    // En Streamlit, esto debería activar un modal o cambiar de página
+    // st.session_state['edit_cupo_nit'] = nit;
+}
+
+function viewOCs(nit) {
+    alert('Ver OCs del cliente: ' + nit);
+    // window.location.href = '/ocs_cliente?nit=' + nit;
+}
+</script>
 """, unsafe_allow_html=True)
 
 # ==================== FUNCIONES AUXILIARES ====================
@@ -464,23 +484,35 @@ def show_clients_page():
         display_df['Disponible'] = display_df['disponible'].apply(format_currency)
         display_df['% Uso'] = display_df['porcentaje_uso'].apply(lambda x: f"{x:.1f}%")
         
-        # Añadir barra de progreso visual
-        display_df['Progreso'] = display_df['porcentaje_uso'].apply(
-            lambda x: f"<div style='background: {get_color_by_percentage(x)}; width: {min(x, 100)}%; height: 8px; border-radius: 4px;'></div>"
+        # Crear tabla con botones de acción
+        st.dataframe(
+            display_df[['nombre', 'nit', 'Cupo Asignado', 'En Uso', 'Disponible', '% Uso']],
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "nombre": "Cliente",
+                "nit": "NIT",
+                "Cupo Asignado": "Cupo",
+                "En Uso": "En Uso", 
+                "Disponible": "Disponible",
+                "% Uso": "% Uso"
+            }
         )
         
-        # Columnas a mostrar
-        columnas = ['nombre', 'nit', 'Cupo Asignado', 'En Uso', 'Disponible', '% Uso', 'Progreso']
-        nombres_columnas = ['Cliente', 'NIT', 'Cupo', 'En Uso', 'Disponible', '% Uso', 'Progreso']
-        
-        st.markdown(
-            display_df[columnas].rename(columns=dict(zip(columnas, nombres_columnas))).to_html(
-                escape=False, 
-                index=False,
-                classes='rappi-table'
-            ), 
-            unsafe_allow_html=True
-        )
+        # Agregar botones de acción para cada fila
+        for _, cliente in page_df.iterrows():
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                if st.button(f"📋 Ver {cliente['nit']}", key=f"view_{cliente['nit']}", use_container_width=True):
+                    st.session_state['selected_client'] = cliente['nit']
+                    st.info(f"Seleccionado cliente: {cliente['nombre']}")
+            with col2:
+                if st.button(f"✏️ Editar {cliente['nit']}", key=f"edit_{cliente['nit']}", use_container_width=True):
+                    st.session_state['edit_cupo_nit'] = cliente['nit']
+                    st.rerun()
+            with col3:
+                if st.button(f"📄 OCs {cliente['nit']}", key=f"ocs_{cliente['nit']}", use_container_width=True):
+                    st.info(f"Ver OCs del cliente: {cliente['nombre']}")
     
     # ========== ACCIONES MASIVAS ==========
     st.markdown("---")
@@ -493,7 +525,7 @@ def show_clients_page():
             try:
                 # Crear archivo Excel
                 output = pd.ExcelWriter('clientes_export.xlsx', engine='xlsxwriter')
-                display_df.to_excel(output, index=False, sheet_name='Clientes')
+                filtered_df.to_excel(output, index=False, sheet_name='Clientes')
                 output.close()
                 
                 with open('clientes_export.xlsx', 'rb') as f:
