@@ -55,19 +55,7 @@ def show_login_screen():
             position: relative;
         }
 
-        /* Elemento decorativo flotante superior */
-        .floating-element {
-            position: absolute;
-            top: 80px;
-            left: 15%;
-            width: 280px;
-            height: 80px;
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            border: 1px solid rgba(180, 220, 255, 0.5);
-            box-shadow: 0 10px 30px rgba(100, 180, 255, 0.1);
-            animation: float 6s ease-in-out infinite;
+
         }
 
         @keyframes float {
