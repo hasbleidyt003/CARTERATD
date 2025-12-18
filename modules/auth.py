@@ -309,7 +309,6 @@ def show_login_screen():
     
     # Header con efecto glass
     st.markdown('<div class="glass-header">', unsafe_allow_html=True)
-    st.markdown('<div class="glass-logo">💊</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-title">TODODROGAS</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-subtitle">Sistema Corporativo de Gestión</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -349,7 +348,6 @@ def show_login_screen():
                 st.markdown('<div class="glass-alert glass-warning">⚠️ Complete todos los campos</div>', unsafe_allow_html=True)
     
     # Footer
-    st.markdown('<div class="glass-footer">© 2024 Tododrogas S.A.S • v3.0</div>', unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
 
