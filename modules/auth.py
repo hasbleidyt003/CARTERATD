@@ -115,22 +115,8 @@ def show_login_screen():
         .stTextInput > div > div > input::placeholder {
             color: #8899aa !important;
         }
-        
-        /* Botón futurista con glow */
-        .stButton > button {
-            background: linear-gradient(135deg, #4488ff, #66aaff, #88bbff) !important;
-            color: white !important;
-            border: none !important;
-            border-radius: 18px !important;
-            padding: 18px !important;
-            font-size: 1.1rem !important;
-            font-weight: 700 !important;
-            width: 100% !important;
-            margin-top: 10px;
-            box-shadow: 0 10px 30px rgba(100, 160, 255, 0.3),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.4);
-            transition: all 0.4s ease;
-            cursor: pointer;
+
+
         }
         
         .stButton > button:hover {
