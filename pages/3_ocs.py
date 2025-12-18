@@ -412,13 +412,13 @@ def show_ocs_page():
             
             with col2:
                 # Valor total
-                valor_total = st.number_input(
-                    "Valor Total *",
+            valor_total = st.number_input(
+            "Valor Total *",
                     min_value=1000000.0,  # Mínimo 1 millón
-                    value=0.0,
+                    value=1000000.0,  # ← IMPORTANTE: debe ser igual o mayor que min_value
                     step=1000000.0,
                     format="%.0f",
-                    help="Valor total de la orden de compra"
+                    help="Valor total de la orden de compra (mínimo $1,000,000)"
                 )
                 
                 # Comentarios
