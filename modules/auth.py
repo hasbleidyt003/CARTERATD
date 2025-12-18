@@ -1,6 +1,6 @@
 """
 AUTENTICACIÓN - GLASSMORPHISM CON AZUL PURISTA
-Efecto cristal con tonos azules brillantes y puro minimalismo
+Efecto cristal con tonos azules brillantes - Placeholders integrados
 """
 
 import streamlit as st
@@ -52,25 +52,32 @@ def authenticate(username, password):
         conn.close()
 
 def show_login_screen():
-    """Login con efecto Glassmorphism y azul purista"""
+    """Login con efecto Glassmorphism - SOLO PLACEHOLDERS"""
     
-    # CSS con Glassmorphism y azul purista
+    # CSS con Glassmorphism y azul purista - SIN LABELS
     st.markdown("""
     <style>
-        /* RESET COMPLETO */
-        #MainMenu, footer, header, .stTextInput label, .stTextInput p {
+        /* RESET COMPLETO - SIN LABELS */
+        #MainMenu, footer, header {
+            display: none !important;
+        }
+        
+        /* OCULTAR CUALQUIER LABEL DE STREAMLIT */
+        label, .stTextInput label, .stTextInput p, 
+        div[data-testid="stForm"] > div > div > div:first-child {
             display: none !important;
             visibility: hidden !important;
             height: 0 !important;
             margin: 0 !important;
             padding: 0 !important;
+            opacity: 0 !important;
         }
         
         .stApp {
             overflow: hidden;
         }
         
-        /* 1) FONDO CON GRADIENTE AZUL PURISTA BRILLANTE */
+        /* 1) FONDO CON GRADIENTE AZUL PURISTA */
         .stApp {
             background: linear-gradient(
                 135deg,
@@ -89,7 +96,7 @@ def show_login_screen():
             position: relative;
         }
         
-        /* Efecto de brillo en el fondo */
+        /* Efecto de brillo */
         .stApp::before {
             content: '';
             position: absolute;
@@ -99,12 +106,11 @@ def show_login_screen():
             bottom: 0;
             background: 
                 radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.4) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.3) 0%, transparent 50%);
             pointer-events: none;
         }
         
-        /* 2) GLASS CARD - CRISTAL AZUL BRILLANTE */
+        /* 2) GLASS CARD */
         .glass-card {
             backdrop-filter: blur(20px) saturate(200%);
             background: rgba(255, 255, 255, 0.25);
@@ -113,8 +119,7 @@ def show_login_screen():
             box-shadow: 
                 0 25px 60px rgba(0, 102, 255, 0.25),
                 0 8px 25px rgba(0, 102, 255, 0.15),
-                inset 0 1px 0 rgba(255, 255, 255, 0.6),
-                inset 0 -1px 0 rgba(0, 102, 255, 0.1);
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
             padding: 60px 50px;
             width: 100%;
             max-width: 480px;
@@ -150,26 +155,7 @@ def show_login_screen():
             pointer-events: none;
         }
         
-        /* Efecto de luz interior */
-        .glass-card::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(
-                135deg,
-                rgba(255, 255, 255, 0.1) 0%,
-                rgba(255, 255, 255, 0.05) 50%,
-                transparent 100%
-            );
-            pointer-events: none;
-            border-radius: 28px;
-            z-index: -1;
-        }
-        
-        /* 3) HEADER - AZUL PURISTA BRILLANTE */
+        /* 3) HEADER */
         .glass-header {
             text-align: center;
             margin-bottom: 50px;
@@ -193,16 +179,6 @@ def show_login_screen():
             -webkit-text-fill-color: transparent;
             background-clip: text;
             filter: drop-shadow(0 4px 12px rgba(0, 102, 255, 0.4));
-            animation: shine 3s ease-in-out infinite alternate;
-        }
-        
-        @keyframes shine {
-            0% {
-                filter: drop-shadow(0 4px 12px rgba(0, 102, 255, 0.4));
-            }
-            100% {
-                filter: drop-shadow(0 6px 20px rgba(0, 102, 255, 0.6));
-            }
         }
         
         .glass-title {
@@ -219,7 +195,6 @@ def show_login_screen():
             background-clip: text;
             margin-bottom: 12px;
             letter-spacing: -0.5px;
-            text-shadow: 0 2px 4px rgba(255, 255, 255, 0.3);
         }
         
         .glass-subtitle {
@@ -227,27 +202,34 @@ def show_login_screen():
             font-size: 1.1rem;
             font-weight: 500;
             opacity: 0.9;
-            letter-spacing: 0.5px;
         }
         
-        /* 4) INPUTS - CRISTAL TRANSPARENTE */
-        .stTextInput > div > div {
-            margin-top: 0 !important;
+        /* 4) INPUTS - PLACEHOLDERS VISIBLES, SIN LABELS */
+        .login-input-container {
+            margin-bottom: 25px;
         }
         
         .stTextInput > div > div > input {
-            background: rgba(255, 255, 255, 0.85) !important;
+            background: rgba(255, 255, 255, 0.9) !important;
             backdrop-filter: blur(10px) !important;
             border: 2px solid rgba(255, 255, 255, 0.6) !important;
             border-radius: 16px !important;
-            padding: 18px 24px !important;
+            padding: 20px 24px !important;
             font-size: 1.1rem !important;
             color: #003366 !important;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            transition: all 0.3s ease !important;
             box-shadow: 
                 inset 0 2px 6px rgba(0, 0, 0, 0.05),
                 0 4px 12px rgba(0, 102, 255, 0.15) !important;
-            margin-top: 5px !important;
+            width: 100% !important;
+            height: 60px !important;
+        }
+        
+        /* PLACEHOLDER ESTILIZADO */
+        .stTextInput > div > div > input::placeholder {
+            color: rgba(0, 51, 102, 0.6) !important;
+            font-weight: 500;
+            font-size: 1.05rem;
         }
         
         .stTextInput > div > div > input:focus {
@@ -257,28 +239,9 @@ def show_login_screen():
                 0 0 0 4px rgba(0, 153, 255, 0.25),
                 inset 0 2px 6px rgba(0, 0, 0, 0.05) !important;
             outline: none !important;
-            transform: translateY(-2px);
         }
         
-        .stTextInput > div > div > input::placeholder {
-            color: rgba(0, 51, 102, 0.5) !important;
-            font-weight: 400;
-        }
-        
-        /* 5) LABELS PERSONALIZADOS */
-        .glass-label {
-            color: rgba(0, 51, 102, 0.95);
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 12px;
-            display: block;
-            padding-left: 8px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
-        }
-        
-        /* 6) BOTÓN PRINCIPAL - AZUL BRILLANTE */
+        /* 5) BOTÓN PRINCIPAL */
         .stButton > button {
             background: linear-gradient(
                 135deg,
@@ -291,62 +254,33 @@ def show_login_screen():
             color: white !important;
             border: none !important;
             border-radius: 16px !important;
-            padding: 20px 36px !important;
+            padding: 22px 36px !important;
             font-size: 1.15rem !important;
             font-weight: 800 !important;
             width: 100% !important;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            transition: all 0.3s ease !important;
             box-shadow: 
                 0 12px 30px rgba(0, 102, 255, 0.4),
-                0 4px 15px rgba(0, 102, 255, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+                0 4px 15px rgba(0, 102, 255, 0.2) !important;
             letter-spacing: 0.5px !important;
-            margin-top: 25px !important;
-            backdrop-filter: blur(8px) !important;
-            position: relative;
-            overflow: hidden;
-            z-index: 1;
-        }
-        
-        .stButton > button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.3),
-                transparent
-            );
-            transition: left 0.7s ease;
-            z-index: -1;
+            margin-top: 10px !important;
         }
         
         .stButton > button:hover {
-            transform: translateY(-4px) scale(1.02) !important;
+            transform: translateY(-2px) !important;
             box-shadow: 
-                0 20px 40px rgba(0, 102, 255, 0.5),
-                0 8px 20px rgba(0, 102, 255, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+                0 16px 40px rgba(0, 102, 255, 0.5),
+                0 6px 20px rgba(0, 102, 255, 0.3) !important;
         }
         
-        .stButton > button:hover::before {
-            left: 100%;
-        }
-        
-        /* 7) MENSAJES GLASS */
+        /* 6) MENSAJES */
         .glass-alert {
-            padding: 20px 24px;
+            padding: 18px 22px;
             border-radius: 16px;
-            margin: 30px 0;
-            font-size: 1.05rem;
+            margin: 25px 0;
+            font-size: 1rem;
             border: 2px solid;
             backdrop-filter: blur(15px);
-            position: relative;
-            z-index: 2;
             text-align: center;
             font-weight: 600;
         }
@@ -369,67 +303,66 @@ def show_login_screen():
             background: rgba(255, 204, 102, 0.2);
         }
         
-        /* 8) FOOTER */
+        /* 7) FOOTER */
         .glass-footer {
             text-align: center;
-            margin-top: 45px;
+            margin-top: 40px;
             padding-top: 30px;
             border-top: 2px solid rgba(255, 255, 255, 0.3);
             color: rgba(0, 51, 102, 0.8);
             font-size: 0.95rem;
             font-weight: 500;
-            position: relative;
-            z-index: 2;
-            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
-            letter-spacing: 0.5px;
         }
         
-        /* 9) CONTENEDOR DE FORMULARIO */
+        /* 8) SPACING MEJORADO */
         .glass-form-container {
             position: relative;
             z-index: 2;
         }
         
-        /* 10) ANIMACIÓN SUTIL DE FLOTACIÓN */
-        @keyframes float {
-            0% { transform: translateY(0px) rotate(0deg); }
-            33% { transform: translateY(-8px) rotate(0.5deg); }
-            66% { transform: translateY(-4px) rotate(-0.5deg); }
-            100% { transform: translateY(0px) rotate(0deg); }
+        .login-spacing {
+            margin-bottom: 30px;
         }
         
-        .glass-card {
-            animation: float 8s ease-in-out infinite;
-        }
-        
-        /* 11) OCULTAR SCROLLBAR */
+        /* 9) OCULTAR SCROLLBAR */
         ::-webkit-scrollbar {
             display: none;
         }
     </style>
     """, unsafe_allow_html=True)
     
-    # Contenedor principal con efecto glass
+    # Contenedor principal
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     
-    # Header sin píldora, solo azul purista
+    # Header
     st.markdown('<div class="glass-header">', unsafe_allow_html=True)
     st.markdown('<div class="glass-logo">🔷</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-title">TODODROGAS</div>', unsafe_allow_html=True)
-    st.markdown('<div class="glass-subtitle">Sistema Corporativo de Gestión de Cupos</div>', unsafe_allow_html=True)
+    st.markdown('<div class="glass-subtitle">Sistema Corporativo de Gestión</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Formulario
+    # Formulario SOLO con placeholders
     with st.form("login_form"):
         st.markdown('<div class="glass-form-container">', unsafe_allow_html=True)
         
-        # Usuario
-        st.markdown('<label class="glass-label">Usuario</label>', unsafe_allow_html=True)
-        username = st.text_input("", placeholder="Ingrese su usuario", label_visibility="collapsed", key="username_input")
+        # Usuario - SOLO PLACEHOLDER
+        st.markdown('<div class="login-spacing"></div>', unsafe_allow_html=True)
+        username = st.text_input(
+            " ",
+            placeholder="Ingrese su usuario", 
+            label_visibility="collapsed",
+            key="username_login"
+        )
         
-        # Contraseña
-        st.markdown('<label class="glass-label">Contraseña</label>', unsafe_allow_html=True)
-        password = st.text_input("", type="password", placeholder="Ingrese su contraseña", label_visibility="collapsed", key="password_input")
+        # Contraseña - SOLO PLACEHOLDER  
+        st.markdown('<div class="login-spacing"></div>', unsafe_allow_html=True)
+        password = st.text_input(
+            "  ",
+            type="password", 
+            placeholder="Ingrese su contraseña", 
+            label_visibility="collapsed",
+            key="password_login"
+        )
         
         # Botón principal
         submit_button = st.form_submit_button("🔐 ACCEDER AL SISTEMA", use_container_width=True)
@@ -449,7 +382,7 @@ def show_login_screen():
                         time.sleep(1)
                         st.rerun()
                     else:
-                        st.markdown('<div class="glass-alert glass-error">✗ Credenciales incorrectas. Intente nuevamente.</div>', unsafe_allow_html=True)
+                        st.markdown('<div class="glass-alert glass-error">✗ Credenciales incorrectas</div>', unsafe_allow_html=True)
             else:
                 st.markdown('<div class="glass-alert glass-warning">⚠️ Complete todos los campos</div>', unsafe_allow_html=True)
     
