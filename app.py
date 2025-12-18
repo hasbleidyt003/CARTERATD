@@ -1,598 +1,529 @@
 """
-SISTEMA DE GESTIÓN DE CUPOS TD - VERSIÓN COMPLETA CON NAVBAR MODERNO
-Todas las páginas funcionan con st.switch_page()
+SISTEMA DE GESTIÓN DE CARTERA - TODODROGAS
+Aplicación principal con tema empresarial moderno
 """
 
 import streamlit as st
-import pandas as pd
-import plotly.graph_objects as go
-import plotly.express as px
-from datetime import datetime, timedelta
 import os
-import sqlite3
 import sys
-from pathlib import Path
+from datetime import datetime
 
-# ============================================================================
-# CONFIGURACIÓN DE PÁGINA
-# ============================================================================
+# ==================== CONFIGURACIÓN DEL TEMA ====================
 
-st.set_page_config(
-    page_title="Sistema de Cupos TD",
-    page_icon="💼",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
-
-# ============================================================================
-# NAVBAR MODERNO (Basado en tu modelo)
-# ============================================================================
-
-def modern_navbar():
-    with st.sidebar:
-        st.markdown("### 🧭 Navegación Rápida")
-
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🏠 Dashboard", use_container_width=True):
-                st.switch_page("app.py")
-
-        with col2:
-            if st.button("👥 Clientes", use_container_width=True):
-                st.switch_page("pages/2_clientes.py")
-
-        col3, col4 = st.columns(2)
-        with col3:
-            if st.button("📋 Órdenes Compra", use_container_width=True):
-                st.switch_page("pages/3_ocs.py")
-
-        with col4:
-            if st.button("📊 Reportes", use_container_width=True):
-                st.switch_page("pages/4_reportes.py")
-
-        if st.button("⚙️ Configuración", use_container_width=True):
-            st.switch_page("pages/5_configuracion.py")
-
-        st.markdown("---")
-        st.markdown("### 🔐 Sesión")
-
-        st.info("🟢 Conectado como Administrador")
-
-        if st.button("🚪 Cerrar Sesión", use_container_width=True):
-            st.success("Sesión cerrada exitosamente")
-            st.session_state.clear()
-            st.switch_page("app.py")
-
-    # --- NAVBAR (CSS + HTML) ---
+def configure_modern_theme():
+    """Configura el tema empresarial moderno de Tododrogas"""
     st.markdown("""
     <style>
-        .modern-navbar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            padding: 0.8rem 0;
-            margin-bottom: 0;
-            border-bottom: 1px solid rgba(0, 102, 204, 0.1);
-            position: relative;
-            z-index: 1000;
+        /* TEMA CORPORATIVO TODODROGAS */
+        .stApp {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
         }
         
-        .nav-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-        
-        .nav-title {
-            color: #1a1a1a;
-            font-size: 1.4rem;
-            font-weight: 800;
+        /* HEADERS ELEGANTES */
+        h1, h2, h3 {
+            color: #1a1a1a !important;
+            font-weight: 700 !important;
             letter-spacing: -0.5px;
-            font-family: 'Inter', sans-serif;
+            margin-bottom: 1rem !important;
         }
         
-        .nav-title span {
-            background: linear-gradient(135deg, #0066cc, #00a8ff);
+        h1 {
+            background: linear-gradient(135deg, #0066cc 0%, #004499 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            font-size: 2.2rem !important;
+            border-bottom: 3px solid #0066cc;
+            padding-bottom: 0.5rem;
         }
         
-        .nav-user {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
+        /* BOTONES CORPORATIVOS */
+        .stButton > button {
+            background: linear-gradient(135deg, #0066cc, #004499);
+            color: white !important;
+            border: none !important;
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+            padding: 0.75rem 1.5rem !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 6px rgba(0, 102, 204, 0.2);
         }
         
-        .user-info {
-            text-align: right;
+        .stButton > button:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 12px rgba(0, 102, 204, 0.3) !important;
+            background: linear-gradient(135deg, #004499, #003366) !important;
         }
         
-        .user-name {
+        /* BOTONES SECUNDARIOS */
+        div[data-testid="stButton"] button[kind="secondary"] {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef) !important;
+            color: #0066cc !important;
+            border: 2px solid #0066cc !important;
+        }
+        
+        /* TARJETAS ELEGANTES */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 102, 204, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 102, 204, 0.15);
+        }
+        
+        /* BADGES DE ESTADO */
+        .badge {
+            display: inline-block;
+            padding: 0.35rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
             font-weight: 600;
-            color: #1a1a1a;
-            font-size: 0.9rem;
+            margin: 0.2rem;
         }
         
-        .user-role {
-            color: #666;
-            font-size: 0.8rem;
+        .badge-pendiente {
+            background: linear-gradient(135deg, #ffd166, #ffb347);
+            color: #8a5700;
         }
         
-        .css-1d391kg {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            border-right: 1px solid rgba(0, 102, 204, 0.1);
+        .badge-autorizada {
+            background: linear-gradient(135deg, #06d6a0, #0cb48c);
+            color: #00563f;
         }
         
-        @media (max-width: 768px) {
-            .nav-content {
-                flex-direction: column;
-                gap: 1rem;
-            }
-            
-            .nav-user {
-                width: 100%;
-                justify-content: center;
-            }
+        .badge-parcial {
+            background: linear-gradient(135deg, #118ab2, #0a6c8f);
+            color: white;
+        }
+        
+        /* INPUTS MODERNOS */
+        .stTextInput > div > div > input,
+        .stNumberInput > div > div > input,
+        .stTextArea > div > div > textarea,
+        .stSelectbox > div > div > div {
+            border-radius: 8px !important;
+            border: 2px solid #e9ecef !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .stTextInput > div > div > input:focus,
+        .stNumberInput > div > div > input:focus,
+        .stTextArea > div > div > textarea:focus {
+            border-color: #0066cc !important;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1) !important;
+        }
+        
+        /* BARRAS DE PROGRESO */
+        .stProgress > div > div > div > div {
+            background: linear-gradient(90deg, #0066cc, #00a8ff) !important;
+            border-radius: 10px !important;
+        }
+        
+        /* OCULTAR ELEMENTOS DEFAULT */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        
+        /* MÉTRICAS PERSONALIZADAS */
+        .stMetric {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 5px solid #0066cc;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* NAVBAR PERSONALIZADA */
+        .navbar {
+            background: linear-gradient(135deg, #0066cc 0%, #004499 100%);
+            padding: 1rem 2rem;
+            margin: -1rem -1rem 2rem -1rem;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 4px 20px rgba(0, 102, 204, 0.3);
+        }
+        
+        .navbar-title {
+            color: white !important;
+            font-size: 1.8rem !important;
+            font-weight: 800 !important;
+            letter-spacing: -0.5px;
+        }
+        
+        .navbar-subtitle {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-size: 1rem !important;
+            margin-top: -0.5rem !important;
+        }
+        
+        /* TABLAS ELEGANTES */
+        .dataframe {
+            border-radius: 8px !important;
+            overflow: hidden !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+        }
+        
+        .dataframe th {
+            background: linear-gradient(135deg, #0066cc, #004499) !important;
+            color: white !important;
+            font-weight: 600 !important;
+        }
+        
+        .dataframe tr:nth-child(even) {
+            background-color: #f8f9fa !important;
+        }
+        
+        .dataframe tr:hover {
+            background-color: #e9f7ff !important;
+        }
+        
+        /* MODALES Y EXPANDERS */
+        .streamlit-expanderHeader {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef) !important;
+            border-radius: 8px !important;
+            border: 2px solid #e9ecef !important;
+            font-weight: 600 !important;
+        }
+        
+        /* SEPARADORES ELEGANTES */
+        hr {
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #0066cc, transparent);
+            margin: 2rem 0;
+        }
+        
+        /* SCROLLBAR PERSONALIZADA */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #0066cc, #004499);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #004499, #003366);
         }
     </style>
     """, unsafe_allow_html=True)
 
+# ==================== NAVBAR MODERNA ====================
+
+def modern_navbar():
+    """Navbar moderna y elegante para Tododrogas"""
     st.markdown("""
-    <div class="modern-navbar">
-        <div class="nav-content">
-            <div class="nav-title">Sistema de <span>Cupos TD</span></div>
-            <div class="nav-user">
-                <div class="user-info">
-                    <div class="user-name">Usuario: Administrador</div>
-                    <div class="user-role">Gestión de Cupos • Conectado</div>
+    <div class="navbar">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div class="navbar-title">💊 TODODROGAS • Automatización</div>
+                <div class="navbar-subtitle">Sistema de Gestión de Cartera y Cupos</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div style="text-align: right;">
+                    <div style="color: white; font-weight: 600; font-size: 1rem;">👤 Administrador</div>
+                    <div style="color: rgba(255, 255, 255, 0.8); font-size: 0.85rem;">Sistema conectado</div>
+                </div>
+                <div style="
+                    background: rgba(255, 255, 255, 0.2);
+                    padding: 0.5rem 1rem;
+                    border-radius: 20px;
+                    color: white;
+                    font-weight: 600;
+                    font-size: 0.9rem;
+                ">
+                    🕐 """ + datetime.now().strftime("%d/%m/%Y %H:%M") + """
                 </div>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-# ============================================================================
-# CONFIGURACIÓN DEL SISTEMA
-# ============================================================================
+# ==================== SIDEBAR DE NAVEGACIÓN ====================
 
-class Config:
-    BASE_DIR = Path(__file__).parent
-    DATA_DIR = BASE_DIR / 'data'
-    DATABASE_PATH = DATA_DIR / 'cupos_td.db'
-    
-    CLIENTES_INICIALES = [
-        {
-            'nit': '901212102',
-            'nombre': 'AUNA COLOMBIA S.A.S',
-            'total_cartera': 19493849830,
-            'cupo_sugerido': 21693849830,
-            'disponible': 2200000000
-        },
-        {
-            'nit': '890905166',
-            'nombre': 'EMPRESA SOCIAL DEL ESTADO HOSPITAL MENTAL DE ANTIOQ',
-            'total_cartera': 7397192942,
-            'cupo_sugerido': 7500000000,
-            'disponible': 102807058
-        },
-        {
-            'nit': '900249425',
-            'nombre': 'PHARMASAN S.A.S',
-            'total_cartera': 5710785209,
-            'cupo_sugerido': 5910785209,
-            'disponible': 200000000
-        },
-        {
-            'nit': '900748052',
-            'nombre': 'NEUROM SAS',
-            'total_cartera': 5184247623,
-            'cupo_sugerido': 5500000000,
-            'disponible': 315752377
-        },
-        {
-            'nit': '800241602',
-            'nombre': 'FUNDACION COLOMBIANA DE CANCEROLOGIA CLINICA VIDA',
-            'total_cartera': 3031469552,
-            'cupo_sugerido': 3500000000,
-            'disponible': 468530448
-        },
-        {
-            'nit': '890985122',
-            'nombre': 'COOPERATIVA DE HOSPITALES DE ANTIOQUIA',
-            'total_cartera': 1221931405,
-            'cupo_sugerido': 1500000000,
-            'disponible': 278068595
-        },
-        {
-            'nit': '811038014',
-            'nombre': 'GRUPO ONCOLOGICO INTERNACIONAL S.A.',
-            'total_cartera': 806853666,
-            'cupo_sugerido': 900000000,
-            'disponible': 93146334
+def create_sidebar():
+    """Crea la barra lateral de navegación elegante"""
+    with st.sidebar:
+        st.markdown("""
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-size: 1.5rem; font-weight: 800; color: #0066cc;">🧭</div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: #1a1a1a;">Navegación</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Botones de navegación
+        nav_options = {
+            "🏠 Dashboard Principal": "pages/1_dashboard.py",
+            "👥 Gestión de Clientes": "pages/2_clientes.py",
+            "📋 Órdenes de Compra": "pages/3_ocs.py",
+            "📊 Reportes Avanzados": "pages/4_reportes.py",
+            "⚙️ Configuración": "pages/5_configuracion.py"
         }
-    ]
+        
+        for option, page in nav_options.items():
+            if st.button(option, use_container_width=True, type="primary" if option == "📋 Órdenes de Compra" else "secondary"):
+                st.switch_page(page)
+        
+        st.markdown("---")
+        
+        # Acciones rápidas
+        st.markdown("### ⚡ Acciones Rápidas")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("➕ Nueva OC", use_container_width=True):
+                st.switch_page("pages/3_ocs.py")
+                # Aquí se activaría el modal de nueva OC
+        with col2:
+            if st.button("💳 Registrar Pago", use_container_width=True):
+                st.switch_page("pages/2_clientes.py")
+        
+        st.markdown("---")
+        
+        # Información del sistema
+        st.markdown("### 📊 Estado del Sistema")
+        
+        # Métricas del sistema (simuladas por ahora)
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.metric("Clientes Activos", "7", delta="+0")
+        with col_b:
+            st.metric("OCs Pendientes", "12", delta="+3")
+        
+        # Botón de cierre de sesión
+        st.markdown("---")
+        if st.button("🚪 Cerrar Sesión", use_container_width=True, type="secondary"):
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.rerun()
 
-config = Config()
+# ==================== PÁGINA DE INICIO ====================
 
-# ============================================================================
-# FUNCIONES DE BASE DE DATOS (COMPARTIDAS)
-# ============================================================================
-
-def init_database():
-    """Inicializa la base de datos"""
-    try:
-        os.makedirs('data', exist_ok=True)
-        conn = sqlite3.connect(config.DATABASE_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS clientes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nit TEXT UNIQUE NOT NULL,
-            nombre TEXT NOT NULL,
-            total_cartera REAL DEFAULT 0,
-            cupo_sugerido REAL DEFAULT 0,
-            disponible REAL DEFAULT 0,
-            fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            activo BOOLEAN DEFAULT 1
-        )
-        ''')
-        
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS ocs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            cliente_nit TEXT,
-            numero_oc TEXT UNIQUE NOT NULL,
-            valor_total REAL NOT NULL,
-            valor_autorizado REAL DEFAULT 0,
-            estado TEXT DEFAULT 'PENDIENTE',
-            tipo TEXT DEFAULT 'NORMAL',
-            prioridad TEXT DEFAULT 'MEDIA',
-            descripcion TEXT,
-            fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (cliente_nit) REFERENCES clientes(nit)
-        )
-        ''')
-        
-        cursor.execute("SELECT COUNT(*) FROM clientes")
-        if cursor.fetchone()[0] == 0:
-            for cliente in config.CLIENTES_INICIALES:
-                cursor.execute('''
-                INSERT INTO clientes (nit, nombre, total_cartera, cupo_sugerido, disponible)
-                VALUES (?, ?, ?, ?, ?)
-                ''', (
-                    cliente['nit'],
-                    cliente['nombre'],
-                    cliente['total_cartera'],
-                    cliente['cupo_sugerido'],
-                    cliente['disponible']
-                ))
-        
-        conn.commit()
-        conn.close()
-        return True
-        
-    except Exception as e:
-        st.error(f"Error inicializando BD: {e}")
-        return False
-
-def get_clientes():
-    """Obtiene todos los clientes"""
-    try:
-        conn = sqlite3.connect(config.DATABASE_PATH)
-        query = '''
-        SELECT 
-            c.*,
-            CASE 
-                WHEN c.total_cartera > c.cupo_sugerido THEN 'SOBREPASADO'
-                WHEN (c.total_cartera * 100.0 / c.cupo_sugerido) > 90 THEN 'ALTO'
-                WHEN (c.total_cartera * 100.0 / c.cupo_sugerido) > 70 THEN 'MEDIO'
-                ELSE 'NORMAL'
-            END as estado_cupo,
-            ROUND((c.total_cartera * 100.0 / c.cupo_sugerido), 2) as porcentaje_uso
-        FROM clientes c
-        WHERE c.activo = 1
-        ORDER BY c.nombre
-        '''
-        df = pd.read_sql_query(query, conn)
-        conn.close()
-        return df
-    except:
-        return pd.DataFrame()
-
-def get_ocs():
-    """Obtiene todas las OCs"""
-    try:
-        conn = sqlite3.connect(config.DATABASE_PATH)
-        query = '''
-        SELECT o.*, c.nombre as cliente_nombre 
-        FROM ocs o
-        LEFT JOIN clientes c ON o.cliente_nit = c.nit
-        ORDER BY o.fecha_registro DESC
-        '''
-        df = pd.read_sql_query(query, conn)
-        conn.close()
-        return df
-    except:
-        return pd.DataFrame()
-
-def crear_oc(data):
-    """Crea una nueva OC"""
-    try:
-        conn = sqlite3.connect(config.DATABASE_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-        INSERT INTO ocs 
-        (cliente_nit, numero_oc, valor_total, estado, tipo, prioridad, descripcion)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            data['cliente_nit'],
-            data['numero_oc'],
-            data['valor_total'],
-            data.get('estado', 'PENDIENTE'),
-            data.get('tipo', 'NORMAL'),
-            data.get('prioridad', 'MEDIA'),
-            data.get('descripcion', '')
-        ))
-        
-        conn.commit()
-        conn.close()
-        return True
-    except Exception as e:
-        st.error(f"Error creando OC: {e}")
-        return False
-
-def actualizar_cliente(nit, data):
-    """Actualiza un cliente"""
-    try:
-        conn = sqlite3.connect(config.DATABASE_PATH)
-        cursor = conn.cursor()
-        
-        updates = []
-        params = []
-        
-        if 'nombre' in data:
-            updates.append("nombre = ?")
-            params.append(data['nombre'])
-        
-        if 'total_cartera' in data:
-            updates.append("total_cartera = ?")
-            params.append(data['total_cartera'])
-        
-        if 'cupo_sugerido' in data:
-            updates.append("cupo_sugerido = ?")
-            params.append(data['cupo_sugerido'])
-        
-        if updates:
-            cursor.execute("SELECT total_cartera, cupo_sugerido FROM clientes WHERE nit = ?", (nit,))
-            row = cursor.fetchone()
-            
-            nueva_cartera = data.get('total_cartera', row[0])
-            nuevo_cupo = data.get('cupo_sugerido', row[1])
-            nuevo_disponible = nuevo_cupo - nueva_cartera
-            
-            updates.append("disponible = ?")
-            params.append(nuevo_disponible)
-            
-            updates.append("fecha_actualizacion = CURRENT_TIMESTAMP")
-            params.append(nit)
-            
-            query = f"UPDATE clientes SET {', '.join(updates)} WHERE nit = ?"
-            cursor.execute(query, params)
-        
-        conn.commit()
-        conn.close()
-        return True
-    except Exception as e:
-        st.error(f"Error actualizando cliente: {e}")
-        return False
-
-# ============================================================================
-# FUNCIONES DE FORMATEO
-# ============================================================================
-
-def formato_monetario(valor):
-    """Formatea valores monetarios"""
-    if pd.isna(valor):
-        return "$0"
-    return f"${float(valor):,.0f}"
-
-def formato_porcentaje(valor):
-    """Formatea porcentajes"""
-    if pd.isna(valor):
-        return "0%"
-    return f"{float(valor):.1f}%"
-
-# ============================================================================
-# PÁGINA PRINCIPAL (DASHBOARD)
-# ============================================================================
-
-def main():
-    """Función principal - Dashboard"""
+def show_homepage():
+    """Muestra la página de inicio elegante"""
     
-    # Mostrar navbar
     modern_navbar()
     
-    # Título principal
-    st.title("🏠 Dashboard Principal")
-    st.markdown("---")
+    # Encabezado principal
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.title("🎯 Panel de Control - Gestión de Cartera")
+        st.markdown("""
+        <div style="
+            background: linear-gradient(135deg, #e9f7ff, #d1ecff);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 5px solid #0066cc;
+            margin-bottom: 2rem;
+        ">
+            <strong>🏆 Sistema de Gestión Empresarial</strong><br>
+            Control total de cupos, cartera y órdenes de compra en tiempo real.
+        </div>
+        """, unsafe_allow_html=True)
     
-    # Verificar base de datos
-    if not os.path.exists(config.DATABASE_PATH):
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.markdown("""
-            <div style="text-align: center; padding: 3rem; background: white; 
-                        border-radius: 16px; border: 1px solid #e0e0e0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">🚀</div>
-                <h2>Bienvenido al Sistema de Cupos TD</h2>
-                <p style="color: #666; margin-bottom: 2rem;">
-                    Sistema profesional para gestión y seguimiento de cupos de crédito
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            if st.button("🔧 Inicializar Sistema", type="primary", use_container_width=True):
-                if init_database():
-                    st.success("✅ Sistema inicializado correctamente")
-                    st.rerun()
-        return
-    
-    # Obtener datos
-    clientes = get_clientes()
-    ocs = get_ocs()
-    
-    if clientes.empty:
-        st.info("No hay clientes registrados")
-        return
+    with col2:
+        if st.button("🚀 Acceso Rápido", use_container_width=True):
+            st.switch_page("pages/3_ocs.py")
     
     # Métricas principales
+    st.subheader("📈 Métricas Clave")
+    
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        total_cupo = clientes['cupo_sugerido'].sum()
-        st.metric("Cupo Total", formato_monetario(total_cupo))
+        st.metric(
+            label="Cupo Total",
+            value="$71.5B",
+            delta="+2.3%",
+            delta_color="normal"
+        )
     
     with col2:
-        total_cartera = clientes['total_cartera'].sum()
-        st.metric("Cartera Total", formato_monetario(total_cartera))
+        st.metric(
+            label="Cartera Activa",
+            value="$48.2B",
+            delta="-1.2%",
+            delta_color="inverse"
+        )
     
     with col3:
-        total_disponible = clientes['disponible'].sum()
-        st.metric("Disponible Total", formato_monetario(total_disponible))
+        st.metric(
+            label="OCs Pendientes",
+            value="12",
+            delta="+3",
+            delta_color="normal"
+        )
     
     with col4:
-        porcentaje_uso = (total_cartera / total_cupo * 100) if total_cupo > 0 else 0
-        st.metric("% Uso Total", formato_porcentaje(porcentaje_uso))
+        st.metric(
+            label="Disponibilidad",
+            value="67.4%",
+            delta="+1.8%",
+            delta_color="normal"
+        )
     
-    st.divider()
+    st.markdown("---")
     
-    # Sección 1: Resumen de clientes
-    st.subheader("👥 Resumen de Clientes")
+    # Sección de acciones rápidas
+    st.subheader("⚡ Acciones Inmediatas")
     
-    # Métricas de clientes
-    col_c1, col_c2, col_c3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     
-    with col_c1:
-        total_clientes = len(clientes)
-        st.metric("Total Clientes", total_clientes)
+    with col1:
+        if st.button("➕ Crear Nueva OC", use_container_width=True, type="primary"):
+            # Esto abrirá el modal en la página de OCs
+            st.session_state['show_new_oc_modal'] = True
+            st.switch_page("pages/3_ocs.py")
     
-    with col_c2:
-        clientes_criticos = len(clientes[clientes['estado_cupo'].isin(['SOBREPASADO', 'ALTO'])])
-        st.metric("Clientes Críticos", clientes_criticos)
+    with col2:
+        if st.button("👥 Ver Clientes", use_container_width=True):
+            st.switch_page("pages/2_clientes.py")
     
-    with col_c3:
-        uso_promedio = clientes['porcentaje_uso'].mean()
-        st.metric("% Uso Promedio", formato_porcentaje(uso_promedio))
+    with col3:
+        if st.button("📊 Generar Reporte", use_container_width=True):
+            st.switch_page("pages/4_reportes.py")
     
-    # Tabla de clientes
-    df_display = clientes[['nombre', 'total_cartera', 'cupo_sugerido', 'disponible', 'porcentaje_uso', 'estado_cupo']].copy()
-    df_display['total_cartera'] = df_display['total_cartera'].apply(formato_monetario)
-    df_display['cupo_sugerido'] = df_display['cupo_sugerido'].apply(formato_monetario)
-    df_display['disponible'] = df_display['disponible'].apply(formato_monetario)
-    df_display['porcentaje_uso'] = df_display['porcentaje_uso'].apply(formato_porcentaje)
+    with col4:
+        if st.button("⚙️ Configurar", use_container_width=True):
+            st.switch_page("pages/5_configuracion.py")
     
-    # Estilo para estado
-    def estilo_estado(val):
-        if val == 'SOBREPASADO':
-            return 'background-color: #ef4444; color: white; font-weight: bold; padding: 5px; border-radius: 4px;'
-        elif val == 'ALTO':
-            return 'background-color: #f59e0b; color: white; font-weight: bold; padding: 5px; border-radius: 4px;'
-        elif val == 'MEDIO':
-            return 'background-color: #7c3aed; color: white; font-weight: bold; padding: 5px; border-radius: 4px;'
-        else:
-            return 'background-color: #10b981; color: white; font-weight: bold; padding: 5px; border-radius: 4px;'
+    st.markdown("---")
     
-    styled_df = df_display.style.map(estilo_estado, subset=['estado_cupo'])
+    # Últimas OCs (simulado)
+    st.subheader("🔄 Actividad Reciente")
     
-    st.dataframe(
-        styled_df,
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            'nombre': 'Cliente',
-            'total_cartera': 'Cartera',
-            'cupo_sugerido': 'Cupo',
-            'disponible': 'Disponible',
-            'porcentaje_uso': '% Uso',
-            'estado_cupo': 'Estado'
+    # Tarjetas de actividad
+    activities = [
+        {
+            "title": "OC-2024-015",
+            "cliente": "AUNA COLOMBIA S.A.S",
+            "valor": "$2.500.000.000",
+            "estado": "PENDIENTE",
+            "fecha": "Hoy, 10:30 AM"
+        },
+        {
+            "title": "OC-2024-014",
+            "cliente": "HOSPITAL MENTAL DE ANTIOQUIA",
+            "valor": "$1.200.000.000",
+            "estado": "AUTORIZADA",
+            "fecha": "Ayer, 15:45 PM"
+        },
+        {
+            "title": "OC-2024-013",
+            "cliente": "PHARMASAN S.A.S",
+            "valor": "$850.000.000",
+            "estado": "PARCIAL",
+            "fecha": "15/03/2024"
+        }
+    ]
+    
+    for activity in activities:
+        with st.container():
+            col1, col2, col3, col4 = st.columns([2, 2, 1, 1])
+            
+            with col1:
+                st.markdown(f"**{activity['title']}**")
+                st.caption(f"👤 {activity['cliente']}")
+            
+            with col2:
+                st.markdown(f"**Valor:** {activity['valor']}")
+                st.caption(f"📅 {activity['fecha']}")
+            
+            with col3:
+                status_color = {
+                    "PENDIENTE": "#ffd166",
+                    "AUTORIZADA": "#06d6a0",
+                    "PARCIAL": "#118ab2"
+                }[activity['estado']]
+                
+                st.markdown(f"""
+                <div style="
+                    background: {status_color};
+                    color: white;
+                    padding: 0.25rem 0.75rem;
+                    border-radius: 20px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    text-align: center;
+                ">
+                    {activity['estado']}
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col4:
+                if st.button("📋 Detalle", key=f"det_{activity['title']}"):
+                    st.session_state[f'view_oc_{activity["title"]}'] = True
+                    st.switch_page("pages/3_ocs.py")
+            
+            st.divider()
+
+# ==================== INICIALIZACIÓN ====================
+
+def init_session_state():
+    """Inicializa el estado de la sesión"""
+    if 'authenticated' not in st.session_state:
+        st.session_state.authenticated = True  # Simplificado para desarrollo
+    if 'username' not in st.session_state:
+        st.session_state.username = "Administrador"
+    if 'user_role' not in st.session_state:
+        st.session_state.user_role = "Sistema"
+
+# ==================== APLICACIÓN PRINCIPAL ====================
+
+def main():
+    """Función principal de la aplicación"""
+    
+    # Configuración de página
+    st.set_page_config(
+        page_title="Tododrogas - Gestión de Cartera",
+        page_icon="💊",
+        layout="wide",
+        initial_sidebar_state="expanded",
+        menu_items={
+            'Get Help': None,
+            'Report a bug': None,
+            'About': """
+            ## 💊 Sistema de Gestión de Cartera - Tododrogas
+            
+            **Versión:** 3.0.0
+            **Propósito:** Control integral de cupos de crédito y cartera
+            **Desarrollado por:** Equipo de Automatización
+            
+            Este sistema permite gestionar:
+            - Clientes y sus cupos de crédito
+            - Órdenes de Compra (OCs) pendientes y autorizadas
+            - Movimientos y pagos
+            - Reportes y estadísticas en tiempo real
+            """
         }
     )
     
-    st.divider()
+    # Aplicar tema personalizado
+    configure_modern_theme()
     
-    # Sección 2: Gráficos
-    st.subheader("📊 Visualización de Datos")
+    # Inicializar estado
+    init_session_state()
     
-    col_chart1, col_chart2 = st.columns(2)
+    # Mostrar sidebar de navegación
+    create_sidebar()
     
-    with col_chart1:
-        # Gráfico de distribución por estado
-        if 'estado_cupo' in clientes.columns:
-            estado_counts = clientes['estado_cupo'].value_counts()
-            
-            fig1 = go.Figure(data=[go.Pie(
-                labels=estado_counts.index,
-                values=estado_counts.values,
-                hole=.4,
-                marker_colors=['#ef4444', '#f59e0b', '#7c3aed', '#10b981'],
-                textinfo='label+percent'
-            )])
-            
-            fig1.update_layout(
-                title_text="Distribución por Estado",
-                height=400,
-                showlegend=True
-            )
-            
-            st.plotly_chart(fig1, use_container_width=True)
-    
-    with col_chart2:
-        # Top 5 clientes por cartera
-        top_clientes = clientes.nlargest(5, 'total_cartera')
-        
-        fig2 = px.bar(
-            top_clientes,
-            x='nombre',
-            y='total_cartera',
-            title='Top 5 Clientes por Cartera',
-            labels={'nombre': 'Cliente', 'total_cartera': 'Cartera'},
-            color='total_cartera',
-            color_continuous_scale='Viridis'
-        )
-        
-        fig2.update_layout(
-            height=400,
-            xaxis_tickangle=-45
-        )
-        
-        st.plotly_chart(fig2, use_container_width=True)
-    
-    st.divider()
-    
-    # Sección 3: Acciones rápidas
-    st.subheader("⚡ Acciones Rápidas")
-    
-    col_act1, col_act2, col_act3 = st.columns(3)
-    
-    with col_act1:
-        if st.button("👥 Ver Todos los Clientes", use_container_width=True):
-            st.switch_page("pages/2_clientes.py")
-    
-    with col_act2:
-        if st.button("📋 Ver Todas las OCs", use_container_width=True):
-            st.switch_page("pages/3_ocs.py")
-    
-    with col_act3:
-        if st.button("📊 Generar Reporte", use_container_width=True):
-            st.switch_page("pages/4_reportes.py")
+    # Mostrar página principal
+    show_homepage()
 
-# ============================================================================
-# EJECUCIÓN
-# ============================================================================
+# ==================== EJECUCIÓN ====================
 
 if __name__ == "__main__":
     main()
