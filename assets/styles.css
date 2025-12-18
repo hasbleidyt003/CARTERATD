@@ -1,40 +1,293 @@
-/* ESTILOS ADICIONALES PARA VISUALIZACIÓN DE DATOS */
+/* ===== ESTILOS PRINCIPALES RAPPI-STYLE ===== */
 
-/* Animaciones suaves */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+:root {
+    --primary-color: #0066CC;
+    --primary-dark: #004499;
+    --secondary-color: #00B8A9;
+    --danger-color: #FF3B30;
+    --warning-color: #FF9500;
+    --success-color: #00B8A9;
+    --background-color: #FFFFFF;
+    --surface-color: #F8F9FA;
+    --text-primary: #1A1A1A;
+    --text-secondary: #666666;
+    --border-color: #E5E7EB;
 }
 
-.metric-card, .data-card, .action-card {
-    animation: fadeIn 0.5s ease-out;
+/* ===== ANIMACIONES ORACLE MINING ===== */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
 }
 
-/* Efectos de hover avanzados */
-.metric-card:hover::after {
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+/* ===== COMPONENTES RAPPI-STYLE ===== */
+
+/* Cards Modernas */
+.rappi-card {
+    background: var(--background-color);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.rappi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 102, 204, 0.15);
+}
+
+/* Botones Rappi */
+.rappi-button {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    padding: 14px 28px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 6px 15px rgba(0, 102, 204, 0.2) !important;
+}
+
+.rappi-button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 25px rgba(0, 102, 204, 0.3) !important;
+    background: linear-gradient(135deg, var(--primary-dark), #003366) !important;
+}
+
+/* Badges de Estado */
+.status-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-pending {
+    background: linear-gradient(135deg, #FFD166, #FFB347);
+    color: #8A5700;
+}
+
+.status-partial {
+    background: linear-gradient(135deg, #118AB2, #0A6C8F);
+    color: white;
+}
+
+.status-authorized {
+    background: linear-gradient(135deg, #06D6A0, #0CB48C);
+    color: #00563F;
+}
+
+/* Inputs Modernos */
+.rappi-input {
+    border-radius: 12px !important;
+    border: 2px solid var(--border-color) !important;
+    transition: all 0.3s ease !important;
+    padding: 12px 16px !important;
+}
+
+.rappi-input:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1) !important;
+}
+
+/* Métricas Oracle Style */
+.oracle-metric {
+    background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+    color: white;
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.oracle-metric::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(0, 102, 204, 0.05), transparent);
-    pointer-events: none;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
 }
 
-/* Tooltips personalizados */
-.tooltip {
+.oracle-metric .value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1;
+    margin: 10px 0;
+    background: linear-gradient(135deg, #FFFFFF, #E0E0E0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Efectos Dinámicos */
+.dynamic-bg {
+    background: linear-gradient(-45deg, #0066CC, #004499, #00B8A9, #0088AA);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+}
+
+@keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Tablas Elegantes */
+.rappi-table {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.rappi-table th {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)) !important;
+    color: white !important;
+    font-weight: 700 !important;
+    padding: 16px !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.rappi-table tr:nth-child(even) {
+    background-color: var(--surface-color) !important;
+}
+
+.rappi-table tr:hover {
+    background-color: rgba(0, 102, 204, 0.05) !important;
+}
+
+/* Progress Bars */
+.rappi-progress {
+    height: 8px;
+    border-radius: 4px;
+    background-color: var(--border-color);
+    overflow: hidden;
+}
+
+.rappi-progress-bar {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    transition: width 0.6s ease;
+}
+
+/* Navbar Rappi */
+.rappi-navbar {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    padding: 1rem 2rem;
+    margin: -1rem -1rem 2rem -1rem;
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 10px 30px rgba(0, 102, 204, 0.2);
+    color: white;
+}
+
+/* Sidebar Moderna */
+.rappi-sidebar {
+    background: var(--surface-color);
+    border-right: 1px solid var(--border-color);
+    padding: 1rem;
+}
+
+/* Cards de Acción */
+.action-card {
+    background: var(--background-color);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.action-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary-color);
+    box-shadow: 0 10px 25px rgba(0, 102, 204, 0.15);
+}
+
+.action-card .icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+/* Loading Effects */
+.loading-shimmer {
+    background: linear-gradient(90deg, 
+        var(--surface-color) 25%, 
+        rgba(255, 255, 255, 0.5) 50%, 
+        var(--surface-color) 75%);
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite linear;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .rappi-card {
+        padding: 16px;
+        margin-bottom: 12px;
+    }
+    
+    .rappi-button {
+        padding: 12px 20px !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .oracle-metric .value {
+        font-size: 2rem;
+    }
+}
+
+/* Scrollbar Personalizada */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--surface-color);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, var(--primary-dark), #0088AA);
+}
+
+/* Tooltips Elegantes */
+.tooltip-container {
     position: relative;
     display: inline-block;
 }
 
-.tooltip .tooltiptext {
+.tooltip-text {
     visibility: hidden;
-    background-color: #003366;
+    background: var(--text-primary);
     color: white;
     text-align: center;
     padding: 8px 12px;
-    border-radius: 6px;
+    border-radius: 8px;
     position: absolute;
     z-index: 1000;
     bottom: 125%;
@@ -42,147 +295,35 @@
     transform: translateX(-50%);
     white-space: nowrap;
     font-size: 0.85rem;
+    opacity: 0;
+    transition: opacity 0.3s;
 }
 
-.tooltip:hover .tooltiptext {
+.tooltip-container:hover .tooltip-text {
     visibility: visible;
+    opacity: 1;
 }
 
-/* Gradientes corporativos */
-.gradient-primary {
-    background: linear-gradient(135deg, #0066cc, #004499);
-}
-
-.gradient-secondary {
-    background: linear-gradient(135deg, #00a8ff, #0066cc);
-}
-
-.gradient-success {
-    background: linear-gradient(135deg, #06d6a0, #0cb48c);
-}
-
-.gradient-warning {
-    background: linear-gradient(135deg, #ffd166, #ffb347);
-}
-
-.gradient-danger {
-    background: linear-gradient(135deg, #ef476f, #e63946);
-}
-
-/* Cards con sombras dinámicas */
-.card-elevated {
-    box-shadow: 
-        0 2px 4px rgba(0, 51, 102, 0.1),
-        0 4px 8px rgba(0, 51, 102, 0.1),
-        0 8px 16px rgba(0, 51, 102, 0.1),
-        0 16px 32px rgba(0, 51, 102, 0.1);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.card-elevated:hover {
-    box-shadow: 
-        0 4px 8px rgba(0, 51, 102, 0.15),
-        0 8px 16px rgba(0, 51, 102, 0.15),
-        0 16px 32px rgba(0, 51, 102, 0.15),
-        0 32px 64px rgba(0, 51, 102, 0.15);
-}
-
-/* Barras de progreso personalizadas */
-.progress-container {
-    width: 100%;
-    background-color: #e6f0ff;
-    border-radius: 10px;
+/* Efectos de Foco */
+.focus-effect {
+    position: relative;
     overflow: hidden;
-    height: 12px;
 }
 
-.progress-bar {
-    height: 100%;
-    border-radius: 10px;
-    transition: width 0.6s ease;
-}
-
-.progress-blue {
-    background: linear-gradient(90deg, #0066cc, #00a8ff);
-}
-
-.progress-green {
-    background: linear-gradient(90deg, #06d6a0, #0cb48c);
-}
-
-.progress-orange {
-    background: linear-gradient(90deg, #ffd166, #ffb347);
-}
-
-/* Estilos para tablas de datos */
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-}
-
-.data-table th {
-    background: linear-gradient(135deg, #003366, #0066cc);
-    color: white;
-    padding: 16px;
-    text-align: left;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-size: 0.9rem;
-}
-
-.data-table td {
-    padding: 14px 16px;
-    border-bottom: 1px solid #f0f7ff;
-    color: #333;
-}
-
-.data-table tr:hover {
-    background-color: #f0f7ff;
-}
-
-.data-table tr:last-child td {
-    border-bottom: none;
-}
-
-/* Indicadores visuales */
-.indicator {
-    display: inline-block;
-    width: 12px;
-    height: 12px;
+.focus-effect::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
     border-radius: 50%;
-    margin-right: 8px;
+    background: rgba(0, 102, 204, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
 }
 
-.indicator-online {
-    background-color: #06d6a0;
-    box-shadow: 0 0 8px rgba(6, 214, 160, 0.5);
-}
-
-.indicator-offline {
-    background-color: #ef476f;
-    box-shadow: 0 0 8px rgba(239, 71, 111, 0.5);
-}
-
-.indicator-warning {
-    background-color: #ffd166;
-    box-shadow: 0 0 8px rgba(255, 209, 102, 0.5);
-}
-
-/* Responsive utilities */
-@media (max-width: 768px) {
-    .metric-value {
-        font-size: 1.6rem !important;
-    }
-    
-    .corporate-header {
-        font-size: 1.8rem !important;
-    }
-    
-    .section-header {
-        font-size: 1.3rem !important;
-    }
+.focus-effect:active::after {
+    width: 200px;
+    height: 200px;
 }
