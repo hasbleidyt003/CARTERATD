@@ -1,6 +1,6 @@
 """
-AUTENTICACIÓN COMPACTA - SISTEMA TODODROGAS
-Login pequeño y centrado
+AUTENTICACIÓN COMPACTA - VERSIÓN CENTRADA
+Login pequeño y bien balanceado
 """
 
 import streamlit as st
@@ -52,67 +52,81 @@ def authenticate(username, password):
         conn.close()
 
 def show_login_screen():
-    """Login pequeño y centrado"""
+    """Login pequeño y perfectamente centrado"""
     
-    # Ocultar elementos de Streamlit
+    # CSS optimizado para centrado perfecto
     st.markdown("""
     <style>
-        /* Ocultar elementos no necesarios */
+        /* Ocultar elementos de Streamlit */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
         
-        /* Fondo general */
+        /* Contenedor principal centrado */
         .stApp {
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 20px;
         }
         
-        /* Card pequeña centrada */
-        .login-small {
+        /* Card compacta y centrada */
+        .login-card-center {
             background: white;
             border-radius: 16px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 35px 30px;
             width: 100%;
-            max-width: 380px;
-            margin: 20px;
+            max-width: 360px; /* Reducido para mejor ajuste */
             border: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         
         /* Header compacto */
-        .login-header-small {
+        .login-header-center {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
+            width: 100%;
         }
         
-        .logo-small {
-            font-size: 2.5rem;
+        .logo-center {
+            font-size: 2.2rem; /* Reducido */
             color: #0066CC;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         
-        .title-small {
-            font-size: 1.8rem;
+        .title-center {
+            font-size: 1.5rem; /* Reducido para caber en 360px */
             font-weight: 700;
             color: #1e40af;
             margin-bottom: 5px;
+            letter-spacing: -0.5px;
         }
         
-        .subtitle-small {
+        .subtitle-center {
             color: #64748b;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
         }
         
-        /* Inputs pequeños */
-        .input-small {
-            margin-bottom: 20px;
+        /* Formulario centrado */
+        .form-center {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 16px; /* Espaciado uniforme */
         }
         
-        .input-label-small {
+        /* Inputs centrados */
+        .input-center {
+            width: 100%;
+        }
+        
+        .input-label-center {
             color: #475569;
             font-size: 0.85rem;
             font-weight: 600;
@@ -120,23 +134,23 @@ def show_login_screen():
             display: block;
         }
         
-        .input-field-small {
+        .input-field-center {
             width: 100%;
-            padding: 12px 16px;
+            padding: 12px 14px;
             border: 2px solid #e2e8f0;
             border-radius: 10px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             transition: all 0.2s;
         }
         
-        .input-field-small:focus {
+        .input-field-center:focus {
             outline: none;
             border-color: #0066CC;
             box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
         }
         
-        /* Botón pequeño */
-        .btn-small {
+        /* Botón centrado y prominente */
+        .btn-center {
             background: #0066CC;
             color: white;
             border: none;
@@ -148,89 +162,142 @@ def show_login_screen():
             cursor: pointer;
             transition: all 0.2s;
             margin-top: 10px;
+            margin-bottom: 5px;
         }
         
-        .btn-small:hover {
+        .btn-center:hover {
             background: #0052a3;
             transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 102, 204, 0.2);
         }
         
-        /* Mensajes pequeños */
-        .alert-small {
-            padding: 12px 16px;
-            border-radius: 10px;
-            margin: 15px 0;
-            font-size: 0.9rem;
+        /* Contenedor para mensajes (debajo del botón) */
+        .messages-container {
+            width: 100%;
+            margin-top: 5px;
+            min-height: 50px; /* Espacio reservado para mensajes */
         }
         
-        .success-small {
+        /* Mensajes centrados */
+        .alert-center {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            text-align: center;
+            width: 100%;
+        }
+        
+        .success-center {
             background: #d1fae5;
             color: #065f46;
             border: 1px solid #a7f3d0;
         }
         
-        .error-small {
+        .error-center {
             background: #fee2e2;
             color: #991b1b;
             border: 1px solid #fecaca;
         }
         
-        .warning-small {
+        .warning-center {
             background: #fef3c7;
             color: #92400e;
             border: 1px solid #fde68a;
         }
+        
+        /* Footer mínimo */
+        .footer-center {
+            text-align: center;
+            margin-top: 20px;
+            color: #94a3b8;
+            font-size: 0.75rem;
+            width: 100%;
+        }
+        
+        /* Responsive adicional */
+        @media (max-width: 400px) {
+            .login-card-center {
+                padding: 25px 20px;
+                margin: 10px;
+            }
+            
+            .title-center {
+                font-size: 1.3rem;
+            }
+            
+            .logo-center {
+                font-size: 2rem;
+            }
+        }
     </style>
     """, unsafe_allow_html=True)
     
-    # Contenedor pequeño centrado
-    st.markdown('<div class="login-small">', unsafe_allow_html=True)
+    # Contenedor principal
+    st.markdown('<div class="login-card-center">', unsafe_allow_html=True)
     
-    # Header
-    st.markdown('<div class="login-header-small">', unsafe_allow_html=True)
-    st.markdown('<div class="logo-small">💊</div>', unsafe_allow_html=True)
-    st.markdown('<div class="title-small">TODODROGAS</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitle-small">Control de Cupos</div>', unsafe_allow_html=True)
+    # Header compacto
+    st.markdown('<div class="login-header-center">', unsafe_allow_html=True)
+    st.markdown('<div class="logo-center">💊</div>', unsafe_allow_html=True)
+    st.markdown('<div class="title-center">TODODROGAS</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitle-center">Sistema de Gestión de Cupos</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Formulario
-    with st.form("login_form"):
+    # Contenedor para el formulario
+    form_container = st.empty()
+    
+    with form_container.form("login_form"):
+        st.markdown('<div class="form-center">', unsafe_allow_html=True)
+        
         # Usuario
-        st.markdown('<div class="input-small">', unsafe_allow_html=True)
-        st.markdown('<label class="input-label-small">Usuario</label>', unsafe_allow_html=True)
-        username = st.text_input("", placeholder="Ingresa tu usuario", label_visibility="collapsed")
+        st.markdown('<div class="input-center">', unsafe_allow_html=True)
+        st.markdown('<label class="input-label-center">Usuario</label>', unsafe_allow_html=True)
+        username = st.text_input("", placeholder="Ingresa tu usuario", label_visibility="collapsed", key="user_input")
         st.markdown('</div>', unsafe_allow_html=True)
         
         # Contraseña
-        st.markdown('<div class="input-small">', unsafe_allow_html=True)
-        st.markdown('<label class="input-label-small">Contraseña</label>', unsafe_allow_html=True)
-        password = st.text_input("", type="password", placeholder="Ingresa tu contraseña", label_visibility="collapsed")
+        st.markdown('<div class="input-center">', unsafe_allow_html=True)
+        st.markdown('<label class="input-label-center">Contraseña</label>', unsafe_allow_html=True)
+        password = st.text_input("", type="password", placeholder="Ingresa tu contraseña", label_visibility="collapsed", key="pass_input")
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Botón
-        submit_button = st.form_submit_button("ACCEDER", use_container_width=True)
+        # Botón en el centro
+        submit_button = st.form_submit_button("ACCEDER AL SISTEMA", use_container_width=True, type="primary")
         
-        if submit_button:
-            if username and password:
-                with st.spinner("Verificando..."):
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Contenedor para mensajes (debajo del botón)
+    st.markdown('<div class="messages-container">', unsafe_allow_html=True)
+    
+    # Manejar el submit fuera del form para mejor control
+    if 'login_submitted' not in st.session_state:
+        st.session_state.login_submitted = False
+    
+    # Si se presionó el botón
+    if submit_button:
+        st.session_state.login_submitted = True
+        
+        if username and password:
+            with st.spinner("Verificando credenciales..."):
+                time.sleep(1)
+                authenticated, user = authenticate(username, password)
+                
+                if authenticated:
+                    st.session_state.user = user
+                    st.session_state.authenticated = True
+                    st.markdown('<div class="alert-center success-center">✓ Acceso concedido. Redirigiendo...</div>', unsafe_allow_html=True)
                     time.sleep(1)
-                    authenticated, user = authenticate(username, password)
-                    
-                    if authenticated:
-                        st.session_state.user = user
-                        st.session_state.authenticated = True
-                        st.markdown('<div class="alert-small success-small">✓ Acceso concedido</div>', unsafe_allow_html=True)
-                        time.sleep(1)
-                        st.rerun()
-                    else:
-                        st.markdown('<div class="alert-small error-small">✗ Credenciales incorrectas</div>', unsafe_allow_html=True)
-            else:
-                st.markdown('<div class="alert-small warning-small">⚠️ Completa todos los campos</div>', unsafe_allow_html=True)
+                    st.rerun()
+                else:
+                    st.markdown('<div class="alert-center error-center">✗ Usuario o contraseña incorrectos</div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div class="alert-center warning-center">⚠️ Completa todos los campos</div>', unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)  # Cierre de messages-container
     
     # Footer mínimo
-    st.markdown('<div style="text-align: center; margin-top: 20px; color: #94a3b8; font-size: 0.8rem;">© 2024</div>', unsafe_allow_html=True)
+    st.markdown('<div class="footer-center">© 2024 Tododrogas • v1.0.0</div>', unsafe_allow_html=True)
     
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)  # Cierre de login-card-center
 
 def check_authentication():
     """Verifica autenticación"""
