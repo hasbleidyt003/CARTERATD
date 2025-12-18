@@ -7,6 +7,8 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime
+import time
+import numpy as np
 
 # Configuración de página
 st.set_page_config(
@@ -412,10 +414,10 @@ def show_ocs_page():
             
             with col2:
                 # Valor total
-            valor_total = st.number_input(
-            "Valor Total *",
-                    min_value=1000000.0,  # Mínimo 1 millón
-                    value=1000000.0,  # ← IMPORTANTE: debe ser igual o mayor que min_value
+                valor_total = st.number_input(
+                    "Valor Total *",
+                    min_value=1000000.0,
+                    value=1000000.0,
                     step=1000000.0,
                     format="%.0f",
                     help="Valor total de la orden de compra (mínimo $1,000,000)"
@@ -516,7 +518,7 @@ def show_ocs_page():
                             st.rerun()
                         else:
                             time.sleep(1)
-                            st.switch_page("pages/3_ocs.py")
+                            st.rerun()
                             
                     except Exception as e:
                         st.error(f"❌ Error al crear OC: {str(e)}")
@@ -678,7 +680,7 @@ def show_ocs_page():
                             "✅ CONFIRMAR AUTORIZACIÓN",
                             type="primary",
                             use_container_width=True,
-                            disabled=impacto['sobrepasa_cupo'] if impacto else False
+                            disabled=impacto['sobrepasa_cupo'] if impacto and 'sobrepasa_cupo' in impacto else False
                         )
                     
                     with col_conf2:
