@@ -53,21 +53,7 @@ def show_login_screen():
             position: relative;
         }
         
-        /* Tarjeta principal - glass muy blanco y futurista */
-        .glass-container {
-            background: rgba(255, 255, 255, 0.65);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border-radius: 28px;
-            border: 1px solid rgba(200, 230, 255, 0.6);
-            box-shadow: 0 20px 50px rgba(100, 160, 255, 0.12),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.8);
-            padding: 60px 70px;
-            width: 100%;
-            max-width: 460px;
-            position: relative;
-            z-index: 10;
-            margin: 20px;
+       
         }
         
         /* Título futurista */
