@@ -1,6 +1,6 @@
 """
 APLICACIÓN PRINCIPAL - SISTEMA DE GESTIÓN DE CUPOS TODODROGAS
-Entry point principal con diseño Rappi-Style/Oracle Mining
+Diseño futurista estilo glass
 """
 
 import streamlit as st
@@ -36,18 +36,8 @@ st.set_page_config(
         ## 💊 Sistema de Gestión de Cupos - Tododrogas
         
         **Versión:** 1.0.0
-        **Propósito:** Control integral de cupos de crédito y órdenes de compra
-        **Desarrollado por:** Equipo de Automatización
-        
-        Este sistema permite gestionar:
-        - Clientes y sus cupos de crédito
-        - Órdenes de Compra (OCs) pendientes y autorizadas
-        - Análisis de disponibilidad y riesgo
-        - Reportes ejecutivos en tiempo real
-        
-        **Credenciales de prueba:**
-        - Administrador: admin / admin123
-        - Usuario: cartera / cartera123
+        **Propósito:** Control integral de cupos de crédito
+        **Estilo:** Futurista Glass
         """
     }
 )
@@ -55,75 +45,81 @@ st.set_page_config(
 # ==================== CSS PERSONALIZADO ====================
 
 def load_custom_css():
-    """Carga los estilos CSS personalizados"""
+    """Carga estilos CSS personalizados"""
     try:
         with open('assets/styles.css', 'r') as f:
             st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
     except FileNotFoundError:
-        # CSS mínimo si no existe el archivo
+        # CSS mínimo de emergencia
         st.markdown("""
         <style>
             .stApp {
-                background-color: #f8fafc;
+                background: linear-gradient(135deg, #FFFFFF 0%, #F7FAFC 100%);
             }
-            
-            h1, h2, h3 {
-                color: #1e40af !important;
+            .main .block-container {
+                padding-top: 1rem;
             }
-            
-            .stButton > button {
-                background-color: #2563eb !important;
-                color: white !important;
-                border-radius: 8px !important;
-            }
-            
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            header {visibility: hidden;}
         </style>
         """, unsafe_allow_html=True)
 
-# ==================== NAVBAR RAPPI-STYLE ====================
+# ==================== NAVBAR GLASS ====================
 
-def create_rappi_navbar():
-    """Crea la navbar estilo Rappi"""
+def create_glass_navbar():
+    """Crea navbar estilo glass futurista"""
     
     current_time = datetime.now().strftime("%d/%m/%Y • %H:%M")
     user = st.session_state.get('user', {})
     
     navbar_html = f"""
-    <div class="rappi-navbar">
+    <div style="
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.08);
+        padding: 1rem 2rem;
+        margin: -1rem -1rem 2rem -1rem;
+        border-radius: 0 0 20px 20px;
+    ">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; align-items: center; gap: 15px;">
-                <div style="font-size: 1.8rem;">💊</div>
+                <div style="
+                    background: linear-gradient(135deg, #0066FF, #00D4FF);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                    font-size: 1.8rem;
+                    font-weight: 800;
+                ">💊</div>
                 <div>
-                    <div style="font-size: 1.4rem; font-weight: 800; color: white;">
-                        TODODROGAS • GESTIÓN DE CUPOS
+                    <div style="font-size: 1.4rem; font-weight: 800; color: #1A1A1A;">
+                        TODODROGAS
                     </div>
-                    <div style="font-size: 0.9rem; color: rgba(255, 255, 255, 0.9);">
-                        Sistema de control ejecutivo
+                    <div style="font-size: 0.9rem; color: #4A5568; margin-top: -2px;">
+                        Control de Cupos - Glass Edition
                     </div>
                 </div>
             </div>
             
             <div style="display: flex; align-items: center; gap: 20px;">
-                <div style="text-align: right;">
-                    <div style="color: white; font-weight: 600;">
-                        👤 {user.get('nombre', 'Usuario')}
-                    </div>
-                    <div style="color: rgba(255, 255, 255, 0.8); font-size: 0.85rem;">
-                        {user.get('rol', '').upper()}
+                <div style="
+                    background: rgba(255, 255, 255, 0.7);
+                    backdrop-filter: blur(10px);
+                    border-radius: 16px;
+                    padding: 8px 16px;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                ">
+                    <div style="color: #1A1A1A; font-weight: 600; font-size: 0.9rem;">
+                        ⏰ {current_time}
                     </div>
                 </div>
                 
-                <div style="
-                    background: rgba(255, 255, 255, 0.15);
-                    padding: 8px 16px;
-                    border-radius: 12px;
-                    border: 1px solid rgba(255, 255, 255, 0.2);
-                ">
-                    <div style="color: white; font-weight: 600; font-size: 0.9rem;">
-                        ⏰ {current_time}
+                <div style="text-align: right;">
+                    <div style="color: #1A1A1A; font-weight: 600;">
+                        👤 {user.get('nombre', 'Usuario')}
+                    </div>
+                    <div style="color: #4A5568; font-size: 0.85rem;">
+                        {user.get('rol', 'Usuario').upper()}
                     </div>
                 </div>
             </div>
@@ -133,21 +129,25 @@ def create_rappi_navbar():
     
     return navbar_html
 
-# ==================== SIDEBAR DE NAVEGACIÓN ====================
+# ==================== SIDEBAR MODERNA ====================
 
 def create_sidebar():
-    """Crea la barra lateral de navegación"""
+    """Crea barra lateral moderna"""
     
     with st.sidebar:
         # Logo y título
         st.markdown("""
         <div style="text-align: center; margin-bottom: 2rem;">
-            <div style="font-size: 2.5rem; margin-bottom: 10px;">💊</div>
-            <div style="font-size: 1.2rem; font-weight: 800; color: #0066CC;">
-                TODODROGAS
-            </div>
-            <div style="font-size: 0.9rem; color: #666; margin-top: 5px;">
-                Control de Cupos
+            <div style="
+                background: linear-gradient(135deg, #0066FF, #00D4FF);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                font-size: 2.5rem;
+                margin-bottom: 10px;
+            ">💊</div>
+            <div style="font-size: 1.2rem; font-weight: 800; color: #1A1A1A;">
+                MENÚ
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -155,19 +155,18 @@ def create_sidebar():
         st.markdown("---")
         
         # Menú de navegación
-        st.markdown("### 🧭 NAVEGACIÓN PRINCIPAL")
+        st.markdown("### 🧭 Navegación")
         
-        # Botones de navegación
-        if st.button("🏠 Dashboard Principal", use_container_width=True, type="primary"):
+        if st.button("🏠 Dashboard", use_container_width=True, type="primary"):
             st.switch_page("pages/1_dashboard.py")
         
-        if st.button("👥 Gestión de Clientes", use_container_width=True):
+        if st.button("👥 Clientes", use_container_width=True):
             st.switch_page("pages/2_clientes.py")
         
-        if st.button("📋 Órdenes de Compra", use_container_width=True):
+        if st.button("📋 Órdenes Compra", use_container_width=True):
             st.switch_page("pages/3_ocs.py")
         
-        if st.button("📊 Reportes y Análisis", use_container_width=True):
+        if st.button("📊 Reportes", use_container_width=True):
             st.switch_page("pages/4_reportes.py")
         
         if st.button("⚙️ Configuración", use_container_width=True):
@@ -176,94 +175,71 @@ def create_sidebar():
         st.markdown("---")
         
         # Acciones rápidas
-        st.markdown("### ⚡ ACCIONES RÁPIDAS")
+        st.markdown("### ⚡ Acciones")
         
         col1, col2 = st.columns(2)
-        
         with col1:
             if st.button("➕ Nueva OC", use_container_width=True):
                 st.switch_page("pages/3_ocs.py")
-        
         with col2:
-            if st.button("📤 Exportar", use_container_width=True):
+            if st.button("📈 Análisis", use_container_width=True):
                 st.switch_page("pages/4_reportes.py")
         
         st.markdown("---")
         
-        # Información del sistema
-        st.markdown("### 📊 ESTADO DEL SISTEMA")
-        
-        try:
-            from modules.database import get_estadisticas_generales
-            stats = get_estadisticas_generales()
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("Clientes", stats['total_clientes'])
-            with col2:
-                st.metric("OCs Activas", stats['cantidad_ocs_pendientes'])
-        except:
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("Clientes", "7")
-            with col2:
-                st.metric("OCs Activas", "12")
-        
-        # Estado de conexión
-        st.progress(85, text="🟢 Sistema operativo")
-        
-        st.markdown("---")
-        
-        # Información de usuario
+        # Usuario actual
         user = st.session_state.get('user', {})
         st.markdown(f"""
-        <div style="background: #F8F9FA; padding: 1rem; border-radius: 10px; margin: 1rem 0;">
-            <div style="font-weight: 600; color: #1A1A1A;">👤 {user.get('nombre', 'Usuario')}</div>
-            <div style="color: #666; font-size: 0.85rem;">{user.get('rol', 'Rol no asignado').upper()}</div>
-            <div style="color: #999; font-size: 0.8rem; margin-top: 5px;">
-                Último acceso: {datetime.now().strftime('%H:%M')}
+        <div style="
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        ">
+            <div style="font-weight: 600; color: #1A1A1A;">
+                👤 {user.get('nombre', 'Usuario')}
+            </div>
+            <div style="color: #4A5568; font-size: 0.85rem;">
+                {user.get('rol', 'Rol')}
             </div>
         </div>
         """, unsafe_allow_html=True)
         
-        # Botón de cierre de sesión
+        # Botón de cerrar sesión
         if st.button("🚪 Cerrar Sesión", use_container_width=True, type="secondary"):
             logout()
 
-# ==================== PÁGINA DE INICIO ====================
+# ==================== PÁGINA PRINCIPAL ====================
 
 def show_homepage():
-    """Muestra la página de inicio"""
+    """Muestra página principal"""
     
-    # Cargar CSS personalizado
+    # Cargar CSS
     load_custom_css()
     
     # Crear navbar
-    st.markdown(create_rappi_navbar(), unsafe_allow_html=True)
+    st.markdown(create_glass_navbar(), unsafe_allow_html=True)
     
     # Crear sidebar
     create_sidebar()
     
-    # Contenido principal - Redirigir al dashboard
+    # Redirigir al dashboard
     st.switch_page("pages/1_dashboard.py")
 
 # ==================== FUNCIÓN PRINCIPAL ====================
 
 def main():
-    """Función principal de la aplicación"""
+    """Función principal"""
     
     # Verificar autenticación
     if 'authenticated' not in st.session_state:
         st.session_state.authenticated = False
     
     if not st.session_state.authenticated:
-        # Mostrar pantalla de login
         show_login_screen()
     else:
-        # Mostrar aplicación principal
         show_homepage()
-
-# ==================== EJECUCIÓN ====================
 
 if __name__ == "__main__":
     main()
