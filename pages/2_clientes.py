@@ -1,212 +1,462 @@
 """
-Página de Gestión de Clientes
+PÁGINA 2 - GESTIÓN DE CLIENTES
+Tabla completa de clientes con gestión de cupos
 """
 
 import streamlit as st
 import pandas as pd
-import sqlite3
-import os
-from pathlib import Path
+import plotly.express as px
+import plotly.graph_objects as go
 
 # Configuración de página
 st.set_page_config(
-    page_title="Clientes - Cupos TD",
+    page_title="Clientes - Tododrogas",
     page_icon="👥",
     layout="wide"
 )
 
-# Importar funciones compartidas
-sys.path.append(str(Path(__file__).parent.parent))
-from app import modern_navbar, Config, get_clientes, actualizar_cliente, formato_monetario, formato_porcentaje
+# Importar módulos
+from modules.auth import check_authentication
+from modules.database import get_clientes, actualizar_cupo_cliente
+from modules.utils import format_currency, format_number, get_status_badge
 
-# Mostrar navbar
-modern_navbar()
+# Verificar autenticación
+user = check_authentication()
 
-# Título
-st.title("👥 Gestión de Clientes")
-st.markdown("---")
+# ==================== ESTILOS CSS ====================
 
-# Verificar base de datos
-config = Config()
-if not os.path.exists(config.DATABASE_PATH):
-    st.error("❌ La base de datos no está inicializada. Ve al Dashboard primero.")
-    st.stop()
-
-# Pestañas
-tab1, tab2 = st.tabs(["📋 Lista de Clientes", "➕ Nuevo Cliente"])
-
-with tab1:
-    # Filtros
-    col_filt1, col_filt2 = st.columns(2)
+st.markdown("""
+<style>
+    .clients-container {
+        padding: 1rem;
+    }
     
-    with col_filt1:
-        filtro_nombre = st.text_input("🔍 Buscar por nombre")
+    .client-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid #E5E7EB;
+        transition: all 0.3s ease;
+    }
     
-    with col_filt2:
-        filtro_estado = st.selectbox(
-            "Filtrar por estado",
-            ["TODOS", "NORMAL", "MEDIO", "ALTO", "SOBREPASADO"]
-        )
+    .client-card:hover {
+        box-shadow: 0 4px 20px rgba(0, 102, 204, 0.1);
+        border-color: #0066CC;
+    }
     
-    # Obtener clientes
-    clientes = get_clientes()
+    .client-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
     
-    if not clientes.empty:
-        # Aplicar filtros
-        if filtro_nombre:
-            clientes = clientes[clientes['nombre'].str.contains(filtro_nombre, case=False, na=False)]
-        
-        if filtro_estado != "TODOS":
-            clientes = clientes[clientes['estado_cupo'] == filtro_estado]
-        
-        # Mostrar métricas
-        col_met1, col_met2, col_met3 = st.columns(3)
-        
-        with col_met1:
-            st.metric("Total Clientes", len(clientes))
-        
-        with col_met2:
-            st.metric("Cupo Total", formato_monetario(clientes['cupo_sugerido'].sum()))
-        
-        with col_met3:
-            st.metric("Cartera Total", formato_monetario(clientes['total_cartera'].sum()))
-        
-        st.divider()
-        
-        # Formulario de edición para cada cliente
-        for _, cliente in clientes.iterrows():
-            with st.expander(f"{cliente['nombre']} (NIT: {cliente['nit']})", expanded=False):
-                col_edit1, col_edit2 = st.columns(2)
-                
-                with col_edit1:
-                    nuevo_nombre = st.text_input(
-                        "Nombre",
-                        value=cliente['nombre'],
-                        key=f"nombre_{cliente['nit']}"
-                    )
-                    
-                    nuevo_cupo = st.number_input(
-                        "Cupo Sugerido",
-                        value=float(cliente['cupo_sugerido']),
-                        min_value=0.0,
-                        step=1000000.0,
-                        format="%.0f",
-                        key=f"cupo_{cliente['nit']}"
-                    )
-                
-                with col_edit2:
-                    nueva_cartera = st.number_input(
-                        "Total Cartera",
-                        value=float(cliente['total_cartera']),
-                        min_value=0.0,
-                        step=1000000.0,
-                        format="%.0f",
-                        key=f"cartera_{cliente['nit']}"
-                    )
-                    
-                    # Calcular en tiempo real
-                    nuevo_disponible = nuevo_cupo - nueva_cartera
-                    nuevo_porcentaje = (nueva_cartera / nuevo_cupo * 100) if nuevo_cupo > 0 else 0
-                
-                # Mostrar cálculos
-                col_calc1, col_calc2 = st.columns(2)
-                with col_calc1:
-                    st.metric("Nuevo Disponible", formato_monetario(nuevo_disponible))
-                with col_calc2:
-                    st.metric("% Uso", formato_porcentaje(nuevo_porcentaje))
-                
-                # Botón de guardar
-                col_btn1, col_btn2 = st.columns(2)
-                
-                with col_btn1:
-                    if st.button("💾 Guardar Cambios", key=f"guardar_{cliente['nit']}", use_container_width=True):
-                        try:
-                            actualizar_cliente(
-                                nit=cliente['nit'],
-                                data={
-                                    'nombre': nuevo_nombre,
-                                    'cupo_sugerido': nuevo_cupo,
-                                    'total_cartera': nueva_cartera
-                                }
-                            )
-                            st.success("✅ Cambios guardados exitosamente")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"❌ Error: {str(e)}")
-                
-                with col_btn2:
-                    if st.button("📋 Ver OCs del Cliente", key=f"ocs_{cliente['nit']}", use_container_width=True):
-                        st.session_state.cliente_seleccionado = cliente['nit']
-                        st.switch_page("pages/3_ocs.py")
+    .client-name {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1A1A1A;
+    }
+    
+    .client-nit {
+        color: #666;
+        font-size: 0.9rem;
+    }
+    
+    .client-metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .metric-item {
+        padding: 0.5rem;
+        background: #F8F9FA;
+        border-radius: 8px;
+    }
+    
+    .metric-label {
+        font-size: 0.8rem;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+    
+    .metric-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1A1A1A;
+    }
+    
+    .progress-bar {
+        height: 8px;
+        background: #E5E7EB;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.6s ease;
+    }
+    
+    .client-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .filter-section {
+        background: white;
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        border: 1px solid #E5E7EB;
+    }
+    
+    .stats-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #0066CC, #004499);
+        color: white;
+        padding: 1rem;
+        border-radius: 12px;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin: 0.5rem 0;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ==================== FUNCIONES AUXILIARES ====================
+
+def get_color_by_percentage(percentage):
+    """Obtiene color basado en porcentaje de uso"""
+    if percentage >= 100:
+        return "#FF3B30"
+    elif percentage >= 90:
+        return "#FF9500"
+    elif percentage >= 80:
+        return "#FFCC00"
+    elif percentage >= 50:
+        return "#00B8A9"
     else:
-        st.info("📭 No hay clientes que coincidan con los filtros")
+        return "#0066CC"
 
-with tab2:
-    st.subheader("➕ Agregar Nuevo Cliente")
+def create_client_card(cliente):
+    """Crea una tarjeta de cliente"""
     
-    with st.form("nuevo_cliente"):
-        col1, col2 = st.columns(2)
+    color = get_color_by_percentage(cliente['porcentaje_uso'])
+    
+    return f'''
+    <div class="client-card">
+        <div class="client-header">
+            <div>
+                <div class="client-name">{cliente['nombre']}</div>
+                <div class="client-nit">NIT: {cliente['nit']}</div>
+            </div>
+            <div>
+                {get_status_badge(cliente['porcentaje_uso'])}
+            </div>
+        </div>
         
-        with col1:
-            nit = st.text_input("NIT *")
-            nombre = st.text_input("Nombre del Cliente *")
+        <div class="client-metrics">
+            <div class="metric-item">
+                <div class="metric-label">Cupo Asignado</div>
+                <div class="metric-value">{format_currency(cliente['cupo_sugerido'])}</div>
+            </div>
+            
+            <div class="metric-item">
+                <div class="metric-label">En Uso</div>
+                <div class="metric-value">{format_currency(cliente['saldo_actual'])}</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {min(cliente['porcentaje_uso'], 100)}%; background: {color};"></div>
+                </div>
+            </div>
+            
+            <div class="metric-item">
+                <div class="metric-label">Disponible</div>
+                <div class="metric-value">{format_currency(cliente['disponible'])}</div>
+            </div>
+            
+            <div class="metric-item">
+                <div class="metric-label">% Uso</div>
+                <div class="metric-value">{cliente['porcentaje_uso']}%</div>
+            </div>
+        </div>
         
-        with col2:
-            cupo = st.number_input(
-                "Cupo Sugerido *",
-                min_value=0.0,
-                value=10000000.0,
-                step=1000000.0,
-                format="%.0f"
-            )
-            cartera = st.number_input(
-                "Total Cartera",
-                min_value=0.0,
-                value=0.0,
-                step=1000000.0,
-                format="%.0f"
-            )
+        <div class="client-actions">
+            <button class="rappi-button" onclick="viewClient('{cliente['nit']}')" style="flex: 1;">📋 Ver Detalle</button>
+            <button class="rappi-button" onclick="editCupo('{cliente['nit']}')" style="flex: 1;">✏️ Editar Cupo</button>
+            <button class="rappi-button" onclick="viewOCs('{cliente['nit']}')" style="flex: 1;">📄 Ver OCs</button>
+        </div>
+    </div>
+    '''
+
+def create_stats_summary(clientes_df):
+    """Crea resumen estadístico"""
+    
+    total_cupo = clientes_df['cupo_sugerido'].sum()
+    total_en_uso = clientes_df['saldo_actual'].sum()
+    total_disponible = clientes_df['disponible'].sum()
+    porcentaje_promedio = clientes_df['porcentaje_uso'].mean()
+    
+    return f'''
+    <div class="stats-summary">
+        <div class="stat-card">
+            <div class="stat-label">CUPO TOTAL</div>
+            <div class="stat-value">{format_currency(total_cupo)}</div>
+        </div>
         
-        # Cálculos en tiempo real
-        disponible = cupo - cartera
-        porcentaje_uso = (cartera / cupo * 100) if cupo > 0 else 0
+        <div class="stat-card" style="background: linear-gradient(135deg, #00B8A9, #0088AA);">
+            <div class="stat-label">EN USO</div>
+            <div class="stat-value">{format_currency(total_en_uso)}</div>
+        </div>
         
-        col_info1, col_info2 = st.columns(2)
-        with col_info1:
-            st.metric("Disponible Inicial", formato_monetario(disponible))
-        with col_info2:
-            st.metric("% Uso Inicial", formato_porcentaje(porcentaje_uso))
+        <div class="stat-card" style="background: linear-gradient(135deg, #06D6A0, #0CB48C);">
+            <div class="stat-label">DISPONIBLE</div>
+            <div class="stat-value">{format_currency(total_disponible)}</div>
+        </div>
         
-        # Botón de envío
-        submitted = st.form_submit_button(
-            "🚀 Crear Cliente",
-            type="primary",
-            use_container_width=True
+        <div class="stat-card" style="background: linear-gradient(135deg, #FF9500, #FF7B00);">
+            <div class="stat-label">USO PROMEDIO</div>
+            <div class="stat-value">{porcentaje_promedio:.1f}%</div>
+        </div>
+    </div>
+    '''
+
+# ==================== PÁGINA PRINCIPAL ====================
+
+def show_clients_page():
+    """Muestra la página de gestión de clientes"""
+    
+    st.title("👥 GESTIÓN DE CLIENTES")
+    st.markdown("Tabla completa de clientes con control de cupos")
+    
+    # Obtener datos
+    with st.spinner("Cargando clientes..."):
+        clientes_df = get_clientes()
+    
+    if clientes_df.empty:
+        st.warning("No hay clientes registrados en el sistema.")
+        return
+    
+    # ========== FILTROS Y BÚSQUEDA ==========
+    st.markdown('<div class="filter-section">', unsafe_allow_html=True)
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        search_term = st.text_input("🔍 Buscar cliente", placeholder="Nombre o NIT")
+    
+    with col2:
+        estado_filter = st.selectbox(
+            "Filtrar por estado",
+            ["TODOS", "NORMAL", "ALERTA", "SOBREPASADO"]
+        )
+    
+    with col3:
+        sort_by = st.selectbox(
+            "Ordenar por",
+            ["Nombre (A-Z)", "Nombre (Z-A)", "% Uso (↑)", "% Uso (↓)", "Cupo (↑)", "Cupo (↓)"]
+        )
+    
+    with col4:
+        items_per_page = st.selectbox(
+            "Clientes por página",
+            [10, 25, 50, 100],
+            index=0
+        )
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # ========== RESUMEN ESTADÍSTICO ==========
+    st.markdown(create_stats_summary(clientes_df), unsafe_allow_html=True)
+    
+    # ========== APLICAR FILTROS ==========
+    filtered_df = clientes_df.copy()
+    
+    # Búsqueda por término
+    if search_term:
+        filtered_df = filtered_df[
+            filtered_df['nombre'].str.contains(search_term, case=False) |
+            filtered_df['nit'].str.contains(search_term, case=False)
+        ]
+    
+    # Filtro por estado
+    if estado_filter != "TODOS":
+        filtered_df = filtered_df[filtered_df['estado'] == estado_filter]
+    
+    # Ordenar
+    if sort_by == "Nombre (A-Z)":
+        filtered_df = filtered_df.sort_values('nombre')
+    elif sort_by == "Nombre (Z-A)":
+        filtered_df = filtered_df.sort_values('nombre', ascending=False)
+    elif sort_by == "% Uso (↑)":
+        filtered_df = filtered_df.sort_values('porcentaje_uso')
+    elif sort_by == "% Uso (↓)":
+        filtered_df = filtered_df.sort_values('porcentaje_uso', ascending=False)
+    elif sort_by == "Cupo (↑)":
+        filtered_df = filtered_df.sort_values('cupo_sugerido')
+    elif sort_by == "Cupo (↓)":
+        filtered_df = filtered_df.sort_values('cupo_sugerido', ascending=False)
+    
+    # ========== PAGINACIÓN ==========
+    total_clientes = len(filtered_df)
+    total_pages = (total_clientes // items_per_page) + (1 if total_clientes % items_per_page > 0 else 0)
+    
+    if total_pages > 1:
+        page_number = st.number_input(
+            "Página",
+            min_value=1,
+            max_value=total_pages,
+            value=1,
+            step=1
         )
         
-        if submitted:
-            if not nit or not nombre:
-                st.error("❌ Los campos marcados con * son obligatorios")
-            elif cupo <= 0:
-                st.error("❌ El cupo sugerido debe ser mayor a 0")
-            else:
-                try:
-                    conn = sqlite3.connect(config.DATABASE_PATH)
-                    cursor = conn.cursor()
-                    
-                    cursor.execute('''
-                    INSERT INTO clientes (nit, nombre, cupo_sugerido, total_cartera, disponible)
-                    VALUES (?, ?, ?, ?, ?)
-                    ''', (nit, nombre, cupo, cartera, disponible))
-                    
-                    conn.commit()
-                    conn.close()
-                    
-                    st.success(f"✅ Cliente '{nombre}' creado exitosamente")
-                    st.balloons()
+        start_idx = (page_number - 1) * items_per_page
+        end_idx = start_idx + items_per_page
+        page_df = filtered_df.iloc[start_idx:end_idx]
+        
+        st.caption(f"Mostrando clientes {start_idx + 1}-{min(end_idx, total_clientes)} de {total_clientes}")
+    else:
+        page_df = filtered_df
+    
+    # ========== TABLA DE CLIENTES ==========
+    st.markdown(f"### 📋 CLIENTES ({len(filtered_df)})")
+    
+    # Opción de vista: Tarjetas o Tabla
+    view_mode = st.radio(
+        "Tipo de vista:",
+        ["Tarjetas", "Tabla"],
+        horizontal=True,
+        key="view_mode_clients"
+    )
+    
+    if view_mode == "Tarjetas":
+        # Mostrar como tarjetas
+        for _, cliente in page_df.iterrows():
+            st.markdown(create_client_card(cliente), unsafe_allow_html=True)
+    else:
+        # Mostrar como tabla
+        display_df = page_df.copy()
+        display_df['Cupo Asignado'] = display_df['cupo_sugerido'].apply(format_currency)
+        display_df['En Uso'] = display_df['saldo_actual'].apply(format_currency)
+        display_df['Disponible'] = display_df['disponible'].apply(format_currency)
+        display_df['% Uso'] = display_df['porcentaje_uso'].apply(lambda x: f"{x:.1f}%")
+        
+        # Añadir barra de progreso visual
+        display_df['Progreso'] = display_df['porcentaje_uso'].apply(
+            lambda x: f"<div style='background: {get_color_by_percentage(x)}; width: {min(x, 100)}%; height: 8px; border-radius: 4px;'></div>"
+        )
+        
+        # Columnas a mostrar
+        columnas = ['nombre', 'nit', 'Cupo Asignado', 'En Uso', 'Disponible', '% Uso', 'Progreso', 'estado']
+        nombres_columnas = ['Cliente', 'NIT', 'Cupo', 'En Uso', 'Disponible', '% Uso', 'Progreso', 'Estado']
+        
+        st.markdown(
+            display_df[columnas].rename(columns=dict(zip(columnas, nombres_columnas))).to_html(
+                escape=False, 
+                index=False,
+                classes='rappi-table'
+            ), 
+            unsafe_allow_html=True
+        )
+    
+    # ========== ACCIONES MASIVAS ==========
+    st.markdown("---")
+    st.markdown("### 🚀 ACCIONES MASIVAS")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("📤 Exportar a Excel", use_container_width=True):
+            try:
+                from modules.database import exportar_datos_a_excel
+                ruta = exportar_datos_a_excel()
+                st.success(f"✅ Datos exportados correctamente: {ruta}")
+                
+                with open(ruta, "rb") as file:
+                    st.download_button(
+                        label="⬇️ Descargar archivo",
+                        data=file,
+                        file_name="clientes_tododrogas.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
+            except Exception as e:
+                st.error(f"❌ Error al exportar: {str(e)}")
+    
+    with col2:
+        if st.button("🔄 Actualizar todos", use_container_width=True):
+            st.rerun()
+    
+    with col3:
+        if st.button("📊 Ver análisis", use_container_width=True):
+            st.switch_page("pages/4_reportes.py")
+    
+    # ========== EDICIÓN DE CUPO (MODAL) ==========
+    if 'edit_cupo_nit' in st.session_state:
+        nit_editar = st.session_state.edit_cupo_nit
+        cliente_editar = clientes_df[clientes_df['nit'] == nit_editar].iloc[0]
+        
+        with st.form(f"editar_cupo_{nit_editar}"):
+            st.subheader(f"✏️ Editar Cupo - {cliente_editar['nombre']}")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.metric("Cupo Actual", format_currency(cliente_editar['cupo_sugerido']))
+                nuevo_cupo = st.number_input(
+                    "Nuevo Cupo",
+                    min_value=0.0,
+                    value=float(cliente_editar['cupo_sugerido']),
+                    step=1000000.0,
+                    format="%.0f"
+                )
+            
+            with col2:
+                st.metric("En Uso", format_currency(cliente_editar['saldo_actual']))
+                nuevo_disponible = nuevo_cupo - cliente_editar['saldo_actual']
+                st.metric("Nuevo Disponible", format_currency(nuevo_disponible))
+            
+            motivo = st.text_input("Motivo del cambio", placeholder="Ej: Ajuste por nueva política")
+            
+            col_btn1, col_btn2 = st.columns(2)
+            
+            with col_btn1:
+                if st.form_submit_button("💾 Guardar Cambios", type="primary", use_container_width=True):
+                    try:
+                        actualizar_cupo_cliente(nit_editar, nuevo_cupo, user['nombre'])
+                        st.success("✅ Cupo actualizado correctamente")
+                        del st.session_state.edit_cupo_nit
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Error al actualizar: {str(e)}")
+            
+            with col_btn2:
+                if st.form_submit_button("❌ Cancelar", use_container_width=True):
+                    del st.session_state.edit_cupo_nit
                     st.rerun()
-                    
-                except sqlite3.IntegrityError:
-                    st.error(f"❌ Ya existe un cliente con NIT: {nit}")
-                except Exception as e:
-                    st.error(f"❌ Error: {str(e)}")
+
+# ==================== EJECUCIÓN ====================
+
+if __name__ == "__main__":
+    show_clients_page()
