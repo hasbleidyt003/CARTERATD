@@ -1,6 +1,6 @@
 """
-MÓDULO DE AUTENTICACIÓN - SISTEMA TODODROGAS
-Login minimalista glass azul
+AUTENTICACIÓN COMPACTA - SISTEMA TODODROGAS
+Login pequeño y centrado
 """
 
 import streamlit as st
@@ -52,181 +52,163 @@ def authenticate(username, password):
         conn.close()
 
 def show_login_screen():
-    """Login minimalista glass azul centrado"""
+    """Login pequeño y centrado"""
     
-    # CSS minimalista
+    # Ocultar elementos de Streamlit
     st.markdown("""
     <style>
-        /* Reset básico */
+        /* Ocultar elementos no necesarios */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        
+        /* Fondo general */
         .stApp {
-            background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
-            min-height: 100vh;
-        }
-        
-        .stApp > header {
-            display: none !important;
-        }
-        
-        #MainMenu, footer, header {
-            visibility: hidden !important;
-        }
-        
-        .block-container {
-            padding: 0 !important;
-            max-width: 100% !important;
-        }
-        
-        /* Contenedor centrado */
-        .login-center {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
         }
         
-        /* Card glass */
-        .login-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 
-                0 15px 35px rgba(0, 0, 0, 0.1),
-                0 0 25px rgba(0, 102, 255, 0.1);
+        /* Card pequeña centrada */
+        .login-small {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
             padding: 40px;
             width: 100%;
-            max-width: 400px;
+            max-width: 380px;
+            margin: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
         
-        /* Header con píldora al lado */
-        .login-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
+        /* Header compacto */
+        .login-header-small {
+            text-align: center;
             margin-bottom: 30px;
-            justify-content: center;
         }
         
-        /* Píldora */
-        .pill {
+        .logo-small {
             font-size: 2.5rem;
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #0066FF 0%, #00D4FF 100%);
-            color: white;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0, 102, 255, 0.3);
+            color: #0066CC;
+            margin-bottom: 10px;
         }
         
-        /* Título */
-        .title {
-            font-size: 2rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #1A1A1A 0%, #0066FF 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .title-small {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 5px;
         }
         
-        .subtitle {
-            color: #666;
+        .subtitle-small {
+            color: #64748b;
             font-size: 0.9rem;
-            margin-top: 5px;
         }
         
-        /* Inputs glass azules */
-        .input-group {
+        /* Inputs pequeños */
+        .input-small {
             margin-bottom: 20px;
         }
         
-        .input-label {
-            color: #333;
-            font-size: 0.9rem;
+        .input-label-small {
+            color: #475569;
+            font-size: 0.85rem;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             display: block;
         }
         
-        .input-field {
-            background: rgba(0, 102, 255, 0.1);
-            border: 2px solid rgba(0, 102, 255, 0.2);
-            border-radius: 12px;
-            padding: 14px 16px;
+        .input-field-small {
             width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
             font-size: 1rem;
-            color: #333;
-            transition: all 0.3s;
+            transition: all 0.2s;
         }
         
-        .input-field:focus {
+        .input-field-small:focus {
             outline: none;
-            border-color: #0066FF;
-            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
-            background: rgba(0, 102, 255, 0.15);
+            border-color: #0066CC;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
         }
         
-        /* Botón */
-        .login-btn {
-            background: linear-gradient(135deg, #0066FF 0%, #00D4FF 100%);
-            border: none;
-            border-radius: 12px;
+        /* Botón pequeño */
+        .btn-small {
+            background: #0066CC;
             color: white;
-            padding: 16px;
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
             font-size: 1rem;
             font-weight: 600;
             width: 100%;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
             margin-top: 10px;
         }
         
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 102, 255, 0.3);
+        .btn-small:hover {
+            background: #0052a3;
+            transform: translateY(-1px);
         }
         
-        /* Footer */
-        .footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-            text-align: center;
-            color: #888;
-            font-size: 0.85rem;
+        /* Mensajes pequeños */
+        .alert-small {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+        
+        .success-small {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .error-small {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        .warning-small {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
         }
     </style>
     """, unsafe_allow_html=True)
     
-    # Contenedor principal
-    st.markdown('<div class="login-center">', unsafe_allow_html=True)
-    st.markdown('<div class="login-card">', unsafe_allow_html=True)
+    # Contenedor pequeño centrado
+    st.markdown('<div class="login-small">', unsafe_allow_html=True)
     
-    # Header con píldora y título
-    st.markdown('<div class="login-header">', unsafe_allow_html=True)
-    st.markdown('<div class="pill">💊</div>', unsafe_allow_html=True)
-    st.markdown('<div><div class="title">TODODROGAS</div><div class="subtitle">Sistema de Gestión</div></div>', unsafe_allow_html=True)
+    # Header
+    st.markdown('<div class="login-header-small">', unsafe_allow_html=True)
+    st.markdown('<div class="logo-small">💊</div>', unsafe_allow_html=True)
+    st.markdown('<div class="title-small">TODODROGAS</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitle-small">Control de Cupos</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Formulario simple
+    # Formulario
     with st.form("login_form"):
         # Usuario
-        st.markdown('<div class="input-group">', unsafe_allow_html=True)
-        st.markdown('<label class="input-label">Usuario</label>', unsafe_allow_html=True)
+        st.markdown('<div class="input-small">', unsafe_allow_html=True)
+        st.markdown('<label class="input-label-small">Usuario</label>', unsafe_allow_html=True)
         username = st.text_input("", placeholder="Ingresa tu usuario", label_visibility="collapsed")
         st.markdown('</div>', unsafe_allow_html=True)
         
         # Contraseña
-        st.markdown('<div class="input-group">', unsafe_allow_html=True)
-        st.markdown('<label class="input-label">Contraseña</label>', unsafe_allow_html=True)
+        st.markdown('<div class="input-small">', unsafe_allow_html=True)
+        st.markdown('<label class="input-label-small">Contraseña</label>', unsafe_allow_html=True)
         password = st.text_input("", type="password", placeholder="Ingresa tu contraseña", label_visibility="collapsed")
         st.markdown('</div>', unsafe_allow_html=True)
         
         # Botón
-        submit_button = st.form_submit_button("ACCEDER", use_container_width=True, type="primary")
+        submit_button = st.form_submit_button("ACCEDER", use_container_width=True)
         
         if submit_button:
             if username and password:
@@ -237,18 +219,17 @@ def show_login_screen():
                     if authenticated:
                         st.session_state.user = user
                         st.session_state.authenticated = True
-                        st.success(f"¡Bienvenido, {user['nombre']}!")
+                        st.markdown('<div class="alert-small success-small">✓ Acceso concedido</div>', unsafe_allow_html=True)
                         time.sleep(1)
                         st.rerun()
                     else:
-                        st.error("❌ Credenciales incorrectas")
+                        st.markdown('<div class="alert-small error-small">✗ Credenciales incorrectas</div>', unsafe_allow_html=True)
             else:
-                st.warning("⚠️ Completa todos los campos")
+                st.markdown('<div class="alert-small warning-small">⚠️ Completa todos los campos</div>', unsafe_allow_html=True)
     
-    # Footer
-    st.markdown('<div class="footer">© 2024 Tododrogas</div>', unsafe_allow_html=True)
+    # Footer mínimo
+    st.markdown('<div style="text-align: center; margin-top: 20px; color: #94a3b8; font-size: 0.8rem;">© 2024</div>', unsafe_allow_html=True)
     
-    st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 def check_authentication():
@@ -273,7 +254,7 @@ def require_admin():
     user = check_authentication()
     
     if user.get('rol') != 'admin':
-        st.error("⛔ Acceso solo para administradores")
+        st.error("⛔ Acceso restringido a administradores")
         st.stop()
     
     return user
