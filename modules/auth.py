@@ -1,6 +1,6 @@
 """
 AUTENTICACIÓN - GLASSMORPHISM CON AZUL PURISTA
-Versión corregida sin labels automáticos de Streamlit
+Efecto cristal con tonos azules brillantes y puro minimalismo
 """
 
 import streamlit as st
@@ -52,45 +52,18 @@ def authenticate(username, password):
         conn.close()
 
 def show_login_screen():
-    """Login con efecto Glassmorphism - SIN LABELS AUTOMÁTICOS"""
+    """Login con efecto Glassmorphism y azul purista"""
     
     # CSS con Glassmorphism y azul purista
     st.markdown("""
     <style>
-        /* RESET COMPLETO - OCULTAR TODO LO DE STREAMLIT */
-        #MainMenu, footer, header {
-            display: none !important;
-        }
-        
-        /* OCULTAR ESPECÍFICAMENTE LOS LABELS QUE STREAMLIT GENERA */
-        [data-testid="stForm"] label,
-        [data-testid="stForm"] p,
-        [data-testid="stForm"] div[data-baseweb="form-control"] > label,
-        [data-testid="stTextInput"] label,
-        [data-testid="stTextInput"] p,
-        [data-testid="column"] label {
+        /* RESET COMPLETO */
+        #MainMenu, footer, header, .stTextInput label, .stTextInput p {
             display: none !important;
             visibility: hidden !important;
             height: 0 !important;
-            width: 0 !important;
             margin: 0 !important;
             padding: 0 !important;
-            font-size: 0 !important;
-            line-height: 0 !important;
-            opacity: 0 !important;
-            pointer-events: none !important;
-            position: absolute !important;
-        }
-        
-        /* OCULTAR CONTENEDORES DE LABELS */
-        div[data-testid="stForm"] > div > div > div > div:first-child {
-            display: none !important;
-        }
-        
-        /* AJUSTAR MARGENES PARA COMPENSAR */
-        .stTextInput > div > div {
-            margin-top: 0 !important;
-            margin-bottom: 0 !important;
         }
         
         .stApp {
@@ -257,7 +230,11 @@ def show_login_screen():
             letter-spacing: 0.5px;
         }
         
-        /* 4) INPUTS - CRISTAL TRANSPARENTE SIN LABELS */
+        /* 4) INPUTS - CRISTAL TRANSPARENTE */
+        .stTextInput > div > div {
+            margin-top: 0 !important;
+        }
+        
         .stTextInput > div > div > input {
             background: rgba(255, 255, 255, 0.85) !important;
             backdrop-filter: blur(10px) !important;
@@ -270,9 +247,7 @@ def show_login_screen():
             box-shadow: 
                 inset 0 2px 6px rgba(0, 0, 0, 0.05),
                 0 4px 12px rgba(0, 102, 255, 0.15) !important;
-            margin-top: 8px !important;
-            margin-bottom: 25px !important;
-            width: 100% !important;
+            margin-top: 5px !important;
         }
         
         .stTextInput > div > div > input:focus {
@@ -290,18 +265,17 @@ def show_login_screen():
             font-weight: 400;
         }
         
-        /* 5) LABELS PERSONALIZADOS - SOLO NUESTROS */
+        /* 5) LABELS PERSONALIZADOS */
         .glass-label {
             color: rgba(0, 51, 102, 0.95);
             font-size: 1rem;
             font-weight: 700;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             display: block;
             padding-left: 8px;
             text-transform: uppercase;
             letter-spacing: 1px;
             text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
-            margin-top: 0 !important;
         }
         
         /* 6) BOTÓN PRINCIPAL - AZUL BRILLANTE */
@@ -327,7 +301,7 @@ def show_login_screen():
                 0 4px 15px rgba(0, 102, 255, 0.2),
                 inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
             letter-spacing: 0.5px !important;
-            margin-top: 15px !important;
+            margin-top: 25px !important;
             backdrop-filter: blur(8px) !important;
             position: relative;
             overflow: hidden;
@@ -432,40 +406,30 @@ def show_login_screen():
         ::-webkit-scrollbar {
             display: none;
         }
-        
-        /* 12) REMOVER ESPACIOS EXTRA DE STREAMLIT */
-        .stForm {
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-        
-        div[data-testid="stForm"] > div {
-            padding: 0 !important;
-            margin: 0 !important;
-        }
     </style>
     """, unsafe_allow_html=True)
     
     # Contenedor principal con efecto glass
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     
-    # Header
+    # Header sin píldora, solo azul purista
     st.markdown('<div class="glass-header">', unsafe_allow_html=True)
-    st.markdown('<div class="glass-logo">💊</div>', unsafe_allow_html=True)
+    st.markdown('<div class="glass-logo">🔷</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-title">TODODROGAS</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass-subtitle">Sistema Corporativo de Gestión de Cupos</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Formulario SIN labels automáticos
+    # Formulario
     with st.form("login_form"):
         st.markdown('<div class="glass-form-container">', unsafe_allow_html=True)
         
-        # Solo nuestros labels personalizados - SIN labels de Streamlit
+        # Usuario
         st.markdown('<label class="glass-label">Usuario</label>', unsafe_allow_html=True)
-        username = st.text_input(" ", placeholder="Ingrese su usuario", label_visibility="collapsed")
+        username = st.text_input("", placeholder="Ingrese su usuario", label_visibility="collapsed", key="username_input")
         
+        # Contraseña
         st.markdown('<label class="glass-label">Contraseña</label>', unsafe_allow_html=True)
-        password = st.text_input("  ", type="password", placeholder="Ingrese su contraseña", label_visibility="collapsed")
+        password = st.text_input("", type="password", placeholder="Ingrese su contraseña", label_visibility="collapsed", key="password_input")
         
         # Botón principal
         submit_button = st.form_submit_button("🔐 ACCEDER AL SISTEMA", use_container_width=True)
@@ -490,6 +454,7 @@ def show_login_screen():
                 st.markdown('<div class="glass-alert glass-warning">⚠️ Complete todos los campos</div>', unsafe_allow_html=True)
     
     # Footer
+    st.markdown('<div class="glass-footer">© 2024 Tododrogas S.A.S • v3.0</div>', unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
 
