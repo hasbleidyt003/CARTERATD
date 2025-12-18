@@ -1,28 +1,18 @@
+# config.toml
 [theme]
-# Colores principales - Azules brillantes sobre fondo claro
-primaryColor = "#0066FF"
+primaryColor = "#4CAF50"
 backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F8FAFC"
-textColor = "#1A1A1A"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
 font = "sans serif"
 
-# Personalización adicional
-fontSize = "16px"
-fontHead = "sans serif"
-
 [server]
-port = 8501
+maxUploadSize = 100
 enableCORS = false
 enableXsrfProtection = true
-maxUploadSize = 200
 
 [browser]
 gatherUsageStats = false
 
-[client]
-caching = true
-showErrorDetails = true
-
 [runner]
-magicEnabled = true
-installTracer = false
+magicEnabled = false
