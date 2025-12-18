@@ -119,9 +119,6 @@ def show_login_screen():
     
         }
         
-        .stButton > button:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(100, 160, 255, 0.4);
         }
         
         /* Mensajes */
@@ -162,9 +159,8 @@ def show_login_screen():
         
 
         }
+
         
-        .glass-container {
-            animation: float 6s ease-in-out infinite;
         }
     </style>
     """, unsafe_allow_html=True)
