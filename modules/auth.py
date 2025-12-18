@@ -1,5 +1,5 @@
 """
-AUTENTICACIÓN - ESTILO MINIMALISTA GLASS AZUL
+AUTENTICACIÓN - DISEÑO COMPACTO Y CENTRADO
 """
 
 import streamlit as st
@@ -51,12 +51,17 @@ def authenticate(username, password):
         conn.close()
 
 def show_login_screen():
-    """Login minimalista glass azul con píldora grande"""
+    """Login compacto y centrado con píldora al lado izquierdo"""
     
-    # CSS inline para el login minimalista
+    # CSS compacto y centrado
     st.markdown("""
     <style>
-        /* Ocultar elementos de Streamlit */
+        /* Reset Streamlit */
+        .stApp {
+            background: linear-gradient(135deg, #FFFFFF 0%, #F5F9FF 100%) !important;
+            min-height: 100vh;
+        }
+        
         .stApp > header {
             display: none !important;
         }
@@ -71,215 +76,203 @@ def show_login_screen():
             max-width: 100% !important;
         }
         
-        /* Contenedor principal */
-        .login-minimalista {
+        /* Contenedor principal centrado */
+        .login-container-compact {
             min-height: 100vh;
-            background: linear-gradient(135deg, 
-                #FFFFFF 0%, 
-                #F5F9FF 25%, 
-                #EDF4FF 50%, 
-                #F5F9FF 75%, 
-                #FFFFFF 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 2rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, 
+                #FFFFFF 0%, 
+                #F5F9FF 30%, 
+                #EDF4FF 70%, 
+                #FFFFFF 100%);
             position: relative;
-            overflow: hidden;
         }
         
-        /* Efecto de visos azules en fondo */
-        .login-minimalista::before {
+        /* Fondo con líneas azules sutiles */
+        .login-container-compact::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
+            width: 100%;
+            height: 100%;
             background: 
-                linear-gradient(45deg, transparent 48%, rgba(0, 102, 255, 0.03) 50%, transparent 52%),
-                linear-gradient(-45deg, transparent 48%, rgba(0, 212, 255, 0.02) 50%, transparent 52%);
-            background-size: 60px 60px;
-            opacity: 0.4;
-            animation: subtle-move 20s infinite linear;
+                linear-gradient(90deg, transparent 98%, rgba(0, 102, 255, 0.05) 100%),
+                linear-gradient(180deg, transparent 98%, rgba(0, 102, 255, 0.05) 100%);
+            background-size: 40px 40px;
+            opacity: 0.3;
+            pointer-events: none;
         }
         
-        @keyframes subtle-move {
-            0% { background-position: 0 0; }
-            100% { background-position: 60px 60px; }
-        }
-        
-        /* Contenedor glass */
-        .login-glass-minimal {
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(30px) saturate(180%);
-            -webkit-backdrop-filter: blur(30px) saturate(180%);
-            border-radius: 28px;
+        /* Panel glass compacto */
+        .glass-panel-compact {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
             border: 1px solid rgba(255, 255, 255, 0.4);
             box-shadow: 
-                0 25px 60px rgba(0, 0, 0, 0.08),
-                0 0 40px rgba(0, 102, 255, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.7);
-            padding: 4rem;
+                0 20px 50px rgba(0, 0, 0, 0.08),
+                0 0 30px rgba(0, 102, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            padding: 2.5rem;
             width: 100%;
-            max-width: 500px;
+            max-width: 450px;
             position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
         
-        /* Encabezado con píldora y título al lado */
-        .login-header-minimal {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-            width: 100%;
-            justify-content: flex-start;
+        /* Borde azul sutil */
+        .glass-panel-compact::after {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            border-radius: 25px;
+            background: linear-gradient(135deg, 
+                rgba(0, 102, 255, 0.2), 
+                rgba(0, 212, 255, 0.2));
+            z-index: -1;
+            opacity: 0.5;
         }
         
-        /* Píldora grande igual que el título */
-        .pill-large {
-            font-size: 3.5rem;
-            width: 100px;
-            height: 100px;
+        /* Header con píldora al lado izquierdo */
+        .login-header-compact {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            margin-bottom: 2.5rem;
+            justify-content: center;
+        }
+        
+        /* Píldora grande al lado izquierdo */
+        .pill-left {
+            font-size: 3rem;
+            width: 80px;
+            height: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: linear-gradient(135deg, #0066FF 0%, #00D4FF 100%);
             color: white;
-            border-radius: 24px;
+            border-radius: 20px;
             box-shadow: 
-                0 15px 35px rgba(0, 102, 255, 0.3),
+                0 10px 30px rgba(0, 102, 255, 0.3),
                 inset 0 1px 0 rgba(255, 255, 255, 0.4);
-            animation: pill-float 3s ease-in-out infinite;
+            flex-shrink: 0;
         }
         
-        @keyframes pill-float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-        
-        /* Título al lado de la píldora */
-        .title-minimal {
-            font-size: 3.5rem;
+        /* Título al lado derecho de la píldora */
+        .title-compact {
+            font-size: 2.5rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #1A1A1A 0%, #0066FF 100%);
+            background: linear-gradient(135deg, #1A1A1A 0%, #0066FF 50%, #00D4FF 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            letter-spacing: -1.5px;
+            letter-spacing: -1px;
             line-height: 1;
         }
         
-        .subtitle-minimal {
+        .subtitle-compact {
             color: #4A5568;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 400;
-            margin-top: 0.5rem;
-            letter-spacing: 0.5px;
+            margin-top: 0.3rem;
         }
         
-        /* Campos de entrada minimalistas glass azules */
-        .input-group-minimal {
-            width: 100%;
-            margin-bottom: 1.8rem;
-            position: relative;
+        /* Formulario compacto */
+        .form-compact {
+            margin-top: 1.5rem;
         }
         
-        .glass-input-minimal {
-            background: rgba(0, 102, 255, 0.1) !important;
-            backdrop-filter: blur(15px) !important;
-            border: 2px solid rgba(0, 102, 255, 0.2) !important;
-            border-radius: 16px !important;
-            padding: 18px 22px !important;
+        /* Campos de entrada glass azul */
+        .input-glass-azul {
+            background: rgba(0, 102, 255, 0.08) !important;
+            backdrop-filter: blur(10px) !important;
+            border: 2px solid rgba(0, 102, 255, 0.15) !important;
+            border-radius: 14px !important;
+            padding: 16px 20px 16px 50px !important;
             width: 100% !important;
-            font-size: 1.1rem !important;
+            font-size: 1rem !important;
             color: white !important;
             transition: all 0.3s ease !important;
             box-shadow: 
-                inset 0 2px 8px rgba(0, 102, 255, 0.2),
-                0 4px 20px rgba(0, 102, 255, 0.15) !important;
+                inset 0 2px 6px rgba(0, 102, 255, 0.15),
+                0 4px 15px rgba(0, 102, 255, 0.1) !important;
             font-weight: 500 !important;
+            margin-bottom: 1.2rem !important;
         }
         
-        .glass-input-minimal:focus {
+        .input-glass-azul:focus {
             outline: none !important;
-            background: rgba(0, 102, 255, 0.2) !important;
-            border-color: rgba(0, 102, 255, 0.4) !important;
+            background: rgba(0, 102, 255, 0.12) !important;
+            border-color: rgba(0, 102, 255, 0.3) !important;
             box-shadow: 
-                inset 0 2px 12px rgba(0, 102, 255, 0.3),
-                0 6px 30px rgba(0, 102, 255, 0.25),
-                0 0 0 3px rgba(0, 102, 255, 0.1) !important;
-            transform: translateY(-2px);
+                inset 0 2px 8px rgba(0, 102, 255, 0.2),
+                0 6px 20px rgba(0, 102, 255, 0.15) !important;
+            transform: translateY(-1px);
         }
         
-        .glass-input-minimal::placeholder {
+        .input-glass-azul::placeholder {
             color: rgba(255, 255, 255, 0.7) !important;
         }
         
-        /* Iconos dentro de los inputs */
-        .input-with-icon {
+        /* Iconos dentro de inputs */
+        .input-wrapper {
             position: relative;
+            width: 100%;
         }
         
-        .input-icon {
+        .input-icon-azul {
             position: absolute;
             left: 18px;
             top: 50%;
             transform: translateY(-50%);
             color: white;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             z-index: 2;
             opacity: 0.8;
         }
         
-        .glass-input-minimal {
-            padding-left: 55px !important;
-        }
-        
-        /* Botón glass azul */
-        .glass-button-minimal {
+        /* Botón compacto */
+        .btn-compact {
             background: linear-gradient(135deg, 
                 rgba(0, 102, 255, 0.9) 0%,
                 rgba(0, 212, 255, 0.9) 100%) !important;
-            backdrop-filter: blur(15px) !important;
-            border: 2px solid rgba(255, 255, 255, 0.3) !important;
-            border-radius: 18px !important;
+            border: none !important;
+            border-radius: 14px !important;
             color: white !important;
-            padding: 20px 40px !important;
-            font-size: 1.2rem !important;
-            font-weight: 700 !important;
+            padding: 16px !important;
+            font-size: 1rem !important;
+            font-weight: 600 !important;
             width: 100% !important;
             cursor: pointer !important;
             transition: all 0.3s ease !important;
             position: relative !important;
             overflow: hidden !important;
             box-shadow: 
-                0 10px 40px rgba(0, 102, 255, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3),
-                0 0 30px rgba(0, 102, 255, 0.2) !important;
-            margin-top: 1rem !important;
-            letter-spacing: 1px !important;
-            text-transform: uppercase !important;
+                0 8px 25px rgba(0, 102, 255, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+            margin-top: 0.5rem !important;
+            letter-spacing: 0.5px !important;
         }
         
-        .glass-button-minimal:hover {
+        .btn-compact:hover {
             background: linear-gradient(135deg, 
                 rgba(0, 102, 255, 1) 0%,
                 rgba(0, 212, 255, 1) 100%) !important;
-            transform: translateY(-3px) !important;
+            transform: translateY(-2px) !important;
             box-shadow: 
-                0 15px 50px rgba(0, 102, 255, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.4),
-                0 0 40px rgba(0, 102, 255, 0.3) !important;
-            border-color: rgba(255, 255, 255, 0.4) !important;
+                0 12px 35px rgba(0, 102, 255, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
         }
         
         /* Efecto de destello */
-        .glass-button-minimal::before {
+        .btn-compact::before {
             content: '';
             position: absolute;
             top: 0;
@@ -289,104 +282,99 @@ def show_login_screen():
             background: linear-gradient(
                 90deg,
                 transparent,
-                rgba(255, 255, 255, 0.3),
+                rgba(255, 255, 255, 0.2),
                 transparent
             );
-            transition: left 0.6s ease;
+            transition: left 0.5s ease;
         }
         
-        .glass-button-minimal:hover::before {
+        .btn-compact:hover::before {
             left: 100%;
         }
         
-        /* Checkbox minimalista */
-        .checkbox-minimal {
+        /* Checkbox minimal */
+        .checkbox-compact {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin: 1.5rem 0;
-            width: 100%;
-        }
-        
-        /* Footer */
-        .login-footer-minimal {
-            margin-top: 3rem;
-            padding-top: 2rem;
-            border-top: 1px solid rgba(0, 0, 0, 0.05);
-            text-align: center;
-            width: 100%;
-        }
-        
-        .footer-text-minimal {
+            gap: 8px;
+            margin: 1.2rem 0;
             color: #4A5568;
             font-size: 0.9rem;
-            opacity: 0.7;
         }
         
-        /* Mensajes de estado */
-        .status-message {
-            background: rgba(0, 102, 255, 0.1);
-            border: 1px solid rgba(0, 102, 255, 0.2);
-            border-radius: 16px;
-            padding: 1.5rem;
+        /* Footer compacto */
+        .footer-compact {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            text-align: center;
+            color: #718096;
+            font-size: 0.85rem;
+        }
+        
+        /* Mensajes compactos */
+        .alert-compact {
+            background: rgba(0, 102, 255, 0.08);
+            border: 1px solid rgba(0, 102, 255, 0.15);
+            border-radius: 12px;
+            padding: 1rem;
             margin: 1rem 0;
             backdrop-filter: blur(10px);
-            text-align: center;
         }
         
         /* Responsive */
         @media (max-width: 768px) {
-            .login-glass-minimal {
-                padding: 3rem 2rem;
-                margin: 1rem;
+            .glass-panel-compact {
+                padding: 2rem 1.5rem;
+                margin: 0.5rem;
             }
             
-            .login-header-minimal {
+            .login-header-compact {
                 flex-direction: column;
                 text-align: center;
                 gap: 1rem;
             }
             
-            .pill-large {
-                width: 80px;
-                height: 80px;
-                font-size: 2.8rem;
+            .pill-left {
+                width: 70px;
+                height: 70px;
+                font-size: 2.5rem;
             }
             
-            .title-minimal {
-                font-size: 2.8rem;
-            }
-            
-            .glass-button-minimal {
-                padding: 18px 30px;
+            .title-compact {
+                font-size: 2rem;
             }
         }
     </style>
     """, unsafe_allow_html=True)
     
-    # Contenedor principal
-    st.markdown('<div class="login-minimalista">', unsafe_allow_html=True)
-    st.markdown('<div class="login-glass-minimal">', unsafe_allow_html=True)
+    # Contenedor principal centrado
+    st.markdown('<div class="login-container-compact">', unsafe_allow_html=True)
+    st.markdown('<div class="glass-panel-compact">', unsafe_allow_html=True)
     
-    # Encabezado con píldora grande y título al lado
-    st.markdown('<div class="login-header-minimal">', unsafe_allow_html=True)
+    # Header con píldora al lado izquierdo y título al lado derecho
+    st.markdown('<div class="login-header-compact">', unsafe_allow_html=True)
     
-    # Píldora grande
-    st.markdown('<div class="pill-large">💊</div>', unsafe_allow_html=True)
+    # Píldora al lado izquierdo
+    st.markdown('<div class="pill-left">💊</div>', unsafe_allow_html=True)
     
-    # Título al lado
-    col_title = st.columns([1])
-    with col_title[0]:
-        st.markdown('<h1 class="title-minimal">TODODROGAS</h1>', unsafe_allow_html=True)
-        st.markdown('<p class="subtitle-minimal">Sistema de Gestión de Cupos</p>', unsafe_allow_html=True)
+    # Título al lado derecho de la píldora
+    st.markdown('''
+    <div>
+        <div class="title-compact">TODODROGAS</div>
+        <div class="subtitle-compact">Sistema de Gestión de Cupos</div>
+    </div>
+    ''', unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Formulario de login
+    # Formulario compacto
     with st.form("login_form", clear_on_submit=False):
-        # Campo de usuario con icono
-        st.markdown('<div class="input-group-minimal input-with-icon">', unsafe_allow_html=True)
-        st.markdown('<div class="input-icon">👤</div>', unsafe_allow_html=True)
+        st.markdown('<div class="form-compact">', unsafe_allow_html=True)
+        
+        # Campo de usuario
+        st.markdown('<div class="input-wrapper">', unsafe_allow_html=True)
+        st.markdown('<div class="input-icon-azul">👤</div>', unsafe_allow_html=True)
         
         username = st.text_input(
             "",
@@ -396,9 +384,9 @@ def show_login_screen():
         )
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Campo de contraseña con icono
-        st.markdown('<div class="input-group-minimal input-with-icon">', unsafe_allow_html=True)
-        st.markdown('<div class="input-icon">🔒</div>', unsafe_allow_html=True)
+        # Campo de contraseña
+        st.markdown('<div class="input-wrapper">', unsafe_allow_html=True)
+        st.markdown('<div class="input-icon-azul">🔒</div>', unsafe_allow_html=True)
         
         password = st.text_input(
             "",
@@ -409,105 +397,87 @@ def show_login_screen():
         )
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Opción recordar sesión
-        st.markdown('<div class="checkbox-minimal">', unsafe_allow_html=True)
-        col_check = st.columns([1, 5])
-        with col_check[0]:
+        # Checkbox recordar sesión
+        col1, col2 = st.columns([1, 8])
+        with col1:
             remember = st.checkbox("", value=True, key="remember_checkbox")
-        with col_check[1]:
-            st.markdown('<label style="color: #4A5568; font-weight: 500;">Recordar mi sesión</label>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        with col2:
+            st.markdown('<div class="checkbox-compact">Recordar mi sesión</div>', unsafe_allow_html=True)
         
         # Botón de acceso
         submit_button = st.form_submit_button(
-            "ACCEDER AL SISTEMA",
+            "ACCEDER",
             use_container_width=True,
             type="primary"
         )
         
         if submit_button:
             if username and password:
-                # Efecto de carga
-                with st.spinner(""):
-                    # Barra de progreso animada
-                    progress_bar = st.progress(0)
-                    for i in range(100):
-                        time.sleep(0.015)
-                        progress_bar.progress(i + 1)
-                    
-                    # Validación
-                    authenticated, user = authenticate(username, password)
-                    
-                    # Limpiar barra
-                    progress_bar.empty()
-                    
-                    if authenticated:
-                        # Mensaje de éxito
-                        st.markdown(f'''
-                        <div class="status-message">
-                            <div style="color: #0066FF; font-weight: 600; font-size: 1.2rem;">
-                                ✓ Acceso concedido
-                            </div>
-                            <div style="color: #1A1A1A; margin-top: 0.8rem;">
-                                ¡Bienvenido, {user['nombre']}!
-                            </div>
+                # Barra de progreso simple
+                progress_bar = st.progress(0)
+                for i in range(100):
+                    time.sleep(0.01)
+                    progress_bar.progress(i + 1)
+                
+                # Validación
+                authenticated, user = authenticate(username, password)
+                
+                # Limpiar barra
+                progress_bar.empty()
+                
+                if authenticated:
+                    # Mensaje de éxito
+                    st.markdown(f'''
+                    <div class="alert-compact">
+                        <div style="color: #0066FF; font-weight: 600;">
+                            ✓ Acceso concedido
                         </div>
-                        ''', unsafe_allow_html=True)
-                        
-                        # Guardar sesión
-                        st.session_state.user = user
-                        st.session_state.authenticated = True
-                        
-                        # Retardo antes de redirección
-                        time.sleep(1.2)
-                        st.rerun()
-                    else:
-                        # Mensaje de error
-                        st.markdown('''
-                        <div class="status-message">
-                            <div style="color: #FF6B6B; font-weight: 600; font-size: 1.2rem;">
-                                ✗ Credenciales incorrectas
-                            </div>
-                            <div style="color: #1A1A1A; margin-top: 0.8rem;">
-                                Verifica tus datos e intenta nuevamente
-                            </div>
+                        <div style="color: #1A1A1A; margin-top: 0.5rem;">
+                            Redirigiendo...
                         </div>
-                        ''', unsafe_allow_html=True)
+                    </div>
+                    ''', unsafe_allow_html=True)
+                    
+                    # Guardar sesión
+                    st.session_state.user = user
+                    st.session_state.authenticated = True
+                    
+                    # Redirección rápida
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    # Mensaje de error
+                    st.markdown('''
+                    <div class="alert-compact" style="border-color: rgba(255, 107, 107, 0.3); background: rgba(255, 107, 107, 0.08);">
+                        <div style="color: #FF6B6B; font-weight: 600;">
+                            ✗ Credenciales incorrectas
+                        </div>
+                    </div>
+                    ''', unsafe_allow_html=True)
             else:
                 # Mensaje de advertencia
                 st.markdown('''
-                <div class="status-message">
-                    <div style="color: #FF9500; font-weight: 600; font-size: 1.2rem;">
-                        ⚠ Campos requeridos
-                    </div>
-                    <div style="color: #1A1A1A; margin-top: 0.8rem;">
-                        Completa todos los campos para continuar
+                <div class="alert-compact" style="border-color: rgba(255, 149, 0, 0.3); background: rgba(255, 149, 0, 0.08);">
+                    <div style="color: #FF9500; font-weight: 600;">
+                        ⚠ Completa todos los campos
                     </div>
                 </div>
                 ''', unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Footer
-    st.markdown('<div class="login-footer-minimal">', unsafe_allow_html=True)
+    st.markdown('<div class="footer-compact">', unsafe_allow_html=True)
     
-    # Información del sistema
-    with st.expander("ℹ️ Información del sistema", expanded=False):
+    # Información simple
+    with st.expander("ℹ️ Información", expanded=False):
         st.markdown(f'''
-        <div style="color: #4A5568; font-size: 0.95rem; line-height: 1.6;">
-            <div style="margin-bottom: 0.8rem;">
-                <strong>Sistema:</strong> Tododrogas Gestión de Cupos v2.0
-            </div>
-            <div style="margin-bottom: 0.8rem;">
-                <strong>Estado:</strong> <span style="color: #0066FF; font-weight: 600;">Operativo</span>
-            </div>
-            <div style="margin-bottom: 0.8rem;">
-                <strong>Último acceso:</strong> {datetime.now().strftime("%d/%m/%Y %H:%M")}
-            </div>
-        </div>
-        ''', unsafe_allow_html=True)
+        **Sistema:** Tododrogas v2.0  
+        **Estado:** Operativo  
+        **Fecha:** {datetime.now().strftime("%d/%m/%Y")}
+        ''')
     
-    # Copyright
-    st.markdown('<p class="footer-text-minimal">© 2024 Tododrogas • Sistema de gestión empresarial</p>', unsafe_allow_html=True)
-    
+    st.markdown('<div style="margin-top: 1rem;">© 2024 Tododrogas</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
@@ -526,10 +496,8 @@ def check_authentication():
 
 def logout():
     """Cierra sesión"""
-    # Limpiar sesión
     for key in list(st.session_state.keys()):
         del st.session_state[key]
-    
     st.rerun()
 
 def require_admin():
