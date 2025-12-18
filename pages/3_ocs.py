@@ -648,29 +648,6 @@ def show_ocs_page():
                     
                     st.markdown('</div>', unsafe_allow_html=True)
                     
-                    # Calcular impacto
-                    impacto = calculate_impact(oc_seleccionada['cliente_nit'], valor_autorizar)
-                    
-                    if impacto:
-                        if impacto['sobrepasa_cupo']:
-                            st.error(f"""
-                            ⚠️ **ADVERTENCIA:** Esta autorización sobrepasa el cupo disponible.
-                            
-                            **Impacto:**
-                            • Disponible actual: {format_currency(impacto['disponible_actual'])}
-                            • Esta autorización: {format_currency(valor_autorizar)}
-                            • Nuevo disponible: {format_currency(impacto['nuevo_disponible'])}
-                            """)
-                        else:
-                            st.success(f"""
-                            ✅ **IMPACTO CALCULADO:**
-                            
-                            **Detalles:**
-                            • Disponible actual: {format_currency(impacto['disponible_actual'])}
-                            • Esta autorización: {format_currency(valor_autorizar)}
-                            • Nuevo disponible: {format_currency(impacto['nuevo_disponible'])}
-                            • Quedaría disponible: {(impacto['nuevo_disponible']/impacto['disponible_actual']*100):.1f}%
-                            """)
                     
                     # Botones de confirmación
                     col_conf1, col_conf2 = st.columns(2)
