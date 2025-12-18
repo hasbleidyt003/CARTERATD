@@ -1,11 +1,12 @@
 """
-AUTENTICACIÓN CON ESTILO BRILLANTE
+AUTENTICACIÓN CON ESTILO FUTURISTA NEGRO/AZUL
 """
 
 import streamlit as st
 import hashlib
 import time
 from datetime import datetime
+import random
 
 def hash_password(password):
     """Encripta contraseña"""
@@ -51,13 +52,15 @@ def authenticate(username, password):
         conn.close()
 
 def show_login_screen():
-    """Login estilo glass con efectos brillantes"""
+    """Login estilo futurista negro/azul"""
     
-    # CSS inline para el login
+    # Ocultar elementos de Streamlit
     st.markdown("""
     <style>
         .stApp {
-            background: transparent !important;
+            background: #0A0A14 !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
         
         .stApp > header {
@@ -65,98 +68,182 @@ def show_login_screen():
         }
         
         #MainMenu, footer, header {
-            display: none !important;
+            visibility: hidden !important;
         }
         
         .block-container {
-            padding-top: 0 !important;
-            padding-bottom: 0 !important;
+            padding: 0 !important;
+            max-width: 100% !important;
+        }
+        
+        .stForm {
+            border: none !important;
+            background: transparent !important;
         }
     </style>
     """, unsafe_allow_html=True)
     
-    # Contenedor principal del login
-    st.markdown('<div class="login-container">', unsafe_allow_html=True)
-    st.markdown('<div class="login-glass-card">', unsafe_allow_html=True)
+    # Contenedor principal
+    st.markdown('<div class="login-futurista">', unsafe_allow_html=True)
     
-    # Icono y título
-    st.markdown('<div class="login-icon">💊</div>', unsafe_allow_html=True)
-    st.markdown('<h1 class="login-title">TODODROGAS</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="login-subtitle">Sistema de Gestión de Cupos</p>', unsafe_allow_html=True)
+    # Línea de escaneo
+    st.markdown('<div class="scan-line"></div>', unsafe_allow_html=True)
+    
+    # Panel de login
+    st.markdown('<div class="login-panel">', unsafe_allow_html=True)
+    
+    # Header con logo animado
+    st.markdown('<div class="login-header">', unsafe_allow_html=True)
+    
+    # Logo con anillos
+    st.markdown('<div class="logo-container">', unsafe_allow_html=True)
+    st.markdown('<div class="logo-rings">', unsafe_allow_html=True)
+    st.markdown('<div class="ring ring-1"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="ring ring-2"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="ring ring-3"></div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('<div class="futuristic-logo">💊</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Títulos
+    st.markdown('<h1 class="title-main">TODODROGAS</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="title-sub">SYSTEM ACCESS</p>', unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Formulario de login
     with st.form("login_form", clear_on_submit=False):
+        st.markdown('<div class="login-form">', unsafe_allow_html=True)
+        
         # Campo de usuario
-        st.markdown('<div style="margin-bottom: 1rem;">', unsafe_allow_html=True)
+        st.markdown('<div class="input-group">', unsafe_allow_html=True)
+        st.markdown('<label class="input-label">USER IDENTIFICATION</label>', unsafe_allow_html=True)
+        
         username = st.text_input(
             "",
-            placeholder="👤 Ingresa tu usuario",
+            placeholder="ENTER USERNAME",
             label_visibility="collapsed",
             key="username_input"
         )
+        st.markdown('<div class="input-line"></div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
         
         # Campo de contraseña
-        st.markdown('<div style="margin-bottom: 1.5rem;">', unsafe_allow_html=True)
+        st.markdown('<div class="input-group">', unsafe_allow_html=True)
+        st.markdown('<label class="input-label">SECURITY CREDENTIALS</label>', unsafe_allow_html=True)
+        
         password = st.text_input(
             "",
             type="password",
-            placeholder="🔒 Ingresa tu contraseña",
+            placeholder="ENTER PASSWORD",
             label_visibility="collapsed",
             key="password_input"
         )
+        st.markdown('<div class="input-line"></div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Opciones adicionales
-        col1, col2 = st.columns([1, 2])
+        # Opciones
+        st.markdown('<div class="checkbox-group">', unsafe_allow_html=True)
+        col1, col2 = st.columns([1, 5])
         with col1:
-            remember = st.checkbox("Recordarme", value=True)
+            remember = st.checkbox("", value=True, key="remember_checkbox")
+        with col2:
+            st.markdown('<label class="checkbox-label">REMEMBER SESSION</label>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
         
-        # Botón de ingreso
+        # Botón de acceso
         submit_button = st.form_submit_button(
-            "🚀 INGRESAR AL SISTEMA",
+            "INITIATE ACCESS SEQUENCE",
             use_container_width=True,
             type="primary"
         )
         
         if submit_button:
             if username and password:
-                with st.spinner("Verificando credenciales..."):
-                    time.sleep(1.5)  # Simulación de validación
+                # Efecto de carga
+                with st.spinner(""):
+                    # Barra de progreso animada
+                    progress_bar = st.progress(0)
+                    for i in range(100):
+                        time.sleep(0.02)
+                        progress_bar.progress(i + 1)
+                    
+                    # Validación
                     authenticated, user = authenticate(username, password)
                     
                     if authenticated:
+                        # Efecto de éxito
+                        st.markdown('''
+                        <div class="neon-alert success">
+                            <div style="color: #00F3FF; font-weight: 600; font-size: 1.1rem;">
+                                ✓ ACCESS GRANTED
+                            </div>
+                            <div style="color: rgba(255, 255, 255, 0.8); margin-top: 0.5rem;">
+                                WELCOME, ''' + user['nombre'] + '''
+                            </div>
+                        </div>
+                        ''', unsafe_allow_html=True)
+                        
+                        # Guardar sesión
                         st.session_state.user = user
                         st.session_state.authenticated = True
-                        st.success(f"¡Bienvenido, {user['nombre']}!")
-                        time.sleep(1)
+                        
+                        # Retardo antes de redirección
+                        time.sleep(1.5)
                         st.rerun()
                     else:
-                        st.error("❌ Usuario o contraseña incorrectos")
+                        # Efecto de error
+                        st.markdown('''
+                        <div class="neon-alert error">
+                            <div style="color: #FF3B30; font-weight: 600; font-size: 1.1rem;">
+                                ✗ ACCESS DENIED
+                            </div>
+                            <div style="color: rgba(255, 255, 255, 0.8); margin-top: 0.5rem;">
+                                INVALID CREDENTIALS DETECTED
+                            </div>
+                        </div>
+                        ''', unsafe_allow_html=True)
             else:
-                st.warning("⚠️ Por favor completa todos los campos")
+                # Advertencia
+                st.markdown('''
+                <div class="neon-alert">
+                    <div style="color: #FF9500; font-weight: 600; font-size: 1.1rem;">
+                    ⚠ SECURITY PROTOCOL
+                    </div>
+                    <div style="color: rgba(255, 255, 255, 0.8); margin-top: 0.5rem;">
+                    ALL FIELDS REQUIRED FOR ACCESS
+                    </div>
+                </div>
+                ''', unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Footer
+    st.markdown('<div class="login-footer">', unsafe_allow_html=True)
     
     # Información del sistema (sin credenciales)
-    st.markdown('<div style="margin-top: 2rem; text-align: center;">', unsafe_allow_html=True)
-    st.markdown('<hr style="border: none; height: 1px; background: linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent); margin: 1.5rem 0;">', unsafe_allow_html=True)
+    with st.expander("SYSTEM INFORMATION", expanded=False):
+        st.markdown('''
+        <div style="color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; line-height: 1.6;">
+            <div style="margin-bottom: 0.5rem;">
+                <strong>SYSTEM:</strong> Tododrogas Control Suite v2.0
+            </div>
+            <div style="margin-bottom: 0.5rem;">
+                <strong>STATUS:</strong> <span style="color: #00F3FF;">OPERATIONAL</span>
+            </div>
+            <div style="margin-bottom: 0.5rem;">
+                <strong>SECURITY:</strong> Level 3 Encryption Active
+            </div>
+            <div>
+                <strong>LAST UPDATE:</strong> ''' + datetime.now().strftime("%Y-%m-%d %H:%M") + '''
+            </div>
+        </div>
+        ''', unsafe_allow_html=True)
     
-    # Información de ayuda
-    with st.expander("🆘 ¿Necesitas ayuda?", expanded=False):
-        st.info("""
-        **Para acceder al sistema:**
-        
-        1. Contacta al administrador del sistema
-        2. Solicita tus credenciales de acceso
-        3. Si olvidaste tu contraseña, contacta al soporte técnico
-        
-        **Soporte:** soporte@tododrogas.com
-        """)
+    # Copyright
+    st.markdown('<p class="footer-text">© 2025 TODODROGAS SECURITY SYSTEMS</p>', unsafe_allow_html=True)
+    st.markdown('<p class="footer-text">UNAUTHORIZED ACCESS PROHIBITED</p>', unsafe_allow_html=True)
     
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Footer del login
-    st.markdown('<div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid rgba(0,0,0,0.05);">', unsafe_allow_html=True)
-    st.markdown('<p style="text-align: center; color: #666; font-size: 0.9rem; margin: 0;">© 2024 Tododrogas • Versión 1.0</p>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
@@ -175,8 +262,24 @@ def check_authentication():
 
 def logout():
     """Cierra sesión"""
+    # Efecto de logout
+    st.markdown('''
+    <div class="neon-alert">
+        <div style="color: #00F3FF; font-weight: 600; font-size: 1.1rem; text-align: center;">
+            SESSION TERMINATED
+        </div>
+        <div style="color: rgba(255, 255, 255, 0.8); text-align: center; margin-top: 0.5rem;">
+            SECURITY PROTOCOLS ENGAGED
+        </div>
+    </div>
+    ''', unsafe_allow_html=True)
+    
+    time.sleep(1)
+    
+    # Limpiar sesión
     for key in list(st.session_state.keys()):
         del st.session_state[key]
+    
     st.rerun()
 
 def require_admin():
@@ -184,7 +287,21 @@ def require_admin():
     user = check_authentication()
     
     if user.get('rol') != 'admin':
-        st.error("⛔ Acceso solo para administradores")
+        # Mensaje de acceso denegado estilo futurista
+        st.markdown('''
+        <div class="neon-alert error" style="text-align: center;">
+            <div style="color: #FF3B30; font-weight: 700; font-size: 1.3rem;">
+                ⛔ ACCESS VIOLATION
+            </div>
+            <div style="color: rgba(255, 255, 255, 0.8); margin-top: 1rem;">
+                ADMINISTRATOR PRIVILEGES REQUIRED
+            </div>
+            <div style="color: rgba(255, 255, 255, 0.6); margin-top: 0.5rem; font-size: 0.9rem;">
+                SECURITY LOCKDOWN ENGAGED
+            </div>
+        </div>
+        ''', unsafe_allow_html=True)
+        time.sleep(2)
         st.stop()
     
     return user
