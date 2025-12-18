@@ -5,8 +5,6 @@ Tabla completa de clientes con gestión de cupos
 
 import streamlit as st
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
 
 # Configuración de página
 st.set_page_config(
@@ -27,6 +25,7 @@ user = check_authentication()
 
 st.markdown("""
 <style>
+    /* ESTILOS PARA TARJETAS DE CLIENTES */
     .clients-container {
         padding: 1rem;
     }
@@ -119,6 +118,7 @@ st.markdown("""
         border: 1px solid #E5E7EB;
     }
     
+    /* ESTILOS PARA ESTADÍSTICAS */
     .stats-summary {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -174,6 +174,34 @@ st.markdown("""
         box-shadow: none;
     }
     
+    /* Alertas y badges */
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-normal {
+        background: #E6F7FF;
+        color: #0066CC;
+        border: 1px solid #B3E0FF;
+    }
+    
+    .status-alerta {
+        background: #FFF7E6;
+        color: #FF9500;
+        border: 1px solid #FFE0B3;
+    }
+    
+    .status-sobrepasado {
+        background: #FFE6E6;
+        color: #FF3B30;
+        border: 1px solid #FFB3B3;
+    }
+    
     /* Estilos para la tabla */
     .rappi-table {
         width: 100%;
@@ -201,34 +229,6 @@ st.markdown("""
     
     .rappi-table tr:hover td {
         background: #F8F9FA;
-    }
-    
-    /* Alertas y badges */
-    .status-badge {
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .status-normal {
-        background: #E6F7FF;
-        color: #0066CC;
-        border: 1px solid #B3E0FF;
-    }
-    
-    .status-alerta {
-        background: #FFF7E6;
-        color: #FF9500;
-        border: 1px solid #FFE0B3;
-    }
-    
-    .status-sobrepasado {
-        background: #FFE6E6;
-        color: #FF3B30;
-        border: 1px solid #FFB3B3;
     }
 </style>
 
@@ -477,42 +477,26 @@ def show_clients_page():
         for _, cliente in page_df.iterrows():
             st.markdown(create_client_card(cliente), unsafe_allow_html=True)
     else:
-        # Mostrar como tabla
+        # Mostrar como tabla usando st.dataframe (mejor para Streamlit)
         display_df = page_df.copy()
         display_df['Cupo Asignado'] = display_df['cupo_sugerido'].apply(format_currency)
         display_df['En Uso'] = display_df['saldo_actual'].apply(format_currency)
         display_df['Disponible'] = display_df['disponible'].apply(format_currency)
         display_df['% Uso'] = display_df['porcentaje_uso'].apply(lambda x: f"{x:.1f}%")
         
-        # Crear tabla con botones de acción
         st.dataframe(
             display_df[['nombre', 'nit', 'Cupo Asignado', 'En Uso', 'Disponible', '% Uso']],
             use_container_width=True,
             hide_index=True,
             column_config={
-                "nombre": "Cliente",
-                "nit": "NIT",
-                "Cupo Asignado": "Cupo",
-                "En Uso": "En Uso", 
-                "Disponible": "Disponible",
-                "% Uso": "% Uso"
+                "nombre": st.column_config.TextColumn("Cliente", width="large"),
+                "nit": st.column_config.TextColumn("NIT", width="medium"),
+                "Cupo Asignado": st.column_config.TextColumn("Cupo", width="medium"),
+                "En Uso": st.column_config.TextColumn("En Uso", width="medium"),
+                "Disponible": st.column_config.TextColumn("Disponible", width="medium"),
+                "% Uso": st.column_config.TextColumn("% Uso", width="small")
             }
         )
-        
-        # Agregar botones de acción para cada fila
-        for _, cliente in page_df.iterrows():
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                if st.button(f"📋 Ver {cliente['nit']}", key=f"view_{cliente['nit']}", use_container_width=True):
-                    st.session_state['selected_client'] = cliente['nit']
-                    st.info(f"Seleccionado cliente: {cliente['nombre']}")
-            with col2:
-                if st.button(f"✏️ Editar {cliente['nit']}", key=f"edit_{cliente['nit']}", use_container_width=True):
-                    st.session_state['edit_cupo_nit'] = cliente['nit']
-                    st.rerun()
-            with col3:
-                if st.button(f"📄 OCs {cliente['nit']}", key=f"ocs_{cliente['nit']}", use_container_width=True):
-                    st.info(f"Ver OCs del cliente: {cliente['nombre']}")
     
     # ========== ACCIONES MASIVAS ==========
     st.markdown("---")
@@ -545,50 +529,6 @@ def show_clients_page():
     with col3:
         if st.button("📊 Ver análisis", use_container_width=True):
             st.switch_page("pages/4_reportes.py")
-    
-    # ========== EDICIÓN DE CUPO (MODAL) ==========
-    if 'edit_cupo_nit' in st.session_state:
-        nit_editar = st.session_state.edit_cupo_nit
-        cliente_editar = clientes_df[clientes_df['nit'] == nit_editar].iloc[0]
-        
-        with st.form(f"editar_cupo_{nit_editar}"):
-            st.subheader(f"✏️ Editar Cupo - {cliente_editar['nombre']}")
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.metric("Cupo Actual", format_currency(cliente_editar['cupo_sugerido']))
-                nuevo_cupo = st.number_input(
-                    "Nuevo Cupo",
-                    min_value=0.0,
-                    value=float(cliente_editar['cupo_sugerido']),
-                    step=1000000.0,
-                    format="%.0f"
-                )
-            
-            with col2:
-                st.metric("En Uso", format_currency(cliente_editar['saldo_actual']))
-                nuevo_disponible = nuevo_cupo - cliente_editar['saldo_actual']
-                st.metric("Nuevo Disponible", format_currency(nuevo_disponible))
-            
-            motivo = st.text_input("Motivo del cambio", placeholder="Ej: Ajuste por nueva política")
-            
-            col_btn1, col_btn2 = st.columns(2)
-            
-            with col_btn1:
-                if st.form_submit_button("💾 Guardar Cambios", type="primary", use_container_width=True):
-                    try:
-                        actualizar_cupo_cliente(nit_editar, nuevo_cupo, user['nombre'])
-                        st.success("✅ Cupo actualizado correctamente")
-                        del st.session_state.edit_cupo_nit
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"❌ Error al actualizar: {str(e)}")
-            
-            with col_btn2:
-                if st.form_submit_button("❌ Cancelar", use_container_width=True):
-                    del st.session_state.edit_cupo_nit
-                    st.rerun()
 
 # ==================== EJECUCIÓN ====================
 
