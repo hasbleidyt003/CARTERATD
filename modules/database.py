@@ -1,204 +1,166 @@
-# modules/databases.py
 import sqlite3
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 import streamlit as st
-import json
-from pathlib import Path
 
-class DatabaseManager:
-    """Gestor robusto de base de datos con soporte para autorizaciones parciales"""
+# Configuración de la base de datos
+DB_PATH = "data/finanzas.db"
+
+def get_db_connection():
+    """Establece conexión con la base de datos"""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def execute_query(query, params=()):
+    """Ejecuta una consulta SQL"""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        conn.commit()
+        return cursor.lastrowid
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        conn.close()
+
+def init_db():
+    """Inicializa la base de datos con tablas y datos iniciales"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
-    def __init__(self, db_path="database.db"):
-        self.db_path = db_path
-        self.conn = None
-        self.connect()
-        self._backup_database()
+    # Tabla de clientes
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS clientes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nit TEXT UNIQUE NOT NULL,
+        nombre TEXT NOT NULL,
+        total_cartera REAL DEFAULT 0,
+        cupo_sugerido REAL DEFAULT 0,
+        excluir_calculo INTEGER DEFAULT 0,
+        observaciones TEXT,
+        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
     
-    def connect(self):
-        """Conectar a la base de datos con manejo de errores"""
-        try:
-            self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
-            self.conn.row_factory = sqlite3.Row
-            self.conn.execute("PRAGMA foreign_keys = ON")
-            self.conn.execute("PRAGMA journal_mode = WAL")
-            self.conn.execute("PRAGMA synchronous = NORMAL")
-            self.conn.execute("PRAGMA cache_size = -2000")
-            
-            # Crear todas las tablas
-            self.create_tables()
-            
-            # Verificar integridad
-            self._check_database_integrity()
-            
-            st.session_state.db_connected = True
-            return True
-            
-        except sqlite3.Error as e:
-            st.error(f"❌ Error conectando a la base de datos: {str(e)}")
-            st.session_state.db_connected = False
-            return False
+    # Tabla de órdenes de compra
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS ocs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        numero TEXT UNIQUE NOT NULL,
+        cliente_nit TEXT NOT NULL,
+        valor_total REAL NOT NULL,
+        fecha DATE NOT NULL,
+        descripcion TEXT,
+        estado TEXT DEFAULT 'PENDIENTE',
+        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (cliente_nit) REFERENCES clientes (nit)
+    )
+    ''')
     
-    def _backup_database(self):
-        """Crear backup de la base de datos"""
-        try:
-            backup_path = f"backups/db_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
-            Path("backups").mkdir(exist_ok=True)
-            
-            backup_conn = sqlite3.connect(backup_path)
-            self.conn.backup(backup_conn)
-            backup_conn.close()
-            
-            # Mantener solo los últimos 7 backups
-            backups = sorted(Path("backups").glob("db_backup_*.db"))
-            if len(backups) > 7:
-                for old_backup in backups[:-7]:
-                    old_backup.unlink()
-                    
-        except Exception as e:
-            print(f"⚠️ No se pudo crear backup: {e}")
+    # Tabla de autorizaciones parciales
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS autorizaciones_parciales (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        oc_numero TEXT NOT NULL,
+        valor_autorizado REAL NOT NULL,
+        valor_pendiente REAL NOT NULL,
+        comentario TEXT,
+        fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (oc_numero) REFERENCES ocs (numero)
+    )
+    ''')
     
-    def _check_database_integrity(self):
-        """Verificar integridad de la base de datos"""
-        try:
-            result = self.conn.execute("PRAGMA integrity_check").fetchone()
-            if result[0] != "ok":
-                st.warning(f"⚠️ Problemas de integridad en la base de datos: {result[0]}")
-                return False
-            return True
-        except Exception as e:
-            print(f"⚠️ Error verificando integridad: {e}")
-            return False
+    # Insertar datos iniciales si la tabla está vacía
+    cursor.execute("SELECT COUNT(*) FROM clientes")
+    if cursor.fetchone()[0] == 0:
+        # Datos iniciales de clientes
+        initial_clients = [
+            ('901212102', 'AUNA COLOMBIA S.A.S', 19493849830, 21693849830, 1, 'pendientes 2.000 y nuevo cupo 200 - andres confirma'),
+            ('890905166', 'HOSPITAL MENTAL DE ANTIOQUIA', 7397192942, 7500000000, 0, 'cupo sugerido'),
+            ('900249425', 'PHARMASAN S.A.S', 5710785209, 5910785209, 1, 'se autoriza cupo de 200m'),
+            ('900748052', 'NEUROM SAS', 5184247623, 5500000000, 0, ''),
+            ('800241602', 'FUNDACIÓN CLÍNICA VIDA', 3031469552, 3500000000, 0, ''),
+            ('890985122', 'COOPERATIVA HOSPITALES ANTIOQUIA', 1221931405, 1500000000, 0, 'cupo sugerido'),
+            ('811038014', 'GRUPO ONCOLOGICO INTERNACIONAL', 806853666, 900000000, 0, 'cupo sugerido')
+        ]
+        
+        cursor.executemany('''
+        INSERT INTO clientes (nit, nombre, total_cartera, cupo_sugerido, excluir_calculo, observaciones)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ''', initial_clients)
+        
+        # Insertar algunas OCs de ejemplo
+        sample_ocs = [
+            ('OC-2024-001', '890905166', 200000000, '2024-01-15', 'Medicamentos varios', 'PENDIENTE'),
+            ('OC-2024-002', '900748052', 150000000, '2024-01-10', 'Equipos médicos', 'PENDIENTE'),
+            ('OC-2024-003', '800241602', 80000000, '2024-01-05', 'Insumos hospitalarios', 'AUTORIZADA'),
+        ]
+        
+        cursor.executemany('''
+        INSERT INTO ocs (numero, cliente_nit, valor_total, fecha, descripcion, estado)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ''', sample_ocs)
     
-    def create_tables(self):
-        """Crear todas las tablas del sistema"""
-        cursor = self.conn.cursor()
-        
-        # Tabla de clientes
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS clientes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            codigo VARCHAR(20) UNIQUE NOT NULL,
-            nombre VARCHAR(200) NOT NULL,
-            nit VARCHAR(20) NOT NULL,
-            direccion TEXT,
-            telefono VARCHAR(20),
-            email VARCHAR(100),
-            contacto_principal VARCHAR(100),
-            telefono_contacto VARCHAR(20),
-            limite_credito DECIMAL(15,2) DEFAULT 0,
-            saldo_actual DECIMAL(15,2) DEFAULT 0,
-            dias_credito INTEGER DEFAULT 30,
-            categoria VARCHAR(50),
-            activo BOOLEAN DEFAULT 1,
-            fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            notas TEXT,
-            creado_por INTEGER,
-            actualizado_por INTEGER,
-            fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (creado_por) REFERENCES usuarios(id),
-            FOREIGN KEY (actualizado_por) REFERENCES usuarios(id)
-        )
-        ''')
-        
-        # Tabla de Órdenes de Compra
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS ordenes_compra (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            numero_oc VARCHAR(50) UNIQUE NOT NULL,
-            cliente_id INTEGER NOT NULL,
-            tipo_oc VARCHAR(20) DEFAULT 'NORMAL', -- NORMAL, URGENTE, ESPECIAL
-            valor_total DECIMAL(15,2) NOT NULL,
-            valor_autorizado DECIMAL(15,2) DEFAULT 0,
-            valor_pendiente DECIMAL(15,2) NOT NULL,
-            valor_retenido DECIMAL(15,2) DEFAULT 0,
-            valor_facturado DECIMAL(15,2) DEFAULT 0,
-            valor_pagado DECIMAL(15,2) DEFAULT 0,
-            estado VARCHAR(20) DEFAULT 'PENDIENTE', -- PENDIENTE, PARCIAL, COMPLETADA, ANULADA
-            fecha_oc DATE NOT NULL,
-            fecha_vencimiento DATE,
-            fecha_entrega_estimada DATE,
-            prioridad INTEGER DEFAULT 3, -- 1: Alta, 2: Media, 3: Baja
-            moneda VARCHAR(3) DEFAULT 'COP',
-            tasa_cambio DECIMAL(10,4) DEFAULT 1,
-            plazo_entrega INTEGER,
-            condiciones_pago TEXT,
-            centro_costo VARCHAR(50),
-            proyecto VARCHAR(100),
-            motivo TEXT,
-            observaciones TEXT,
-            archivo_url TEXT,
-            creado_por INTEGER,
-            aprobado_por INTEGER,
-            fecha_aprobacion TIMESTAMP,
-            fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (cliente_id) REFERENCES clientes(id),
-            FOREIGN KEY (creado_por) REFERENCES usuarios(id),
-            FOREIGN KEY (aprobado_por) REFERENCES usuarios(id),
-            CHECK (valor_total >= 0),
-            CHECK (valor_autorizado >= 0),
-            CHECK (valor_pendiente >= 0),
-            CHECK (valor_total = valor_autorizado + valor_pendiente)
-        )
-        ''')
-        
-        # Índices para ordenes_compra
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_oc_cliente ON ordenes_compra(cliente_id)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_oc_estado ON ordenes_compra(estado)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_oc_fecha ON ordenes_compra(fecha_oc)')
-        
-        # Tabla de autorizaciones parciales
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS autorizaciones_parciales (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            oc_id INTEGER NOT NULL,
-            numero_parcial VARCHAR(50) NOT NULL,
-            valor_autorizado DECIMAL(15,2) NOT NULL,
-            porcentaje_autorizado DECIMAL(5,2) NOT NULL,
-            motivo TEXT,
-            usuario_id INTEGER NOT NULL,
-            fecha_autorizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            estado_anterior VARCHAR(20),
-            estado_nuevo VARCHAR(20),
-            ip_autorizacion VARCHAR(45),
-            dispositivo TEXT,
-            FOREIGN KEY (oc_id) REFERENCES ordenes_compra(id) ON DELETE CASCADE,
-            FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-            UNIQUE(oc_id, numero_parcial)
-        )
-        ''')
-        
-        # Tabla de historial de OCs
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS historial_ocs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            oc_id INTEGER NOT NULL,
-            accion VARCHAR(50) NOT NULL, -- AUTORIZACION, MODIFICACION, ANULACION, ETC
-            descripcion TEXT NOT NULL,
-            valor_anterior DECIMAL(15,2),
-            valor_nuevo DECIMAL(15,2),
-            estado_anterior VARCHAR(20),
-            estado_nuevo VARCHAR(20),
-            usuario_id INTEGER,
-            ip_address VARCHAR(45),
-            dispositivo TEXT,
-            fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            metadata JSON,
-            FOREIGN KEY (oc_id) REFERENCES ordenes_compra(id) ON DELETE CASCADE,
-            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-        )
-        ''')
-        
-        # Tabla de items de OC
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS oc_items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            oc_id INTEGER NOT NULL,
-            item_numero INTEGER NOT NULL,
-            codigo_producto VARCHAR(50),
-            descripcion TEXT NOT NULL,
-            unidad_medida VARCHAR(20),
-            cantidad DECIMAL(10,3) NOT NULL,
-            precio_unitario DECIMAL(15,2) NOT NULL,
-            valor_total
+    conn.commit()
+    conn.close()
+    
+    # Crear carpeta de respaldo si no existe
+    import os
+    os.makedirs("backup", exist_ok=True)
+
+def backup_database():
+    """Crea un respaldo de la base de datos"""
+    import shutil
+    from datetime import datetime
+    
+    backup_file = f"backup/finanzas_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
+    shutil.copy2(DB_PATH, backup_file)
+    return backup_file
+
+def restore_database(backup_file):
+    """Restaura la base de datos desde un respaldo"""
+    import shutil
+    shutil.copy2(backup_file, DB_PATH)
+    return True
+
+def get_client_summary():
+    """Obtiene resumen de clientes para dashboard"""
+    conn = get_db_connection()
+    
+    query = """
+    SELECT 
+        COUNT(*) as total_clientes,
+        SUM(CASE WHEN excluir_calculo = 0 THEN 1 ELSE 0 END) as clientes_incluidos,
+        SUM(CASE WHEN excluir_calculo = 1 THEN 1 ELSE 0 END) as clientes_excluidos,
+        SUM(cupo_sugerido) as cupo_total,
+        SUM(total_cartera) as cartera_total,
+        SUM(CASE WHEN excluir_calculo = 0 THEN cupo_sugerido - total_cartera ELSE 0 END) as disponible_total
+    FROM clientes
+    """
+    
+    result = pd.read_sql(query, conn)
+    conn.close()
+    return result.iloc[0].to_dict()
+
+def get_ocs_summary():
+    """Obtiene resumen de OCs para dashboard"""
+    conn = get_db_connection()
+    
+    query = """
+    SELECT 
+        COUNT(*) as total_ocs,
+        SUM(CASE WHEN estado = 'PENDIENTE' THEN 1 ELSE 0 END) as ocs_pendientes,
+        SUM(CASE WHEN estado = 'PARCIAL' THEN 1 ELSE 0 END) as ocs_parciales,
+        SUM(CASE WHEN estado = 'AUTORIZADA' THEN 1 ELSE 0 END) as ocs_autorizadas,
+        SUM(valor_total) as valor_total_ocs,
+        SUM(CASE WHEN estado = 'PENDIENTE' THEN valor_total ELSE 0 END) as valor_pendiente
+    FROM ocs
+    """
+    
+    result = pd.read_sql(query, conn)
+    conn.close()
+    return result.iloc[0].to_dict()
